@@ -1,11 +1,17 @@
 """Price history from Yahoo Finance, normalized to one tidy frame per symbol."""
 from __future__ import annotations
 
+import logging
+import time
 from typing import Callable
 
 import pandas as pd
 
+logger = logging.getLogger(__name__)
+
 PRICE_COLUMNS = ("Open", "High", "Low", "Close", "Volume")
+DOWNLOAD_ATTEMPTS = 3
+RETRY_WAIT_SECONDS = 2.0   # doubles after every failed attempt: 2 s, then 4 s
 Downloader = Callable[..., pd.DataFrame]
 
 
@@ -56,12 +62,28 @@ def split_by_symbol(raw: pd.DataFrame, symbols: list[str]) -> dict[str, pd.DataF
 
 
 def download_history(symbols: list[str], period: str, interval: str = "1d",
-                     downloader: Downloader = _yfinance_download) -> dict[str, pd.DataFrame]:
-    """Download daily bars for `symbols`. Returns only the symbols that came back with data."""
+                     downloader: Downloader = _yfinance_download, attempts: int = DOWNLOAD_ATTEMPTS,
+                     retry_wait: float = RETRY_WAIT_SECONDS,
+                     sleep: Callable[[float], None] = time.sleep) -> dict[str, pd.DataFrame]:
+    """Download daily bars for `symbols`. Returns only the symbols that came back with data.
+
+    Errors are retried with a growing wait, since Yahoo often refuses bursts of requests for a moment.
+    An empty reply is retried too when several symbols were asked for (throttling); for one symbol it
+    usually means a wrong symbol, so it is returned at once.
+    """
     if not symbols:
         return {}
-    try:
-        raw = downloader(symbols, period=period, interval=interval)
-    except Exception as exc:  # yfinance raises many unrelated error types; surface one clear error
-        raise MarketDataError(f"Could not download prices from Yahoo Finance: {exc}") from exc
-    return split_by_symbol(raw, symbols)
+    for attempt in range(1, attempts + 1):
+        try:
+            frames = split_by_symbol(downloader(symbols, period=period, interval=interval), symbols)
+        except Exception as exc:  # yfinance raises many unrelated error types; surface one clear error
+            if attempt == attempts:
+                raise MarketDataError(f"Could not download prices from Yahoo Finance: {exc}") from exc
+            logger.warning("Download of %d symbol(s) failed (attempt %d of %d): %s",
+                           len(symbols), attempt, attempts, exc)
+        else:
+            if frames or len(symbols) == 1 or attempt == attempts:
+                return frames
+            logger.warning("Yahoo returned no data for %d symbols (attempt %d of %d)", len(symbols), attempt, attempts)
+        sleep(retry_wait * 2 ** (attempt - 1))
+    return {}  # only reached when attempts < 1

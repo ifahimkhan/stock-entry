@@ -151,3 +151,17 @@ def test_load_settings_validates_port(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("STOCK_ENTRY_PORT", "99999")
     with pytest.raises(ValueError, match="STOCK_ENTRY_PORT"):
         load_settings()
+
+
+def test_scan_job_saves_a_scan_and_reports_failure(settings: Settings, tmp_path: Path) -> None:
+    from stock_entry.scan_job import run_once
+    from stock_entry.services import build_services
+
+    services = build_services(settings, fetch=fake_fetch, fetch_fundamentals=fake_fundamentals)
+    assert run_once(services) == 0
+    saved = services.store.load()
+    assert {row["ticker"] for row in saved["rows"]} == {"ENTRY.NS", "WAIT.NS"}
+
+    broken = build_services(replace(settings, tickers_path=tmp_path / "missing.csv"),
+                            fetch=fake_fetch, fetch_fundamentals=fake_fundamentals)
+    assert run_once(broken) == 1

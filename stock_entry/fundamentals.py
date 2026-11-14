@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable
 
+from stock_entry.clock import now_ist
 from stock_entry.tickers import Ticker
 
 logger = logging.getLogger(__name__)
@@ -63,7 +64,7 @@ def fetch_from_yahoo(symbol: str) -> Fundamentals:
 
 class FundamentalsService:
     def __init__(self, path: Path, fetch_one: FetchOne, max_age_days: int, workers: int,
-                 now: Callable[[], datetime] = datetime.now) -> None:
+                 now: Callable[[], datetime] = now_ist) -> None:
         self._path = path
         self._fetch_one = fetch_one
         self._max_age = timedelta(days=max_age_days)

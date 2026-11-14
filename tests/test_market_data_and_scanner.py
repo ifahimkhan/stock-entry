@@ -59,7 +59,7 @@ def test_download_history_wraps_errors_and_skips_empty_request() -> None:
         raise ConnectionError("offline")
 
     with pytest.raises(MarketDataError, match="offline"):
-        download_history(["A.NS"], "6mo", downloader=boom)
+        download_history(["A.NS"], "6mo", downloader=boom, sleep=lambda seconds: None)
     assert download_history([], "6mo", downloader=boom) == {}
     ok = download_history(["A.NS"], "6mo", downloader=lambda s, period, interval: yahoo_frame({"A.NS": [1.0]}))
     assert list(ok) == ["A.NS"]

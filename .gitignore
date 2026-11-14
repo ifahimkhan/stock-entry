@@ -20,8 +20,7 @@ htmlcov/
 *.pem
 *.key
 
-# Generated data: scan results and the fundamentals cache are rebuilt by "Run scan"
-data/
+# Scan results are committed by the daily GitHub Action; only the half-written temp files are ignored
 *.tmp
 
 # Personal research files (notebooks carry outputs and local database credentials)

@@ -3,6 +3,7 @@
 // {id, op, ...}, and the reply {id, success, data, error} comes back in the next "render" message.
 
 const REPLY_TIMEOUT_MS = 90000;
+export const POLL_MS = 4000;  // each progress check costs two Streamlit script runs, so check less often
 const MIN_FRAME_HEIGHT = 640;
 const PAGE_CHROME_HEIGHT = 150;  // browser toolbars + Streamlit header above the frame
 const session = Math.random().toString(36).slice(2, 10);  // keeps ids unique if the frame reloads

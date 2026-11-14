@@ -53,7 +53,8 @@ def main() -> None:
         st.error(f"Stock Entry could not start: {exc}")
         return
 
-    request = page(response=st.session_state.get(RESPONSE_KEY), key=COMPONENT_NAME, default=None)
+    # pop: the reply (up to ~600 KB for a full scan) goes to the page once instead of staying in every session
+    request = page(response=st.session_state.pop(RESPONSE_KEY, None), key=COMPONENT_NAME, default=None)
     if not is_new_request(request, st.session_state.get(HANDLED_KEY)):
         return  # nothing new: this run only delivered the previous reply to the page
     st.session_state[RESPONSE_KEY] = handle_request(services, request)

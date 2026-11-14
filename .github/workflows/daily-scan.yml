@@ -1,0 +1,56 @@
+# Runs the full scan after the NSE close and commits the result, so the Streamlit app always opens
+# with fresh data (its own disk is wiped whenever it restarts). Can also be started by hand from the
+# Actions tab ("Run workflow").
+name: Daily scan
+
+on:
+  schedule:
+    - cron: "30 10 * * 1-5"   # 10:30 UTC = 16:00 IST, Monday to Friday (GitHub may start it a little late)
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to commit data/
+
+concurrency:
+  group: daily-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install scanner dependencies
+        run: pip install numpy pandas yfinance   # the scan needs only these, not Streamlit or Flask
+
+      - name: Run scan
+        run: python -m stock_entry.scan_job
+
+      - name: Commit scan results
+        run: |
+          data_date() { python -c "import json, sys; print(json.load(sys.stdin).get('data_date'))"; }
+          new_date=$(data_date < data/scan_latest.json)
+          old_date=$(git show HEAD:data/scan_latest.json 2>/dev/null | data_date || echo none)
+          if [ "$new_date" = "$old_date" ]; then
+            echo "No new trading day since the last commit ($new_date), e.g. an NSE holiday. Nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/scan_latest.json data/fundamentals.json
+          git commit -m "chore: daily scan for $new_date"
+          for attempt in 1 2 3; do   # someone may push at the same moment: rebase onto it and try again
+            if git pull --rebase && git push; then
+              exit 0
+            fi
+            echo "Push attempt $attempt failed; retrying."
+            sleep $((attempt * 10))
+          done
+          exit 1

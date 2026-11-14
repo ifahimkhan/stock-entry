@@ -14,6 +14,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
+from stock_entry.clock import now_ist
 from stock_entry.history import StockNotFoundError
 from stock_entry.market_data import MarketDataError
 from stock_entry.services import Services
@@ -67,7 +68,7 @@ def _scan_status(services: Services, request: dict[str, Any]) -> Any:
 
 
 def _start_scan(services: Services, request: dict[str, Any]) -> Any:
-    wait = _cooldown_left(services, datetime.now())
+    wait = _cooldown_left(services, now_ist())
     if wait > 0:
         minutes = math.ceil(wait / 60)
         raise BridgeError(f"A scan just finished. The next one can start in about {minutes} minute"

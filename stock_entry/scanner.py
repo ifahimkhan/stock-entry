@@ -4,12 +4,12 @@ from __future__ import annotations
 import logging
 import threading
 from dataclasses import asdict, dataclass, replace
-from datetime import datetime
-from typing import Any, Callable
+from typing import Any, Callable, TypeVar
 
 import pandas as pd
 
 from stock_entry.analysis import analyze, build_row
+from stock_entry.clock import now_ist
 from stock_entry.market_data import MarketDataError
 from stock_entry.store import ScanStore
 from stock_entry.tickers import Ticker
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 Fetch = Callable[[list[str]], dict[str, pd.DataFrame]]
 OnProgress = Callable[[int, int], None]
 Enrich = Callable[[list[Ticker], OnProgress], list[Ticker]]
+T = TypeVar("T")
 DEFAULT_MAX_FAILED_SHARE = 0.25  # above this a scan counts as failed and the previous one is kept
 
 
@@ -34,22 +35,36 @@ class ScanProgress:
 
 
 def _now() -> str:
-    return datetime.now().isoformat(timespec="seconds")
+    return now_ist().isoformat(timespec="seconds")
 
 
-def _batches(items: list[Ticker], size: int) -> list[list[Ticker]]:
+def _batches(items: list[T], size: int) -> list[list[T]]:
     return [items[start:start + size] for start in range(0, len(items), size)]
 
 
-def _scan_batch(batch: list[Ticker], fetch: Fetch) -> tuple[list[dict[str, Any]], list[str]]:
-    """Rows for the stocks that produced signals, and the symbols that did not."""
-    symbols = [ticker.symbol for ticker in batch]
+def _fetch_safely(symbols: list[str], fetch: Fetch) -> dict[str, pd.DataFrame]:
     try:
-        frames = fetch(symbols)
+        return fetch(symbols)
     except Exception as exc:  # one bad batch (network, odd Yahoo reply) must not abort the whole scan
         logger.warning("Batch starting at %s failed: %s", symbols[0], exc)
-        return [], symbols
+        return {}
 
+
+def _fetch_batch(symbols: list[str], fetch: Fetch, refetch: Fetch) -> dict[str, pd.DataFrame]:
+    """Fetch a batch. Stocks missing from a partial reply are asked for once more, with `refetch`, in
+    half-size batches: a throttled Yahoo tends to drop part of a large request. A batch that came back
+    entirely empty is not split: Yahoo is down or refusing, and more requests would only make it worse."""
+    frames = _fetch_safely(symbols, fetch)
+    missing = [symbol for symbol in symbols if frames.get(symbol) is None or frames[symbol].empty]
+    if len(symbols) > 1 and missing and len(missing) < len(symbols):
+        for chunk in _batches(missing, max(1, len(symbols) // 2)):
+            frames = {**frames, **_fetch_safely(chunk, refetch)}
+    return frames
+
+
+def _scan_batch(batch: list[Ticker], fetch: Fetch, refetch: Fetch) -> tuple[list[dict[str, Any]], list[str]]:
+    """Rows for the stocks that produced signals, and the symbols that did not."""
+    frames = _fetch_batch([ticker.symbol for ticker in batch], fetch, refetch)
     rows, failed = [], []
     for ticker in batch:
         frame = frames.get(ticker.symbol)
@@ -65,18 +80,21 @@ def _scan_batch(batch: list[Ticker], fetch: Fetch) -> tuple[list[dict[str, Any]]
 
 
 def run_scan(tickers: list[Ticker], fetch: Fetch, batch_size: int, on_progress: OnProgress | None = None,
-             max_failed_share: float = DEFAULT_MAX_FAILED_SHARE) -> dict[str, Any]:
+             max_failed_share: float = DEFAULT_MAX_FAILED_SHARE, refetch: Fetch | None = None) -> dict[str, Any]:
     """Scan every ticker and return {scanned_at, data_date, total, rows, failed}.
 
+    `refetch` asks again for stocks missing from a batch (default: `fetch`). Give it a fetch without
+    retries, so a delisted stock costs one extra request instead of a full retry-with-wait cycle.
     Raises MarketDataError when more than `max_failed_share` of the tickers return no data.
     """
+    refetch = refetch or fetch
     if batch_size < 1:
         raise ValueError("batch_size must be at least 1")
     rows: list[dict[str, Any]] = []
     failed: list[str] = []
     done = 0
     for batch in _batches(tickers, batch_size):
-        batch_rows, batch_failed = _scan_batch(batch, fetch)
+        batch_rows, batch_failed = _scan_batch(batch, fetch, refetch)
         rows = [*rows, *batch_rows]
         failed = [*failed, *batch_failed]
         done += len(batch)
@@ -99,10 +117,11 @@ class Scanner:
 
     def __init__(self, load_universe: Callable[[], list[Ticker]], fetch: Fetch,
                  store: ScanStore, batch_size: int, max_failed_share: float = DEFAULT_MAX_FAILED_SHARE,
-                 enrich: Enrich | None = None) -> None:
+                 enrich: Enrich | None = None, refetch: Fetch | None = None) -> None:
         self._enrich = enrich
         self._load_universe = load_universe
         self._fetch = fetch
+        self._refetch = refetch or fetch
         self._store = store
         self._batch_size = batch_size
         self._max_failed_share = max_failed_share
@@ -113,14 +132,27 @@ class Scanner:
         with self._lock:
             return asdict(self._progress)
 
-    def start(self) -> bool:
-        """Start a scan. Returns False when one is already running."""
+    def _claim(self) -> bool:
+        """Mark a scan as running. False when one already is."""
         with self._lock:
             if self._progress.running:
                 return False
             self._progress = ScanProgress(running=True, started_at=_now())
+            return True
+
+    def start(self) -> bool:
+        """Start a scan in a background thread. Returns False when one is already running."""
+        if not self._claim():
+            return False
         threading.Thread(target=self._run, name="stock-scan", daemon=True).start()
         return True
+
+    def run_now(self) -> bool:
+        """Scan in the calling thread (the daily job). True when the scan was saved."""
+        if not self._claim():
+            return False
+        self._run()
+        return self.progress()["error"] is None
 
     def _update(self, **changes: Any) -> None:
         with self._lock:
@@ -143,7 +175,7 @@ class Scanner:
             self._update(stage="prices", done=0, total=len(tickers))
             scan = run_scan(tickers, self._fetch, self._batch_size,
                             on_progress=lambda done, total: self._update(done=done, total=total),
-                            max_failed_share=self._max_failed_share)
+                            max_failed_share=self._max_failed_share, refetch=self._refetch)
             self._store.save(scan)
             self._update(running=False, finished_at=_now())
             logger.info("Scan finished: %d stocks, %d without data", len(scan["rows"]), len(scan["failed"]))

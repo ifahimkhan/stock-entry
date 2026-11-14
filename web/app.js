@@ -1,13 +1,12 @@
 // Page controller: loads the scan, renders tiles / tabs / table, opens the single-stock panel.
 
-import { getScan, getScanStatus, getStock, getTickers, startScan } from "./api.js";
+import { POLL_MS, getScan, getScanStatus, getStock, getTickers, startScan } from "./api.js";
 import { renderDetail, renderDetailMessage } from "./detail.js";
 import { el, formatDate, formatDateTime, isNumber } from "./format.js";
 import { renderTable, sortRows } from "./table.js";
 
 const RECENT_SESSIONS = 5;
 const MRI_SESSIONS = 10;  // how far back a confirmed SPV / PV still counts as fresh
-const POLL_MS = 1500;
 const MAX_POLL_FAILURES = 5;
 const SYMBOL_LIKE = /^[A-Za-z0-9][A-Za-z0-9&.\-]*$/;
 

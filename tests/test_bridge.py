@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import replace
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -175,3 +176,14 @@ def test_server_paths_are_not_shown_to_visitors(services: Services, settings: Se
 ])
 def test_is_new_request(request_value: object, handled: object, expected: bool) -> None:
     assert is_new_request(request_value, handled) is expected
+
+
+def test_cooldown_uses_the_same_clock_as_the_scanner(services: Services, monkeypatch: pytest.MonkeyPatch) -> None:
+    import stock_entry.bridge as bridge_module
+
+    assert call(services, "start_scan")["success"] is True
+    wait_for_scan(services)
+    later = datetime.fromisoformat(services.scanner.progress()["finished_at"]) + timedelta(hours=1)
+    monkeypatch.setattr(bridge_module, "now_ist", lambda: later)
+    assert call(services, "start_scan")["success"] is True
+    wait_for_scan(services)

@@ -39,6 +39,9 @@ class Services:
 def build_services(settings: Settings, fetch: Fetch | None = None,
                    fetch_fundamentals: FetchOne | None = None) -> Services:
     """`fetch` (symbols -> {symbol: bars}) and `fetch_fundamentals` can be replaced in tests."""
+    # The re-ask for stocks a batch dropped makes one attempt only: those are often delisted symbols.
+    refetch = fetch or partial(download_history, period=settings.history_period, interval=settings.interval,
+                               attempts=1)
     fetch = fetch or partial(download_history, period=settings.history_period, interval=settings.interval)
     load_universe = partial(read_universe, (settings.universe_path, settings.tickers_path),
                             settings.default_suffix, settings.excluded_sectors)
@@ -46,7 +49,7 @@ def build_services(settings: Settings, fetch: Fetch | None = None,
     fundamentals = FundamentalsService(settings.fundamentals_path, fetch_fundamentals or fetch_from_yahoo,
                                        settings.fundamentals_max_age_days, settings.fundamentals_workers)
     scanner = Scanner(load_universe, fetch, store, settings.batch_size, settings.max_failed_share,
-                      enrich=fundamentals.enrich)
+                      enrich=fundamentals.enrich, refetch=refetch)
     history = HistoryService(fetch, settings.history_cache_seconds, settings.detail_rows)
     return Services(settings=settings, load_universe=load_universe, store=store, fundamentals=fundamentals,
                     scanner=scanner, history=history)

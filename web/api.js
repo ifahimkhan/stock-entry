@@ -1,6 +1,7 @@
 // Thin client for the backend. Every endpoint answers {success, data, error}.
 
 const CLIENT_HEADER = { "X-Requested-With": "stock-entry" };
+export const POLL_MS = 1500;  // scan progress refresh; a local HTTP request is cheap
 
 async function request(path, options = {}) {
   let response;
