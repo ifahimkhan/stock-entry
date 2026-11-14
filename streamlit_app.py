@@ -1,0 +1,64 @@
+"""Streamlit entry point:  streamlit run streamlit_app.py
+
+Shows the same page as the Flask server (run.py). The page's API calls travel through a Streamlit
+component instead of HTTP - see stock_entry/bridge.py and web/api.streamlit.js.
+"""
+from __future__ import annotations
+
+import logging
+import tempfile
+from pathlib import Path
+from typing import Any
+
+import streamlit as st
+import streamlit.components.v1 as components
+
+from stock_entry.bridge import build_component_dir, handle_request, is_new_request
+from stock_entry.config import Settings
+from stock_entry.services import Services, build_services
+
+COMPONENT_NAME = "stock_entry_page"
+RESPONSE_KEY = "bridge_response"
+HANDLED_KEY = "bridge_handled_request"
+# The page brings its own layout: drop Streamlit's header and padding around it.
+PAGE_CSS = """
+<style>
+  header[data-testid="stHeader"], footer, #MainMenu { display: none; }
+  .block-container, [data-testid="stMainBlockContainer"] { padding: 0 !important; max-width: 100% !important; }
+  iframe { display: block; }
+</style>
+"""
+
+
+@st.cache_resource
+def get_services() -> Services:
+    """One set of services for the whole server, so every visitor sees the same scan and progress."""
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    return build_services(Settings())
+
+
+@st.cache_resource
+def get_component() -> Any:
+    target = Path(tempfile.mkdtemp(prefix="stock-entry-page-"))
+    return components.declare_component(COMPONENT_NAME, path=str(build_component_dir(Settings().web_dir, target)))
+
+
+def main() -> None:
+    st.set_page_config(page_title="Stock Entry", layout="wide")
+    st.markdown(PAGE_CSS, unsafe_allow_html=True)
+    try:
+        services, page = get_services(), get_component()
+    except (OSError, ValueError) as exc:
+        logging.getLogger(__name__).exception("Stock Entry could not start")
+        st.error(f"Stock Entry could not start: {exc}")
+        return
+
+    request = page(response=st.session_state.get(RESPONSE_KEY), key=COMPONENT_NAME, default=None)
+    if not is_new_request(request, st.session_state.get(HANDLED_KEY)):
+        return  # nothing new: this run only delivered the previous reply to the page
+    st.session_state[RESPONSE_KEY] = handle_request(services, request)
+    st.session_state[HANDLED_KEY] = request
+    st.rerun()  # the next run hands the reply to the page
+
+
+main()

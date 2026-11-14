@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stock Entry</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Stock Entry</h1>
+      <p class="subtitle" id="scan-meta">Loading…</p>
+    </div>
+    <button type="button" class="primary" id="scan-button">Run scan</button>
+  </header>
+
+  <div class="progress" id="progress" hidden>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <span id="progress-text"></span>
+  </div>
+  <p class="notice" id="notice" role="status" hidden></p>
+
+  <section class="tiles" id="tiles" aria-label="Scan summary"></section>
+
+  <div class="toolbar">
+    <form class="search" id="search-form" role="search">
+      <label for="search-input">Find a stock</label>
+      <div class="search-row">
+        <input id="search-input" type="search" list="ticker-list" autocomplete="off" maxlength="40"
+               placeholder="Type a symbol or name, e.g. TCS — Enter opens it">
+        <button type="submit">Open</button>
+      </div>
+      <datalist id="ticker-list"></datalist>
+    </form>
+    <nav class="tabs" id="tabs" aria-label="Lists"></nav>
+  </div>
+
+  <main class="layout">
+    <section class="panel" aria-labelledby="list-title">
+      <div class="panel-head">
+        <h2 id="list-title">Entry today</h2>
+        <span class="count" id="list-count"></span>
+        <div class="ranges cap-filter" id="cap-filter" role="group" aria-label="Market cap"></div>
+      </div>
+      <p class="hint" id="list-hint"></p>
+      <div class="table-wrap">
+        <table id="stock-table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="empty" id="list-empty" hidden></p>
+    </section>
+
+    <section class="panel detail" id="detail" aria-live="polite">
+      <p class="empty">Click a stock in the list, or search for any symbol, to see its chart and entry points.</p>
+    </section>
+  </main>
+
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>

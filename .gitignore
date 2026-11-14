@@ -1,0 +1,30 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editors / tools
+.idea/
+.vscode/
+.qodo/
+
+# Secrets - never commit
+.env
+.env.*
+.streamlit/secrets.toml
+*.pem
+*.key
+
+# Generated data: scan results and the fundamentals cache are rebuilt by "Run scan"
+data/
+*.tmp
+
+# Personal research files (notebooks carry outputs and local database credentials)
+*.ipynb
+.ipynb_checkpoints/
+Screenshot*.png

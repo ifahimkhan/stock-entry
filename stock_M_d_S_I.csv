@@ -1,0 +1,454 @@
+Ticker,Market Cap,Debt to Equity,Sector,Industry
+KRN.NS,68076826624,0.16,Technology,Electronic Components
+VESUVIUS.NS,74973716480,0.01,Industrials,Specialty Industrial Machinery
+CONTROLPR.NS,9931458560,0.01,Industrials,Business Equipment & Supplies
+BALAJITELE.NS,12363329536,0.03,Communication Services,Entertainment
+HYUNDAI.NS,1708773998592,0.03,Consumer Cyclical,Auto Manufacturers
+HMT.NS,18797103104,0.00,Industrials,Farm & Heavy Construction Machinery
+DIVGIITTS.NS,27206572032,0.00,Consumer Cyclical,Auto Parts
+ABB.NS,1467041579008,0.02,Industrials,Specialty Industrial Machinery
+APARINDS.NS,601203015680,0.12,Industrials,Electrical Equipment & Parts
+BAJAJCON.NS,57165107200,0.02,Consumer Defensive,Household & Personal Products
+POWERINDIA.NS,1272318132224,0.02,Industrials,Electrical Equipment & Parts
+HAPPYFORGE.NS,177577984000,0.24,Industrials,Metal Fabrication
+KEI.NS,395561500672,0.04,Industrials,Electrical Equipment & Parts
+NGLFINE.NS,19263696896,0.37,Healthcare,Drug Manufacturers - General
+TIINDIA.NS,445661577216,0.06,Industrials,Conglomerates
+GAEL.NS,68332752896,0.13,Consumer Defensive,Packaged Foods
+EUROPRATIK.NS,19264700416,0.08,Basic Materials,Building Materials
+MOREPENLAB.NS,52000808960,0.23,Healthcare,Drug Manufacturers - Specialty & Generic
+YATHARTH.NS,102169346048,0.25,Healthcare,Medical Care Facilities
+HSCL.NS,283848212480,0.22,Basic Materials,Specialty Chemicals
+NPST.NS,36419325952,0.03,Technology,Software - Application
+SIEMENS.NS,1307282767872,0.02,Industrials,Specialty Industrial Machinery
+INDSWFTLAB.NS,31841089536,0.01,Healthcare,Drug Manufacturers - Specialty & Generic
+UDS.NS,14710629376,0.04,Industrials,Specialty Business Services
+NETWEB.NS,246820290560,0.16,Technology,Computer Hardware
+NAVA.NS,162677456896,0.21,Industrials,Conglomerates
+GVT&D.NS,1075395428352,0.01,Industrials,Specialty Industrial Machinery
+JGCHEM.NS,23574335488,0.02,Basic Materials,Other Industrial Metals & Mining
+BDL.NS,386760081408,0.00,Industrials,Aerospace & Defense
+QPOWER.NS,115639517184,0.05,Industrials,Electrical Equipment & Parts
+ADVENZYMES.NS,30640730112,0.03,Basic Materials,Specialty Chemicals
+TIPSMUSIC.NS,99890257920,0.01,Communication Services,Entertainment
+CUPID.NS,517425430528,0.20,Consumer Defensive,Household & Personal Products
+JAYKAY.NS,30693713920,0.06,Industrials,Specialty Business Services
+FOSECOIND.NS,47572570112,0.00,Basic Materials,Chemicals
+GTLINFRA.NS,13961931776,0.00,Technology,Communication Equipment
+VTL.NS,150527426560,0.16,Consumer Cyclical,Textile Manufacturing
+GUJTHEM.NS,50440290304,0.56,Healthcare,Drug Manufacturers - Specialty & Generic
+IRCTC.NS,376760008704,0.02,Consumer Cyclical,Travel Services
+JYOTHYLAB.NS,73101901824,0.04,Consumer Defensive,Household & Personal Products
+SHARDACROP.NS,66970673152,0.01,Basic Materials,Agricultural Inputs
+THEJO.NS,22888128512,0.11,Industrials,Specialty Industrial Machinery
+DATAPATTNS.NS,236868173824,0.00,Industrials,Aerospace & Defense
+GMRP&UI.NS,72314413056,5.60,Energy,Thermal Coal
+KPRMILL.NS,393832464384,0.05,Consumer Cyclical,Textile Manufacturing
+ALIVUS.NS,177527848960,0.01,Healthcare,Drug Manufacturers - Specialty & Generic
+VOLTAS.NS,368837197824,0.23,Consumer Cyclical,"Furnishings, Fixtures & Appliances"
+CGPOWER.NS,1294659747840,0.02,Industrials,Electrical Equipment & Parts
+SHREDIGCEM.NS,8512466432,1.40,Basic Materials,Building Materials
+CIEINDIA.NS,143493808128,0.07,Consumer Cyclical,Auto Parts
+GENESYS.NS,12965715968,0.25,Technology,Software - Application
+INFOBEAN.NS,16153100288,0.03,Technology,Software - Application
+GPPL.NS,81036345344,0.01,Industrials,Marine Shipping
+HEG.NS,47954919424,0.17,Industrials,Electrical Equipment & Parts
+SBCL.NS,59718270976,0.18,Industrials,Metal Fabrication
+CUMMINSIND.NS,1180373090304,0.00,Industrials,Specialty Industrial Machinery
+PARAS.NS,105118113792,0.04,Industrials,Aerospace & Defense
+WHIRLPOOL.NS,105730990080,0.09,Consumer Cyclical,"Furnishings, Fixtures & Appliances"
+SASKEN.NS,26056443904,0.13,Technology,Information Technology Services
+COALINDIA.NS,2491591163904,0.12,Energy,Thermal Coal
+SPLPETRO.NS,132089643008,0.05,Basic Materials,Specialty Chemicals
+TENNIND.NS,184830607360,0.03,Consumer Cyclical,Auto Parts
+BALUFORGE.NS,66838380544,0.10,Industrials,Metal Fabrication
+VINATIORGA.NS,117901246464,0.00,Basic Materials,Specialty Chemicals
+PETRONET.NS,502500032512,0.09,Energy,Oil & Gas Refining & Marketing
+DABUR.NS,679999176704,0.12,Consumer Defensive,Household & Personal Products
+JNKINDIA.NS,20977123328,0.17,Industrials,Specialty Industrial Machinery
+HINDUNILVR.NS,4638093344768,0.03,Consumer Defensive,Household & Personal Products
+KIRLPNU.NS,85890400256,0.00,Industrials,Specialty Industrial Machinery
+DDEVPLSTIK.NS,26151657472,0.06,Basic Materials,Specialty Chemicals
+FIEMIND.NS,51152261120,0.05,Consumer Cyclical,Auto Parts
+TCI.NS,64888197120,0.17,Industrials,Integrated Freight & Logistics
+COLPAL.NS,470535143424,0.03,Consumer Defensive,Household & Personal Products
+DLF.NS,1904257138688,0.01,Real Estate,Real Estate - Development
+STEELCAS.NS,38658400256,0.00,Basic Materials,Steel
+FORCEMOT.NS,261364334592,0.00,Consumer Cyclical,Auto Manufacturers
+LLOYDSME.NS,1020243607552,1.23,Basic Materials,Steel
+INDRAMEDCO.NS,30825046016,0.04,Healthcare,Medical Care Facilities
+OBEROIRLTY.NS,660665270272,0.14,Real Estate,Real Estate - Development
+FINPIPE.NS,92957310976,0.02,Industrials,Building Products & Equipment
+AZAD.NS,159413567488,0.31,Industrials,Specialty Industrial Machinery
+BEL.NS,2958998372352,0.00,Industrials,Aerospace & Defense
+SCHAEFFLER.NS,554706075648,0.01,Consumer Cyclical,Auto Parts
+ORKLAINDIA.NS,77070139392,0.02,Consumer Defensive,Packaged Foods
+MGL.NS,113959911424,0.05,Utilities,Utilities - Regulated Gas
+LMW.NS,185563709440,0.00,Industrials,Specialty Industrial Machinery
+ORIENTELEC.NS,43175223296,0.13,Consumer Cyclical,"Furnishings, Fixtures & Appliances"
+SHARDAMOTR.NS,51253596160,0.04,Consumer Cyclical,Auto Parts
+RRKABEL.NS,220306898944,0.19,Industrials,Electrical Equipment & Parts
+PARACABLES.NS,22255558656,0.15,Technology,Communication Equipment
+GRINDWELL.NS,211895943168,0.02,Industrials,Building Products & Equipment
+HAVELLS.NS,736255344640,0.02,Industrials,Electrical Equipment & Parts
+EIHAHOTELS.NS,17970112512,0.01,Consumer Cyclical,Lodging
+GMDCLTD.NS,158363992064,0.05,Energy,Thermal Coal
+GRSE.NS,253331750912,0.01,Industrials,Aerospace & Defense
+POLYCAB.NS,1217702920192,0.02,Industrials,Electrical Equipment & Parts
+INDIAMART.NS,98325995520,0.01,Consumer Cyclical,Internet Retail
+SUPREMEIND.NS,424453177344,0.01,Industrials,Building Products & Equipment
+NMDC.NS,624834445312,0.19,Basic Materials,Steel
+ASIANPAINT.NS,2431145476096,0.21,Basic Materials,Specialty Chemicals
+GRAPHITE.NS,156046491648,0.05,Industrials,Electrical Equipment & Parts
+SHREECEM.NS,909415284736,0.09,Basic Materials,Building Materials
+RATNAMANI.NS,173414629376,0.08,Basic Materials,Steel
+AVTNPL.NS,15127891968,0.20,Basic Materials,Specialty Chemicals
+BALMLAWRIE.NS,30134296576,0.16,Industrials,Conglomerates
+PIIND.NS,263999029248,0.03,Basic Materials,Agricultural Inputs
+SUNTV.NS,263425867776,0.01,Communication Services,Broadcasting
+NAVNETEDUL.NS,27448131584,0.04,Communication Services,Publishing
+MARICO.NS,1170789367808,0.24,Consumer Defensive,Household & Personal Products
+TATATECH.NS,277475524608,0.29,Technology,Information Technology Services
+SYNGENE.NS,179976929280,0.10,Healthcare,Diagnostics & Research
+EXIDEIND.NS,323000008704,0.12,Consumer Cyclical,Auto Parts
+ASTRAL.NS,342528983040,0.08,Industrials,Building Products & Equipment
+HINDCOPPER.NS,431437742080,0.03,Basic Materials,Copper
+TI.NS,127964897280,0.73,Consumer Defensive,Beverages - Wineries & Distilleries
+RIIL.NS,11171734528,0.00,Industrials,Engineering & Construction
+HEROMOTOCO.NS,1069264470016,0.06,Consumer Cyclical,Auto Manufacturers
+AJAXENGG.NS,64527978496,0.00,Industrials,Farm & Heavy Construction Machinery
+MEESHO.NS,1176785649664,0.01,Consumer Cyclical,Internet Retail
+ORISSAMINE.NS,21016801280,0.00,Basic Materials,Steel
+VEEDOL.NS,23704430592,0.02,Basic Materials,Specialty Chemicals
+CIPLA.NS,1137748738048,0.02,Healthcare,Drug Manufacturers - Specialty & Generic
+HAL.NS,3239144587264,0.00,Industrials,Aerospace & Defense
+IZMO.NS,13507756032,0.04,Technology,Software - Application
+ARE&M.NS,138019422208,0.08,Industrials,Electrical Equipment & Parts
+EASEMYTRIP.NS,23708678144,0.04,Consumer Cyclical,Travel Services
+DMART.NS,2253081280512,0.16,Consumer Defensive,Discount Stores
+MARKSANS.NS,145030397952,0.14,Healthcare,Drug Manufacturers - General
+PIXTRANS.NS,23792322560,0.03,Industrials,Specialty Industrial Machinery
+RALLIS.NS,36912140288,0.05,Basic Materials,Agricultural Inputs
+WAAREEENER.NS,739839246336,0.31,Technology,Solar
+BAJAJ-AUTO.NS,3007728058368,0.70,Consumer Cyclical,Auto Manufacturers
+KSB.NS,110828167168,0.00,Industrials,Specialty Industrial Machinery
+IDEAFORGE.NS,35727269888,0.14,Industrials,Aerospace & Defense
+SONACOMS.NS,578914287616,0.10,Consumer Cyclical,Auto Parts
+PTCIL.NS,381918707712,0.18,Industrials,Metal Fabrication
+GLAXO.NS,449874690048,0.02,Healthcare,Drug Manufacturers - General
+MAZDOCK.NS,769245642752,0.08,Industrials,Aerospace & Defense
+DELHIVERY.NS,330164666368,0.15,Industrials,Integrated Freight & Logistics
+GMRAIRPORT.NS,1067163648000,0.00,Industrials,Airports & Air Services
+EXPLEOSOL.NS,13169273856,0.01,Technology,Information Technology Services
+LAOPALA.NS,17433659392,0.01,Consumer Cyclical,"Furnishings, Fixtures & Appliances"
+ENDURANCE.NS,354442248192,0.19,Consumer Cyclical,Auto Parts
+PAYTM.NS,1232341303296,0.02,Technology,Software - Infrastructure
+IMPAL.NS,12792000512,0.00,Consumer Cyclical,Auto Parts
+TECHNOE.NS,118172000256,0.02,Industrials,Engineering & Construction
+DCXINDIA.NS,18043488256,0.00,Industrials,Aerospace & Defense
+BASF.NS,126506614784,0.04,Basic Materials,Specialty Chemicals
+UNIMECH.NS,100816494592,0.22,Industrials,Aerospace & Defense
+GNFC.NS,69106204672,0.01,Basic Materials,Chemicals
+CCAVENUE.NS,43083456512,0.09,Technology,Software - Infrastructure
+SUNPHARMA.NS,4522746314752,0.04,Healthcare,Drug Manufacturers - Specialty & Generic
+AETHER.NS,224243908608,0.26,Basic Materials,Specialty Chemicals
+INSECTICID.NS,15904876544,0.19,Basic Materials,Agricultural Inputs
+GOLDIAM.NS,47990083584,0.07,Consumer Cyclical,Luxury Goods
+NIITMTS.NS,24565106688,0.18,Consumer Defensive,Education & Training Services
+TRITURBINE.NS,161273692160,0.02,Industrials,Specialty Industrial Machinery
+AMAGI.NS,119213572096,0.01,Technology,Software - Application
+ENRIN.NS,1081787285504,0.04,Utilities,Utilities - Renewable
+DODLA.NS,58252529664,0.04,Consumer Defensive,Food Distribution
+SUNTECK.NS,45844082688,0.21,Real Estate,Real Estate - Development
+DIACABS.NS,226250260480,2.59,Industrials,Specialty Industrial Machinery
+BOSCHLTD.NS,1489553063936,0.03,Consumer Cyclical,Auto Parts
+BUTTERFLY.NS,10494403584,0.02,Consumer Cyclical,"Furnishings, Fixtures & Appliances"
+RATEGAIN.NS,80401850368,0.34,Technology,Software - Application
+NESCO.NS,75526029312,0.03,Industrials,Conglomerates
+PRAKASH.NS,21242687488,0.14,Basic Materials,Steel
+MRF.NS,545410973696,0.19,Consumer Cyclical,Auto Parts
+ANANTRAJ.NS,174450343936,0.13,Real Estate,Real Estate - Development
+BAYERCROP.NS,156115337216,0.02,Basic Materials,Agricultural Inputs
+MAHSEAMLES.NS,76459966464,0.00,Basic Materials,Steel
+AUTOAXLES.NS,24919646208,0.01,Consumer Cyclical,Auto Parts
+SIYSIL.NS,23075227648,0.61,Consumer Cyclical,Textile Manufacturing
+MARUTI.NS,4094778933248,0.00,Consumer Cyclical,Auto Manufacturers
+EICHERMOT.NS,2072364318720,0.02,Consumer Cyclical,Auto Manufacturers
+CAPILLARY.NS,41036890112,0.05,Technology,Software - Application
+EUREKAFORB.NS,72649719808,0.02,Consumer Cyclical,"Furnishings, Fixtures & Appliances"
+IFGLEXPOR.NS,13390767104,0.18,Basic Materials,Building Materials
+SESHAPAPER.NS,13967700992,0.00,Basic Materials,Paper & Paper Products
+ARKADE.NS,20889014272,0.06,Real Estate,Real Estate - Development
+INTELLECT.NS,73693192192,0.03,Technology,Software - Application
+SAREGAMA.NS,123285979136,0.01,Communication Services,Entertainment
+ALEMBICLTD.NS,29345026048,0.00,Real Estate,Real Estate - Development
+SUBROS.NS,40119988224,0.12,Consumer Cyclical,Auto Parts
+INOXGREEN.NS,48963420160,0.05,Utilities,Utilities - Renewable
+PAGEIND.NS,355250896896,0.18,Consumer Cyclical,Apparel Manufacturing
+IBULLSLTD.NS,70976667648,0.06,Real Estate,Real Estate - Development
+TATAELXSI.NS,240627384320,0.05,Technology,Software - Application
+UNICHEMLAB.NS,34998697984,0.18,Healthcare,Drug Manufacturers - Specialty & Generic
+UNITECH.NS,10412877824,0.00,Real Estate,Real Estate - Diversified
+BAJAJELEC.NS,32676431872,0.98,Consumer Cyclical,"Furnishings, Fixtures & Appliances"
+NATCOPHARM.NS,158660640768,0.08,Healthcare,Drug Manufacturers - Specialty & Generic
+MANINFRA.NS,44169986048,0.02,Industrials,Engineering & Construction
+WINDLAS.NS,20908625920,0.09,Healthcare,Drug Manufacturers - Specialty & Generic
+GPIL.NS,144459317248,0.08,Basic Materials,Steel
+AMRUTANJAN.NS,14704360448,0.00,Healthcare,Drug Manufacturers - Specialty & Generic
+NATIONALUM.NS,611782098944,0.00,Basic Materials,Aluminum
+TCS.NS,8836816568320,0.10,Technology,Information Technology Services
+ITC.NS,3559689551872,0.01,Consumer Defensive,Tobacco
+LINCOLN.NS,10377401344,0.00,Healthcare,Drug Manufacturers - Specialty & Generic
+NOCIL.NS,23734243328,0.00,Basic Materials,Specialty Chemicals
+AVANTIFEED.NS,103941799936,0.00,Consumer Defensive,Packaged Foods
+SUNDRMFAST.NS,225425719296,0.19,Consumer Cyclical,Auto Parts
+ALKEM.NS,633933660160,0.14,Healthcare,Drug Manufacturers - Specialty & Generic
+TTKHLTCARE.NS,13290990592,0.02,Healthcare,Drug Manufacturers - General
+HONDAPOWER.NS,20199925760,0.00,Industrials,Specialty Industrial Machinery
+OLECTRA.NS,85745639424,0.31,Industrials,Farm & Heavy Construction Machinery
+PATANJALI.NS,468757151744,0.21,Consumer Defensive,Packaged Foods
+EMUDHRA.NS,29693427712,0.02,Technology,Software - Application
+GABRIEL.NS,314510082048,0.59,Consumer Cyclical,Auto Parts
+PRICOLLTD.NS,89430548480,0.38,Consumer Cyclical,Auto Parts
+ORIENTCEM.NS,26056421376,0.03,Basic Materials,Building Materials
+JAGSNPHARM.NS,14317020160,0.04,Healthcare,Drug Manufacturers - Specialty & Generic
+ACUTAAS.NS,327165181952,0.01,Basic Materials,Specialty Chemicals
+BOSCH-HCIL.NS,47994630144,0.59,Consumer Cyclical,"Furnishings, Fixtures & Appliances"
+63MOONS.NS,42735538176,0.00,Technology,Software - Application
+JSWHL.NS,126152941568,0.00,Financial Services,Asset Management
+WENDT.NS,14993000448,0.00,Industrials,Tools & Accessories
+TIMKEN.NS,232944893952,0.00,Industrials,Tools & Accessories
+INOXINDIA.NS,178375835648,0.02,Industrials,Specialty Industrial Machinery
+ASIANENE.NS,19263111168,0.26,Energy,Oil & Gas Equipment & Services
+IGL.NS,200676212736,0.01,Utilities,Utilities - Regulated Gas
+GANESHHOU.NS,53217640448,0.30,Real Estate,Real Estate - Development
+EIHOTEL.NS,197740150784,0.05,Consumer Cyclical,Lodging
+JAICORPLTD.NS,16474653696,0.00,Basic Materials,Specialty Chemicals
+MSUMI.NS,257905328128,0.14,Consumer Cyclical,Auto Parts
+PARKHOTELS.NS,22568593408,0.28,Consumer Cyclical,Lodging
+LGEINDIA.NS,1173461794816,0.05,Technology,Consumer Electronics
+SYNCOMF.NS,19025600512,0.00,Healthcare,Drug Manufacturers - Specialty & Generic
+LINDEINDIA.NS,580316495872,0.23,Basic Materials,Specialty Chemicals
+GMBREW.NS,19740884992,0.01,Consumer Defensive,Beverages - Wineries & Distilleries
+KKCL.NS,27108917248,0.10,Consumer Cyclical,Apparel Manufacturing
+IVALUE.NS,11077213184,0.15,Technology,Information Technology Services
+FMGOETZE.NS,26728456192,0.00,Consumer Cyclical,Auto Parts
+CASTROLIND.NS,188872916992,0.03,Energy,Oil & Gas Refining & Marketing
+PGHL.NS,96425811968,0.01,Healthcare,Drug Manufacturers - Specialty & Generic
+SANOFI.NS,75561164800,0.02,Healthcare,Drug Manufacturers - General
+BANARISUG.NS,39441117184,0.01,Consumer Defensive,Confectioners
+IGIL.NS,185137201152,0.09,Basic Materials,Other Precious Metals & Mining
+EKC.NS,12148724736,0.19,Industrials,Specialty Industrial Machinery
+JTLIND.NS,29842757632,0.17,Basic Materials,Steel
+PIDILITIND.NS,1608987836416,0.03,Basic Materials,Specialty Chemicals
+TTML.NS,76066234368,0.00,Communication Services,Telecom Services
+DLINKINDIA.NS,14627997696,0.03,Technology,Communication Equipment
+SHILCTECH.NS,40721391616,0.00,Industrials,Electrical Equipment & Parts
+AMBUJACEM.NS,967587790848,0.01,Basic Materials,Building Materials
+INGERRAND.NS,126729732096,0.01,Industrials,Specialty Industrial Machinery
+BLUESTARCO.NS,325350359040,0.22,Industrials,Building Products & Equipment
+TCIEXP.NS,19024095232,0.09,Industrials,Integrated Freight & Logistics
+DEN.NS,12739184640,0.00,Communication Services,Entertainment
+SANOFICONR.NS,81598619648,0.06,Healthcare,Drug Manufacturers - General
+ANTELOPUS.NS,29770569728,0.01,Energy,Oil & Gas E&P
+ZFCVINDIA.NS,263334543360,0.01,Consumer Cyclical,Auto Parts
+CARBORUNIV.NS,201388244992,0.12,Industrials,Tools & Accessories
+ONEPOINT.NS,19212789760,0.55,Industrials,Specialty Business Services
+DIVISLAB.NS,3048906686464,0.00,Healthcare,Drug Manufacturers - Specialty & Generic
+SUVEN.NS,79583780864,0.03,Healthcare,Drug Manufacturers - Specialty & Generic
+MPHASIS.NS,460366643200,0.30,Technology,Information Technology Services
+SHAKTIPUMP.NS,48532418560,0.55,Industrials,Specialty Industrial Machinery
+OFSS.NS,871366262784,0.00,Technology,Software - Infrastructure
+JWL.NS,90478592000,0.33,Industrials,Railroads
+SETL.NS,69562744832,0.20,Industrials,Specialty Industrial Machinery
+PGHH.NS,233408921600,0.00,Consumer Defensive,Household & Personal Products
+ASTRAZEN.NS,160962494464,0.11,Healthcare,Drug Manufacturers - Specialty & Generic
+DRREDDY.NS,1155958702080,0.19,Healthcare,Drug Manufacturers - Specialty & Generic
+CAMS.NS,184647237632,0.04,Technology,Information Technology Services
+LLOYDSENT.NS,102776848384,0.15,Basic Materials,Steel
+CEINSYS.NS,14709752832,0.08,Industrials,Engineering & Construction
+APOLLOPIPE.NS,22757632000,0.13,Industrials,Building Products & Equipment
+STARCEMENT.NS,71220633600,0.19,Basic Materials,Building Materials
+ASIANTILES.NS,13264305152,0.27,Industrials,Building Products & Equipment
+ZYDUSLIFE.NS,1202989563904,0.46,Healthcare,Drug Manufacturers - Specialty & Generic
+TDPOWERSYS.NS,201194815488,0.02,Industrials,Specialty Industrial Machinery
+CROMPTON.NS,139079172096,0.06,Consumer Cyclical,"Furnishings, Fixtures & Appliances"
+WABAG.NS,130114379776,0.07,Industrials,Engineering & Construction
+INTERARCH.NS,27695970304,0.02,Industrials,Engineering & Construction
+ROSSARI.NS,23813931008,0.28,Basic Materials,Specialty Chemicals
+RISHABH.NS,24831385600,0.11,Technology,Scientific & Technical Instruments
+TAJGVK.NS,20061343744,0.09,Consumer Cyclical,Lodging
+SKFINDIA.NS,73098969088,0.00,Industrials,Tools & Accessories
+SJS.NS,66441486336,0.02,Consumer Cyclical,Auto Parts
+ALKYLAMINE.NS,82343526400,0.01,Basic Materials,Specialty Chemicals
+NDRAUTO.NS,17821057024,0.15,Consumer Cyclical,Auto Parts
+ZYDUSWELL.NS,149853683712,0.54,Consumer Defensive,Packaged Foods
+SANSTAR.NS,19872634880,0.03,Basic Materials,Chemicals
+GRWRHITECH.NS,179563167744,0.00,Basic Materials,Specialty Chemicals
+ORCHPHARMA.NS,43506847744,0.28,Healthcare,Drug Manufacturers - Specialty & Generic
+AIAENG.NS,299157094400,0.01,Industrials,Specialty Industrial Machinery
+ITCHOTELS.NS,365371817984,0.01,Consumer Cyclical,Resorts & Casinos
+FCL.NS,61287682048,0.01,Basic Materials,Specialty Chemicals
+ATUL.NS,153033211904,0.03,Basic Materials,Specialty Chemicals
+CARTRADE.NS,128554983424,0.05,Consumer Cyclical,Auto & Truck Dealerships
+KIRLOSBROS.NS,129714487296,0.11,Industrials,Specialty Industrial Machinery
+COCHINSHIP.NS,314644627456,0.39,Industrials,Aerospace & Defense
+UNIECOM.NS,9680342016,0.04,Technology,Software - Application
+ACC.NS,232968880128,0.02,Basic Materials,Building Materials
+UBL.NS,322204106752,0.25,Consumer Defensive,Beverages - Brewers
+VOLTAMP.NS,98358640640,0.00,Industrials,Electrical Equipment & Parts
+TMCV.NS,1669795676160,0.25,Consumer Cyclical,Auto Manufacturers
+ZENTEC.NS,157834854400,0.01,Industrials,Aerospace & Defense
+TATACONSUM.NS,1074119901184,0.11,Consumer Defensive,Packaged Foods
+ABBOTINDIA.NS,565231419392,0.04,Healthcare,Drug Manufacturers - Specialty & Generic
+DBCORP.NS,27526854656,0.09,Communication Services,Publishing
+SHANTIGEAR.NS,38853619712,0.01,Industrials,Specialty Industrial Machinery
+GOPAL.NS,32142843904,0.27,Consumer Defensive,Packaged Foods
+HUHTAMAKI.NS,17278662656,0.11,Consumer Cyclical,Packaging & Containers
+JTEKTINDIA.NS,34058790912,0.35,Consumer Cyclical,Auto Parts
+VSSL.NS,36861415424,0.12,Basic Materials,Steel
+CRIZAC.NS,27451254784,0.00,Consumer Defensive,Education & Training Services
+URBANCO.NS,248960794624,0.07,Technology,Software - Application
+GESHIP.NS,194791374848,0.04,Industrials,Marine Shipping
+ITDC.NS,55621455872,0.00,Consumer Cyclical,Lodging
+BERGEPAINT.NS,559040036864,0.15,Basic Materials,Specialty Chemicals
+LALPATHLAB.NS,335892905984,0.08,Healthcare,Diagnostics & Research
+BOROLTD.NS,37137936384,0.21,Consumer Cyclical,"Furnishings, Fixtures & Appliances"
+CERA.NS,64160243712,0.03,Industrials,Building Products & Equipment
+GHCL.NS,41090273280,0.02,Basic Materials,Chemicals
+BBL.NS,30906122240,0.17,Industrials,Electrical Equipment & Parts
+KAJARIACER.NS,188037382144,0.13,Industrials,Building Products & Equipment
+AHLUCONT.NS,34257438720,0.04,Industrials,Engineering & Construction
+SURYAROSNI.NS,45677424640,0.03,Basic Materials,Steel
+GPTHEALTH.NS,11902052352,0.34,Healthcare,Medical Care Facilities
+STYLAMIND.NS,55670439936,0.05,Consumer Cyclical,"Furnishings, Fixtures & Appliances"
+SAFARI.NS,63614672896,0.13,Consumer Cyclical,Footwear & Accessories
+CYIENT.NS,113575231488,0.49,Industrials,Conglomerates
+BHAGCHEM.NS,24379082752,0.52,Basic Materials,Agricultural Inputs
+ESABINDIA.NS,79551127552,0.01,Industrials,Tools & Accessories
+NAZARA.NS,169273753600,0.06,Communication Services,Electronic Gaming & Multimedia
+NAVKARCORP.NS,12602972160,0.16,Industrials,Integrated Freight & Logistics
+DIAMONDYD.NS,24714876928,0.11,Consumer Defensive,Packaged Foods
+CONCOR.NS,342118793216,0.08,Industrials,Railroads
+FINEORG.NS,163494313984,0.06,Basic Materials,Specialty Chemicals
+GALAXYSURF.NS,79096004608,0.10,Basic Materials,Specialty Chemicals
+RENUKA.NS,39589908480,0.00,Consumer Defensive,Confectioners
+GARFIBRES.NS,70243336192,0.04,Consumer Cyclical,Textile Manufacturing
+PROTEAN.NS,29495568384,0.08,Technology,Information Technology Services
+WAAREERTL.NS,78607982592,0.86,Industrials,Engineering & Construction
+APLLTD.NS,205850722304,0.26,Healthcare,Drug Manufacturers - Specialty & Generic
+ACCELYA.NS,14966561792,0.06,Technology,Information Technology Services
+MAPMYINDIA.NS,48088502272,0.00,Technology,Software - Infrastructure
+INDOTECH.NS,29275092992,0.01,Industrials,Electrical Equipment & Parts
+MAITHANALL.NS,25807284224,0.06,Basic Materials,Steel
+CMSINFO.NS,34495262720,0.09,Industrials,Specialty Business Services
+NBCC.NS,216810012672,0.00,Industrials,Engineering & Construction
+BEPL.NS,27931873280,0.00,Basic Materials,Chemicals
+STUDDS.NS,16489074688,0.01,Consumer Cyclical,Auto Parts
+WONDERLA.NS,31694495744,0.00,Consumer Cyclical,Leisure
+EXCELINDUS.NS,12370189312,0.01,Basic Materials,Specialty Chemicals
+JAGRAN.NS,14532774912,0.05,Communication Services,Publishing
+USHAMART.NS,148790968320,0.07,Basic Materials,Steel
+RESPONIND.NS,36234768384,0.09,Basic Materials,Specialty Chemicals
+HONAUT.NS,271746629632,0.02,Industrials,Electrical Equipment & Parts
+NIITLTD.NS,10019722240,0.00,Consumer Defensive,Education & Training Services
+LGBBROSLTD.NS,53908901888,0.13,Consumer Cyclical,Auto Parts
+AJANTPHARM.NS,415363792896,0.03,Healthcare,Drug Manufacturers - Specialty & Generic
+WINDMACHIN.NS,30618814464,0.13,Industrials,Specialty Industrial Machinery
+BIKAJI.NS,123550359552,0.25,Consumer Defensive,Packaged Foods
+TEXINFRA.NS,16319524864,0.03,Real Estate,Real Estate Services
+CAPLIPOINT.NS,181386706944,0.00,Healthcare,Drug Manufacturers - Specialty & Generic
+HATHWAY.NS,16851395584,0.00,Communication Services,Entertainment
+RAMCOIND.NS,27698116608,0.00,Industrials,Building Products & Equipment
+ASIANHOTNR.NS,13546707968,0.36,Consumer Cyclical,Lodging
+PRINCEPIPE.NS,35264679936,0.06,Industrials,Building Products & Equipment
+LLOYDSENGG.NS,135683981312,0.15,Industrials,Specialty Industrial Machinery
+GUJALKALI.NS,44209029120,0.18,Basic Materials,Chemicals
+FLAIR.NS,26307739648,0.05,Industrials,Business Equipment & Supplies
+ECLERX.NS,142583955456,0.18,Technology,Information Technology Services
+SCILAL.NS,16997006336,0.00,Real Estate,Real Estate Services
+BEML.NS,177030774784,0.22,Industrials,Conglomerates
+KFINTECH.NS,166762332160,0.05,Technology,Software - Application
+GALLANTT.NS,127118860288,0.17,Basic Materials,Steel
+SUMICHEM.NS,178020319232,0.02,Basic Materials,Agricultural Inputs
+GILLETTE.NS,243427852288,0.00,Consumer Defensive,Household & Personal Products
+TANLA.NS,96489463808,0.03,Technology,Software - Application
+ETERNAL.NS,3356674490368,0.18,Consumer Cyclical,Internet Retail
+SUNFLAG.NS,71700307968,0.06,Basic Materials,Steel
+NCC.NS,85318074368,0.67,Industrials,Engineering & Construction
+RAJOOENG.NS,9916478464,0.06,Industrials,Specialty Industrial Machinery
+ELECON.NS,102180511744,0.14,Industrials,Specialty Industrial Machinery
+SHYAMMETL.NS,365766606848,0.10,Basic Materials,Steel
+SWIGGY.NS,504112021504,0.15,Consumer Cyclical,Internet Retail
+FILATEX.NS,45285072896,0.10,Consumer Cyclical,Textile Manufacturing
+BAJEL.NS,18820419584,0.49,Utilities,Utilities - Regulated Electric
+IDEA.NS,1405209149440,0.00,Communication Services,Telecom Services
+JINDRILL.NS,14971637760,0.05,Energy,Oil & Gas Equipment & Services
+ADFFOODS.NS,26837477376,0.10,Consumer Defensive,Packaged Foods
+KANSAINER.NS,162681454592,0.04,Basic Materials,Specialty Chemicals
+TITAGARH.NS,98486919168,0.33,Industrials,Railroads
+HBLENGINE.NS,224125976576,0.03,Industrials,Electrical Equipment & Parts
+BHARATCOAL.NS,,0.43,Basic Materials,Coking Coal
+ASALCBR.NS,11663002624,0.10,Consumer Defensive,Beverages - Wineries & Distilleries
+CHAMBLFERT.NS,154872135680,0.16,Basic Materials,Agricultural Inputs
+HCLTECH.NS,3737308626944,0.08,Technology,Information Technology Services
+HERITGFOOD.NS,35786776576,0.34,Consumer Defensive,Packaged Foods
+SUPRIYA.NS,51673980928,0.00,Healthcare,Biotechnology
+SUNDROP.NS,24016662528,0.01,Consumer Defensive,Packaged Foods
+DEEPINDS.NS,42352001024,0.10,Energy,Oil & Gas E&P
+KIOCL.NS,206726529024,0.11,Basic Materials,Steel
+HEIDELBERG.NS,27424655360,0.01,Basic Materials,Building Materials
+GLAND.NS,545971372032,0.03,Healthcare,Drug Manufacturers - Specialty & Generic
+GSFC.NS,58747539456,0.05,Basic Materials,Agricultural Inputs
+AFFLE.NS,230549815296,0.00,Communication Services,Advertising Agencies
+BALAMINES.NS,60492668928,0.07,Basic Materials,Specialty Chemicals
+NUCLEUS.NS,16488854528,0.01,Technology,Software - Application
+VSTIND.NS,33710366720,0.00,Consumer Defensive,Tobacco
+ORICONENT.NS,8542502912,0.00,Consumer Cyclical,Packaging & Containers
+INDGN.NS,160400883712,0.05,Healthcare,Health Information Services
+TALBROAUTO.NS,25697429504,0.07,Consumer Cyclical,Auto Parts
+AVANTEL.NS,43039744000,0.31,Technology,Communication Equipment
+MMTC.NS,80459997184,0.00,Industrials,Conglomerates
+SWARAJENG.NS,42768740352,0.01,Industrials,Farm & Heavy Construction Machinery
+KINGFA.NS,86532341760,0.01,Basic Materials,Specialty Chemicals
+MTNL.NS,16745400320,0.00,Communication Services,Telecom Services
+APEX.NS,10718749696,0.01,Consumer Defensive,Farm Products
+MHRIL.NS,40456364032,5.43,Consumer Cyclical,Resorts & Casinos
+GANDHITUBE.NS,10156073984,0.00,Industrials,Metal Fabrication
+ROLEXRINGS.NS,57246334976,0.00,Industrials,Metal Fabrication
+BLSE.NS,26119368704,0.01,Industrials,Specialty Business Services
+HONASA.NS,161720778752,0.09,Consumer Defensive,Household & Personal Products
+RPGLIFE.NS,43054362624,0.03,Healthcare,Drug Manufacturers - Specialty & Generic
+PFIZER.NS,176787537920,0.04,Healthcare,Drug Manufacturers - General
+MOIL.NS,44966162432,0.00,Basic Materials,Other Industrial Metals & Mining
+ACI.NS,52682317824,0.28,Basic Materials,Chemicals
+ENGINERSIN.NS,172856131584,0.00,Industrials,Engineering & Construction
+ANDHRAPAP.NS,12533527552,0.15,Basic Materials,Paper & Paper Products
+DHANUKA.NS,40532840448,0.02,Basic Materials,Agricultural Inputs
+FINCABLES.NS,191587106816,0.00,Industrials,Electrical Equipment & Parts
+ESCORTS.NS,267346837504,0.01,Industrials,Farm & Heavy Construction Machinery
+TEAMLEASE.NS,15365172224,0.14,Industrials,Staffing & Employment Services
+EMAMILTD.NS,177109385216,0.08,Consumer Defensive,Household & Personal Products
+RAMCOSYS.NS,20532371456,0.14,Technology,Software - Application
+BOMDYEING.NS,22062057472,0.00,Consumer Cyclical,Textile Manufacturing
+INFY.NS,4662793076736,0.09,Technology,Information Technology Services
+UNITDSPR.NS,1011758006272,0.05,Consumer Defensive,Beverages - Wineries & Distilleries
+JKLAKSHMI.NS,61550804992,0.69,Basic Materials,Building Materials
+ALOKINDS.NS,40714969088,0.00,Consumer Cyclical,Textile Manufacturing
+MOSCHIP.NS,33108615168,0.29,Technology,Semiconductor Equipment & Materials
+SPARC.NS,68912160768,0.00,Healthcare,Drug Manufacturers - Specialty & Generic
+IOLCP.NS,60196622336,0.10,Healthcare,Drug Manufacturers - Specialty & Generic
+RHIM.NS,75176837120,0.13,Industrials,Metal Fabrication
+HEMIPROP.NS,33296867328,0.21,Real Estate,Real Estate - Diversified
+PANACEABIO.NS,22091094016,0.03,Healthcare,Biotechnology
+RAILTEL.NS,82458697728,0.03,Communication Services,Telecom Services
+MPSLTD.NS,38983667712,0.03,Communication Services,Publishing
+VAIBHAVGBL.NS,28348413952,0.25,Consumer Cyclical,Luxury Goods
+UNIPARTS.NS,33605521408,0.17,Industrials,Farm & Heavy Construction Machinery
+VIMTALABS.NS,22600249344,0.03,Healthcare,Diagnostics & Research
+EMSLIMITED.NS,17564393472,0.15,Industrials,Engineering & Construction
+GREAVESCOT.NS,51990102016,0.37,Industrials,Specialty Industrial Machinery
+IKIO.NS,15179475968,0.11,Technology,Electronic Components
+DELTACORP.NS,22310688768,0.04,Consumer Cyclical,Resorts & Casinos
+WSTCSTPAPR.NS,47578329088,0.11,Basic Materials,Paper & Paper Products
+WEWORK.NS,95533883392,16.44,Real Estate,Real Estate Services
