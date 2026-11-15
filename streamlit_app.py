@@ -26,6 +26,7 @@ PAGE_CSS = """
   header[data-testid="stHeader"], footer, #MainMenu { display: none; }
   .block-container, [data-testid="stMainBlockContainer"] { padding: 0 !important; max-width: 100% !important; }
   iframe { display: block; }
+  .stApp, [data-testid="stAppViewContainer"] { background: #0b1220; }  /* same as the page, no white band */
 </style>
 """
 

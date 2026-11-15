@@ -2,7 +2,9 @@
 
 import { POLL_MS, getScan, getScanStatus, getStock, getTickers, startScan } from "./api.js";
 import { renderDetail, renderDetailMessage } from "./detail.js";
-import { el, formatDate, formatDateTime, isNumber } from "./format.js";
+import { renderCards } from "./cards.js";
+import { MARKET_HOURS_TEXT, isMarketHours } from "./market.js";
+import { DASH, el, formatDate, formatDateTime, formatPercent, formatPrice, isNumber } from "./format.js";
 import { renderTable, sortRows } from "./table.js";
 
 const RECENT_SESSIONS = 5;
@@ -20,9 +22,15 @@ const CAP = { key: "cap_category", label: "Cap", type: "text" };
 const MARKET_CAP = { key: "market_cap_cr", label: "Mkt cap (Cr)", type: "crore" };
 const DEBT = { key: "debt_to_equity", label: "Debt/Eq", type: "num2" };
 const CAP_FILTERS = [
-  { id: "all", label: "All caps" }, { id: "Large", label: "Large cap" },
-  { id: "Mid", label: "Mid cap" }, { id: "Small", label: "Small cap" },
+  { id: "all", label: "All caps" }, { id: "Large", label: "Large" },
+  { id: "Mid", label: "Mid" }, { id: "Small", label: "Small" },
 ];
+const WIDE_LAYOUT = "(min-width: 1100px)";  // list and detail side by side; below this the detail is a sheet
+const TO_TOP_AFTER_PX = 600;
+const LIVE_PRICE_WARNING = `NSE trades ${MARKET_HOURS_TEXT}. Today's candle is still forming, so the scan uses the live price at this moment as today's close, not the final closing price. Entry, Wait and Valid signals for today can change by 3:30 PM: run the scan again after the close for final results.`;
+const LIVE_PRICE_NOTE = "Market open: today's prices are live, not the final close.";
+const fixed = (value) => (isNumber(value) ? value.toFixed(2) : DASH);
+const days = (count) => `${count} day${count === 1 ? "" : "s"}`;
 const STAGE_TEXT = { fundamentals: "Loading market cap and debt", prices: "Scanning prices" };
 const NO_FUNDAMENTALS = " Market cap and debt/equity are not loaded for this scan, so those filters were skipped: run the scan again.";
 const OLD_SCAN = " This scan was made before this screen was added: run the scan again.";
@@ -31,6 +39,8 @@ const OLD_SCAN = " This scan was made before this screen was added: run the scan
 const VIEWS = [
   {
     id: "entry", label: "Entry today", mark: "entry",
+    chip: "Entry today",
+    note: (row) => (row.screens ? `Entry on the latest bar · also passes ${row.screens}` : "Entry on the latest bar: first up day after the pullback"),
     hint: "Reversal on the latest bar: first up day after a breakout and pullback.",
     filter: (row, dataDate) => row.status === "entry" && row.date === dataDate,
     columns: [TICKER, { key: "close", label: "Entry price", type: "price" }, CHANGE,
@@ -39,6 +49,8 @@ const VIEWS = [
   },
   {
     id: "recent", label: `Entries, last ${RECENT_SESSIONS} sessions`, mark: "entry",
+    chip: `Entries (${RECENT_SESSIONS} sess)`,
+    note: (row) => `Entry ${formatDate(row.last_entry_date)} at ${formatPrice(row.last_entry_price)}, ${formatPercent(row.since_entry_pct)} since`,
     hint: "Entry signals from the last few sessions and how price has moved since.",
     filter: (row) => row.last_entry_date !== null && row.sessions_since_entry < RECENT_SESSIONS,
     columns: [TICKER, { key: "last_entry_date", label: "Entry date", type: "date" },
@@ -48,6 +60,8 @@ const VIEWS = [
   },
   {
     id: "wait", label: "Waiting", mark: "wait",
+    chip: "Waiting",
+    note: (row) => `Waiting ${days(row.wait_days)}, ${formatPercent(row.pullback_pct)} from breakout`,
     hint: "Breakout done, pullback running. The first up day becomes the entry: watch these.",
     filter: (row) => row.status === "wait",
     columns: [TICKER, SECTOR, CLOSE, CHANGE, { key: "wait_days", label: "Days waiting", type: "int" },
@@ -56,6 +70,8 @@ const VIEWS = [
   },
   {
     id: "breakout", label: "Valid today", mark: "breakout",
+    chip: "Valid today",
+    note: (row) => `Closed above the 4-day high of ${formatPrice(row.prev4_max_close)}`,
     hint: "Valid = True on the latest bar: up day closing above the previous 4-day high.",
     filter: (row, dataDate) => row.valid === true && row.date === dataDate,
     columns: [TICKER, SECTOR, CLOSE, CHANGE, { key: "prev4_max_close", label: "Prev 4-day high", type: "price" }],
@@ -63,6 +79,8 @@ const VIEWS = [
   },
   {
     id: "cci", label: "CCI up-cross", mark: null, usesFundamentals: true,
+    chip: "CCI up-cross",
+    note: (row) => `CCI ${fixed(row.cci)} · RSI ${fixed(row.rsi)} · ATR ${fixed(row.atr_pct)}% (${row.volatility || DASH})`,
     hint: "CCI crossed above its EMA 9 today while CCI ≤ 0, close above EMA 7, gap ≥ 4, debt/equity ≤ 0.4.",
     filter: (row, dataDate) => row.cci_setup === true && row.date === dataDate,
     columns: [TICKER, CLOSE, CHANGE, CCI, { key: "cci_gap", label: "Above EMA", type: "num2" }, RSI,
@@ -71,6 +89,8 @@ const VIEWS = [
   },
   {
     id: "screen", label: "Breakout screen", mark: null, usesFundamentals: true,
+    chip: "Breakout",
+    note: (row) => `${row.cap_category || DASH} cap · debt/equity ${fixed(row.debt_to_equity)}${row.top_pick ? " · Top pick" : ""}`,
     hint: "Close above the previous 5 closes, CCI above its EMA (gap ≥ 2, CCI ≤ 100), RSI ≥ 40, 3-rule candle, close above EMA 7, debt/equity ≤ 0.3. Top pick: small cap, RSI ≥ 45, CCI ≤ 0, debt/equity ≤ 0.2.",
     filter: (row, dataDate) => row.breakout_setup === true && row.date === dataDate,
     columns: [TICKER, CLOSE, CCI, RSI, CAP, MARKET_CAP, DEBT,
@@ -79,6 +99,8 @@ const VIEWS = [
   },
   {
     id: "spv", label: "MRI SPV", mark: null, needsKey: "spv_position",
+    chip: "MRI SPV",
+    note: (row) => `SPV ${formatDate(row.spv_date)} · LTP ${(row.spv_position || DASH).toLowerCase()} (${fixed(row.spv_distance_pct)}%)`,
     hint: `Bullish SPV from the MRI Scan indicator, confirmed in the last ${MRI_SESSIONS} sessions and still active: an order block candle that starts a fair value gap after an internal structure break up. Active = price has not traded below the SPV low.`,
     filter: (row) => isNumber(row.spv_sessions) && row.spv_sessions < MRI_SESSIONS,
     columns: [TICKER, { key: "spv_date", label: "SPV candle", type: "date" }, CLOSE,
@@ -89,6 +111,8 @@ const VIEWS = [
   },
   {
     id: "pv", label: "MRI PV", mark: null, needsKey: "spv_position",
+    chip: "MRI PV",
+    note: (row) => `PV ${formatDate(row.pv_date)} · trend ${row.smc_trend || DASH}`,
     hint: `Bullish PV from the MRI Scan indicator, confirmed in the last ${MRI_SESSIONS} sessions: the first fair value gap candle after the order block of an internal structure break up.`,
     filter: (row) => row.pv_kind === "PV bull" && isNumber(row.pv_sessions) && row.pv_sessions < MRI_SESSIONS,
     columns: [TICKER, { key: "pv_date", label: "PV candle", type: "date" }, CLOSE, CHANGE,
@@ -98,6 +122,8 @@ const VIEWS = [
   },
   {
     id: "all", label: "All stocks", mark: null,
+    chip: "All",
+    note: (row) => [row.sector, row.cap_category && `${row.cap_category} cap`].filter(Boolean).join(" · ") || "Scanned",
     hint: "Every stock from the last scan.",
     filter: () => true,
     columns: [TICKER, SECTOR, CAP, MARKET_CAP, DEBT, CLOSE, CHANGE,
@@ -109,14 +135,18 @@ const VIEWS = [
 const $ = (id) => document.getElementById(id);
 const dom = {
   meta: $("scan-meta"), scanButton: $("scan-button"), progress: $("progress"), progressFill: $("progress-fill"),
-  progressText: $("progress-text"), notice: $("notice"), tiles: $("tiles"), tabs: $("tabs"),
+  progressText: $("progress-text"), notice: $("notice"), tiles: $("tiles"), cards: $("stock-cards"),
+  sortSelect: $("sort-select"), detailPane: $("detail-pane"), detailClose: $("detail-close"), scrim: $("scrim"),
+  toTop: $("to-top"), confirm: $("scan-confirm"), confirmText: $("confirm-text"), confirmRun: $("confirm-run"),
+  confirmCancel: $("confirm-cancel"), marketWarning: $("market-warning"), marketWarningText: $("market-warning-text"),
   searchForm: $("search-form"), searchInput: $("search-input"), tickerList: $("ticker-list"),
   listTitle: $("list-title"), listCount: $("list-count"), listHint: $("list-hint"),
   table: $("stock-table"), listEmpty: $("list-empty"), detail: $("detail"), capFilter: $("cap-filter"),
 };
 
 let state = {
-  scan: null, progress: { running: false }, tickers: [], viewId: "entry",
+  scan: undefined,  // undefined until the first load answers; null when there is no scan yet
+  progress: { running: false }, tickers: [], viewId: "entry",
   sort: VIEWS[0].sort, query: "", selected: null, capFilter: "all",
 };
 let pollTimer = null;
@@ -155,38 +185,48 @@ function renderMeta() {
     const share = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
     dom.progressFill.style.width = `${share}%`;
     const stage = STAGE_TEXT[progress.stage] || "Scanning";
-    dom.progressText.textContent = progress.total ? `${stage}: ${progress.done} of ${progress.total} stocks` : "Starting…";
+    const status = progress.total ? `${stage}: ${progress.done} of ${progress.total} stocks` : "Starting…";
+    dom.progressText.textContent = isMarketHours() ? `${status} · ${LIVE_PRICE_NOTE}` : status;
   }
-  dom.meta.textContent = scan
+  dom.meta.textContent = scan === undefined ? "Loading the latest scan…" : scan
     ? `Prices up to ${formatDate(scan.data_date, true)} · scanned ${formatDateTime(scan.scanned_at)}`
     : "No scan yet. Press Run scan to check every stock in tickers.csv.";
 }
 
+/** One chip per list with its stock count; the row scrolls sideways on small screens. */
 function renderTiles() {
   const { scan } = state;
-  const tile = (view, value, note) => el("button", {
-    type: "button", class: "tile", "aria-pressed": String(state.viewId === view.id),
-    onclick: () => selectView(view.id),
-  }, [
-    el("span", { class: "tile-label" }, [view.mark ? el("span", { class: `mark ${view.mark}` }) : null, el("span", { text: view.label })]),
-    el("span", { class: "tile-value", text: scan ? String(value) : "—" }),
-    el("span", { class: "tile-note", text: note }),
-  ]);
   const failed = scan ? scan.failed.length : 0;
-  const notes = {
-    entry: "buy setups on the latest bar", recent: "still fresh", wait: "watchlist for tomorrow",
-    breakout: "new valid = True", cci: "CCI turning up from below 0", screen: "5-close breakout + CCI + RSI",
-    spv: "order block + fair value gap", pv: "first gap after order block",
-    all: failed ? `${failed} returned no data` : "scanned",
-  };
-  dom.tiles.replaceChildren(...VIEWS.map((view) => tile(view, scan ? rowsFor(view).length : 0, notes[view.id])));
+  dom.tiles.replaceChildren(...VIEWS.map((view) => {
+    const selected = state.viewId === view.id;
+    const title = view.id === "all" && failed ? `${view.hint} ${failed} returned no data.` : view.hint;
+    return el("button", {
+      type: "button", class: "chip", "aria-pressed": String(selected), title,
+      onclick: () => selectView(view.id),
+    }, [
+      view.mark ? el("span", { class: `mark ${view.mark}`, "aria-hidden": "true" }) : null,
+      el("span", { text: view.chip }),
+      el("span", { class: "chip-count", text: scan ? String(rowsFor(view).length) : DASH }),
+    ]);
+  }));
+  // Keep the selected chip visible by scrolling the chip row only (scrollIntoView would also move the page).
+  const active = dom.tiles.querySelector('[aria-pressed="true"]');
+  if (!active) return;
+  const row = dom.tiles;
+  const left = active.offsetLeft - row.offsetLeft;
+  if (left < row.scrollLeft || left + active.offsetWidth > row.scrollLeft + row.clientWidth) {
+    row.scrollLeft = Math.max(0, left - 16);
+  }
 }
 
-function renderTabs() {
-  dom.tabs.replaceChildren(...VIEWS.map((view) => el("button", {
-    type: "button", role: "tab", "aria-selected": String(state.viewId === view.id), text: view.label,
-    onclick: () => selectView(view.id),
-  })));
+/** Sort picker for the card layout, where there are no column headers to click. */
+function renderSortSelect(view) {
+  const options = view.columns.flatMap((column) => [
+    el("option", { value: `${column.key}:desc`, text: `${column.label} ↓` }),
+    el("option", { value: `${column.key}:asc`, text: `${column.label} ↑` }),
+  ]);
+  dom.sortSelect.replaceChildren(...options);
+  dom.sortSelect.value = `${state.sort.key}:${state.sort.dir}`;
 }
 
 /** Large / Mid / Small buttons with the number of stocks of the current list in each group. */
@@ -211,7 +251,10 @@ function renderList() {
   if (state.scan && rows().length && rows()[0][needsKey] === undefined) hint += OLD_SCAN;
   else if (view.usesFundamentals && state.scan && !rows().some((row) => row.fundamentals_known)) hint += NO_FUNDAMENTALS;
   dom.listHint.textContent = hint;
-  dom.listCount.textContent = state.scan ? (state.query.trim() ? `${visible.length} of ${inView.length}` : String(inView.length)) : "";
+  const shown = state.query.trim() ? `${visible.length} of ${inView.length}` : String(inView.length);
+  dom.listCount.textContent = state.scan ? `· ${shown} stock${inView.length === 1 ? "" : "s"}` : "";
+  renderSortSelect(view);
+  renderCards(dom.cards, { rows: visible, selected: state.selected, note: view.note, onSelect: (row) => openStock(row.ticker) });
   renderTable(dom.table, {
     rows: visible, columns: view.columns, sort: state.sort, selected: state.selected,
     onSort: (key) => setState({ sort: { key, dir: state.sort.key === key && state.sort.dir === "desc" ? "asc" : "desc" } }),
@@ -227,13 +270,34 @@ function renderList() {
   dom.listEmpty.textContent = empty;
   dom.listEmpty.hidden = !empty;
   dom.table.hidden = Boolean(empty);
+  dom.cards.hidden = Boolean(empty);
 }
 
 function render() {
   renderMeta();
   renderTiles();
-  renderTabs();
   renderList();
+}
+
+/** On phones and tablets the stock detail slides up as a sheet over the list. */
+function setSheetOpen(open) {
+  const isSheet = !window.matchMedia(WIDE_LAYOUT).matches;
+  document.body.classList.toggle("sheet-open", open && isSheet);
+  dom.scrim.hidden = !(open && isSheet);
+  if (open && isSheet) dom.detailPane.scrollTop = 0;
+}
+
+function closeSheet() {
+  setSheetOpen(false);
+  const card = dom.cards.querySelector('[aria-pressed="true"]');
+  if (card) card.focus({ preventScroll: true });
+}
+
+function watchScroll() {
+  const update = () => { dom.toTop.hidden = window.scrollY < TO_TOP_AFTER_PX; };
+  window.addEventListener("scroll", update, { passive: true });
+  dom.toTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  update();
 }
 
 function selectView(viewId) {
@@ -246,6 +310,7 @@ async function openStock(symbol) {
   detailCleanup = null;
   setState({ selected: symbol });
   renderDetailMessage(dom.detail, `Loading ${symbol}…`);
+  setSheetOpen(true);
   try {
     const detail = await getStock(symbol);
     if (request !== detailRequest) return;  // a newer click won
@@ -318,7 +383,27 @@ function startPolling() {
   }, POLL_MS);
 }
 
+/** Ask before scanning; during NSE hours also warn that today's close is a live price. */
+function openScanConfirm() {
+  const total = state.tickers.length || rows().length;
+  dom.confirmText.textContent = `This downloads fresh daily prices for ${total ? `all ${total} stocks` : "every stock"} from Yahoo Finance and takes a few minutes. Everyone using the app will see the new results.`;
+  const live = isMarketHours();
+  dom.marketWarning.hidden = !live;
+  dom.marketWarningText.textContent = live ? LIVE_PRICE_WARNING : "";
+  dom.confirmRun.textContent = live ? "Scan with live prices" : "Run scan";
+  dom.confirm.hidden = false;
+  document.body.classList.add("modal-open");
+  dom.confirmCancel.focus();
+}
+
+function closeScanConfirm() {
+  dom.confirm.hidden = true;
+  document.body.classList.remove("modal-open");
+  dom.scanButton.focus();
+}
+
 async function onScanClick() {
+  closeScanConfirm();
   showNotice("");
   try {
     const { progress } = await startScan();
@@ -353,9 +438,27 @@ async function loadTickers() {
 }
 
 async function init() {
-  dom.scanButton.addEventListener("click", onScanClick);
+  dom.scanButton.addEventListener("click", openScanConfirm);
+  dom.confirmRun.addEventListener("click", onScanClick);
+  dom.confirmCancel.addEventListener("click", closeScanConfirm);
+  dom.confirm.addEventListener("click", (event) => { if (event.target === dom.confirm) closeScanConfirm(); });
   dom.searchForm.addEventListener("submit", onSearchSubmit);
   dom.searchInput.addEventListener("input", () => setState({ query: dom.searchInput.value }));
+  dom.sortSelect.addEventListener("change", () => {
+    const [key, dir] = dom.sortSelect.value.split(":");
+    setState({ sort: { key, dir } });
+  });
+  dom.detailClose.addEventListener("click", closeSheet);
+  dom.scrim.addEventListener("click", closeSheet);
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (!dom.confirm.hidden) closeScanConfirm();
+    else if (document.body.classList.contains("sheet-open")) closeSheet();
+  });
+  window.matchMedia(WIDE_LAYOUT).addEventListener("change", (event) => {
+    if (event.matches) setSheetOpen(false);  // rotated / resized to the side-by-side layout
+  });
+  watchScroll();
   // Bookmarkable lists, e.g. /?list=screen&cap=Large opens the Breakout screen for large caps.
   const params = new URLSearchParams(location.search);
   const linkedView = VIEWS.find((view) => view.id === params.get("list"));
@@ -367,6 +470,7 @@ async function init() {
     const progress = await refreshScan();
     if (progress.running) startPolling();
   } catch (error) {
+    state = { ...state, scan: null };  // stop showing "Loading…" on later renders
     dom.meta.textContent = "Could not load the scan.";
     showNotice(errorText(error));
   }

@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 BRIDGE_CLIENT = "api.streamlit.js"
 MAX_ID_LENGTH = 64
-PAGE_FILES = ("index.html", "app.js", "chart.js", "detail.js", "format.js", "table.js", "styles.css")
+PAGE_FILES = ("index.html", "app.js", "cards.js", "chart.js", "detail.js", "format.js", "market.js", "table.js", "styles.css")
 
 
 class BridgeError(Exception):

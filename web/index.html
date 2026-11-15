@@ -2,48 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Stock Entry</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <header class="topbar">
-    <div>
-      <h1>Stock Entry</h1>
-      <p class="subtitle" id="scan-meta">Loading…</p>
+    <div class="topbar-row">
+      <div class="brand">
+        <h1><span class="live-dot" aria-hidden="true"></span>Stock Entry</h1>
+        <p class="subtitle" id="scan-meta">Loading…</p>
+      </div>
+      <button type="button" class="primary" id="scan-button">Run scan</button>
     </div>
-    <button type="button" class="primary" id="scan-button">Run scan</button>
-  </header>
-
-  <div class="progress" id="progress" hidden>
-    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
-    <span id="progress-text"></span>
-  </div>
-  <p class="notice" id="notice" role="status" hidden></p>
-
-  <section class="tiles" id="tiles" aria-label="Scan summary"></section>
-
-  <div class="toolbar">
     <form class="search" id="search-form" role="search">
-      <label for="search-input">Find a stock</label>
+      <label for="search-input" class="visually-hidden">Find a stock</label>
       <div class="search-row">
         <input id="search-input" type="search" list="ticker-list" autocomplete="off" maxlength="40"
-               placeholder="Type a symbol or name, e.g. TCS — Enter opens it">
+               placeholder="Search symbol or name, e.g. TCS">
         <button type="submit">Open</button>
       </div>
       <datalist id="ticker-list"></datalist>
     </form>
-    <nav class="tabs" id="tabs" aria-label="Lists"></nav>
-  </div>
+    <div class="progress" id="progress" hidden>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <span id="progress-text"></span>
+    </div>
+    <nav class="chips" id="tiles" aria-label="Lists"></nav>
+    <div class="segmented cap-filter" id="cap-filter" role="group" aria-label="Market cap"></div>
+  </header>
+
+  <p class="notice" id="notice" role="status" hidden></p>
 
   <main class="layout">
-    <section class="panel" aria-labelledby="list-title">
+    <section class="panel list-pane" aria-labelledby="list-title">
       <div class="panel-head">
-        <h2 id="list-title">Entry today</h2>
-        <span class="count" id="list-count"></span>
-        <div class="ranges cap-filter" id="cap-filter" role="group" aria-label="Market cap"></div>
+        <h2><span id="list-title">Entry today</span> <span class="count" id="list-count"></span></h2>
+        <label class="sort-picker">
+          <span>Sort</span>
+          <select id="sort-select" aria-label="Sort the list"></select>
+        </label>
       </div>
       <p class="hint" id="list-hint"></p>
+      <ul class="cards" id="stock-cards" aria-label="Stocks"></ul>
       <div class="table-wrap">
         <table id="stock-table">
           <thead></thead>
@@ -53,10 +54,34 @@
       <p class="empty" id="list-empty" hidden></p>
     </section>
 
-    <section class="panel detail" id="detail" aria-live="polite">
-      <p class="empty">Click a stock in the list, or search for any symbol, to see its chart and entry points.</p>
+    <div class="scrim" id="scrim" hidden></div>
+    <section class="panel detail" id="detail-pane" aria-label="Stock detail">
+      <div class="sheet-bar">
+        <span class="grabber" aria-hidden="true"></span>
+        <button type="button" class="icon-button" id="detail-close" aria-label="Close stock detail">✕</button>
+      </div>
+      <div id="detail" aria-live="polite">
+        <p class="empty">Tap a stock in the list, or search for any symbol, to see its chart and entry points.</p>
+      </div>
     </section>
   </main>
+
+  <button type="button" class="to-top" id="to-top" aria-label="Back to top" hidden>↑</button>
+
+  <div class="modal" id="scan-confirm" role="dialog" aria-modal="true" aria-labelledby="confirm-title" hidden>
+    <div class="modal-card">
+      <h2 id="confirm-title">Run a new scan?</h2>
+      <p id="confirm-text">This downloads fresh daily prices for every stock from Yahoo Finance and takes a few minutes. Everyone using the app will see the new results.</p>
+      <div class="modal-warning" id="market-warning" hidden>
+        <strong>The market is open right now.</strong>
+        <span id="market-warning-text"></span>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="confirm-cancel">Cancel</button>
+        <button type="button" class="primary" id="confirm-run">Run scan</button>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="/static/app.js"></script>
 </body>

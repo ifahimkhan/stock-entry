@@ -1,7 +1,7 @@
 // Single-stock panel: headline, plain-language status, chart, and the bars as a table.
 
 import { renderChart } from "./chart.js";
-import { DASH, el, formatDate, formatPercent, formatPrice, isNumber, signClass, statusBadge } from "./format.js";
+import { DASH, el, formatDate, formatPercent, formatPrice, isNumber, signClass, statusBadge, statusKind } from "./format.js";
 import { renderTable } from "./table.js";
 
 const HISTORY_ROWS = 40;
@@ -89,22 +89,59 @@ function smcItems(summary) {
   ];
 }
 
+function rsiNote(rsi) {
+  if (!isNumber(rsi)) return "";
+  if (rsi < 30) return "Oversold (below 30)";
+  return rsi > 70 ? "Overbought (above 70)" : "Neutral (30 to 70)";
+}
+
+function cciNote(cci) {
+  if (!isNumber(cci)) return "";
+  if (cci < -100) return "Below -100: oversold zone";
+  return cci > 100 ? "Above 100: overbought zone" : "Between -100 and 100";
+}
+
+function cciEmaNote(cci, ema) {
+  if (!isNumber(cci) || !isNumber(ema)) return "";
+  return cci >= ema ? "CCI is above its EMA" : "CCI is below its EMA";
+}
+
+/** Colour class for a value against its low / high bands: "down" below, "up" above, "" between. */
+function tone(value, low, high) {
+  if (!isNumber(value)) return "";
+  if (value < low) return "down";
+  return value > high ? "up" : "";
+}
+
 /** Indicator values and screen results from the Mid Cap notebook strategy, for the latest bar. */
 function indicators(summary) {
   if (summary.screen_count === undefined) return null;
+  const check = (value, yes, no) => [passFail(value), value === true ? yes : no, value === true ? "pass" : "fail"];
   const items = [
-    ["RSI 14", fixed(summary.rsi)],
-    ["CCI 60", fixed(summary.cci)],
-    ["CCI EMA 9", fixed(summary.cci_ma)],
-    ["ATR %", isNumber(summary.atr_pct) ? `${summary.atr_pct.toFixed(2)} (${summary.volatility})` : DASH],
-    ["Close > EMA 7", passFail(summary.ema7_pass)],
-    ["3-rule candle", passFail(summary.candle_3rule)],
-    ["Above prev 5 closes", passFail(summary.close_breakout)],
-    ["Screens passed", summary.top_pick ? `${summary.screens} (top pick)` : summary.screens || "None"],
+    ["RSI 14", fixed(summary.rsi), rsiNote(summary.rsi), tone(summary.rsi, 30, 70)],
+    ["CCI 60", fixed(summary.cci), cciNote(summary.cci), tone(summary.cci, -100, 100)],
+    ["CCI EMA 9", fixed(summary.cci_ma), cciEmaNote(summary.cci, summary.cci_ma), ""],
+    ["ATR %", isNumber(summary.atr_pct) ? `${summary.atr_pct.toFixed(2)}%` : DASH,
+      summary.volatility ? `${summary.volatility} · daily range vs price` : "Daily range vs price", "warn"],
+    ["Close > EMA 7", ...check(summary.ema7_pass, "Close is above EMA 7", "Close is under EMA 7")],
+    ["3-rule candle", ...check(summary.candle_3rule, "Candle rules met", "Candle rules not met")],
+    ["Above prev 5 closes", ...check(summary.close_breakout, "Close beat the last 5", "Close did not beat the last 5")],
+    ["Screens passed", summary.screens || "None", summary.top_pick ? "Top pick" : `${summary.screen_count || 0} of 2 (CCI up-cross, Breakout)`,
+      summary.screens ? "pass" : "muted"],
   ];
-  return el("dl", { class: "indicators" }, [...items, ...smcItems(summary)].map(([label, value]) => el("div", {}, [
-    el("dt", { text: label }), el("dd", { text: value }),
-  ])));
+  const tile = ([label, value, note, kind]) => el("div", { class: "metric" }, [
+    el("dt", { text: label }),
+    el("dd", {}, [
+      el("span", { class: `metric-value ${kind ? `tone-${kind}` : ""}`, text: value }),
+      note ? el("span", { class: "metric-note", text: note }) : null,
+    ]),
+  ]);
+  const mri = smcItems(summary);
+  return el("div", {}, [
+    el("dl", { class: "indicators" }, items.map(tile)),
+    mri.length ? el("h3", { class: "section-title", text: "MRI Scan" }) : null,
+    mri.length ? el("dl", { class: "indicators" }, mri.map(([label, value]) => tile([label, value, "", ""]))) : null,
+  ]);
 }
 
 /** A row of pick-one buttons above the chart. `onChange` receives the chosen option. */
@@ -144,9 +181,11 @@ export function renderDetail(panel, { summary, history }) {
   panel.replaceChildren(
     el("div", { class: "detail-head" }, [
       el("div", {}, [
-        el("h2", { text: summary.ticker }),
+        el("div", { class: "detail-title" }, [
+          el("h2", { text: summary.ticker }),
+          statusKind(summary.status, summary.valid) ? statusBadge(summary.status, summary.valid) : null,
+        ]),
         subtitle ? el("p", { class: "detail-name", text: subtitle }) : null,
-        el("p", { class: "detail-name" }, [statusBadge(summary.status, summary.valid)]),
       ]),
       el("div", { class: "hero" }, [
         el("div", { class: "hero-value", text: formatPrice(summary.close) }),
@@ -154,7 +193,8 @@ export function renderDetail(panel, { summary, history }) {
         el("div", { class: "dim", text: `Close on ${formatDate(summary.date, true)}` }),
       ]),
     ]),
-    el("div", { class: "facts" }, factLines(summary).map((text) => el("p", { text }))),
+    el("div", { class: `facts facts-${statusKind(summary.status, summary.valid) || "none"}` },
+      factLines(summary).map((text) => el("p", { text }))),
     indicators(summary),
     el("div", { class: "chart-controls" }, [legend, el("div", { class: "pickers" }, [
       picker(MODES, DEFAULT_MODE === "candles" ? "Candles" : "Line", "Chart type", (option) => {
@@ -166,8 +206,8 @@ export function renderDetail(panel, { summary, history }) {
         drawChart();
       }),
     ])]),
-    chart,
-    el("h3", { class: "history-title", text: `Last ${recent.length} sessions` }),
+    el("div", { class: "chart-card" }, [chart]),
+    el("h3", { class: "section-title", text: `Last ${recent.length} sessions` }),
     el("div", { class: "table-wrap" }, [table]),
   );
   renderTable(table, { rows: recent, columns: HISTORY_COLUMNS });

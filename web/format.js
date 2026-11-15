@@ -51,7 +51,7 @@ const STATUS_LABELS = { entry: "Entry", wait: "Wait", breakout: "Breakout" };
 export function statusBadge(status, valid) {
   const kind = statusKind(status, valid);
   if (!kind) return el("span", { class: "dim", text: DASH });
-  return el("span", { class: "badge" }, [
+  return el("span", { class: `badge badge-${kind}` }, [
     el("span", { class: `mark ${kind}`, "aria-hidden": "true" }),
     el("span", { text: STATUS_LABELS[kind] }),
   ]);
