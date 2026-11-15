@@ -13,7 +13,7 @@ from typing import Any
 import streamlit as st
 import streamlit.components.v1 as components
 
-from stock_entry.bridge import build_component_dir, handle_request, is_new_request
+from stock_entry.bridge import build_component_dir, handle_request, is_new_request, page_fingerprint
 from stock_entry.config import Settings
 from stock_entry.services import Services, build_services
 
@@ -39,16 +39,19 @@ def get_services() -> Services:
 
 
 @st.cache_resource
-def get_component() -> Any:
-    target = Path(tempfile.mkdtemp(prefix="stock-entry-page-"))
-    return components.declare_component(COMPONENT_NAME, path=str(build_component_dir(Settings().web_dir, target)))
+def get_component(version: str) -> Any:
+    """One copy of the page per version. A push redeploys the script without restarting the server,
+    so the cache key has to change with the page files, or the old page keeps being served."""
+    target = Path(tempfile.mkdtemp(prefix=f"stock-entry-page-{version}-"))
+    web_dir = Settings().web_dir
+    return components.declare_component(COMPONENT_NAME, path=str(build_component_dir(web_dir, target, version)))
 
 
 def main() -> None:
     st.set_page_config(page_title="Stock Entry", layout="wide")
     st.markdown(PAGE_CSS, unsafe_allow_html=True)
     try:
-        services, page = get_services(), get_component()
+        services, page = get_services(), get_component(page_fingerprint(Settings().web_dir))
     except (OSError, ValueError) as exc:
         logging.getLogger(__name__).exception("Stock Entry could not start")
         st.error(f"Stock Entry could not start: {exc}")

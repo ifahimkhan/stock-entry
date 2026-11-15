@@ -6,8 +6,10 @@ which sends {"id", "op", ...} through the Streamlit component channel; `handle_r
 """
 from __future__ import annotations
 
+import hashlib
 import logging
 import math
+import re
 import shutil
 from dataclasses import fields
 from datetime import datetime
@@ -138,8 +140,28 @@ def handle_request(services: Services, request: Any) -> dict[str, Any]:
         return _reply(request, error="Something went wrong on the server. See the server log.")
 
 
-def build_component_dir(web_dir: Path, target: Path) -> Path:
-    """Copy the page into `target` as a Streamlit component: relative asset links and the bridge api.js."""
+# ES module imports between page files, e.g. from "./format.js"
+_RELATIVE_IMPORT = re.compile(r'(from\s+"\./[\w.-]+\.js)(")')
+# <script src="app.js"> / <link href="styles.css"> once "/static/" is removed
+_ASSET_LINK = re.compile(r'((?:src|href)="[\w.-]+\.(?:js|css))(")')
+
+
+def page_fingerprint(web_dir: Path) -> str:
+    """Short hash of the page files: it changes whenever a deploy changes the page."""
+    digest = hashlib.sha256()
+    for name in (*PAGE_FILES, BRIDGE_CLIENT):
+        path = web_dir / name
+        digest.update(name.encode())
+        digest.update(path.read_bytes() if path.is_file() else b"")
+    return digest.hexdigest()[:12]
+
+
+def build_component_dir(web_dir: Path, target: Path, version: str | None = None) -> Path:
+    """Copy the page into `target` as a Streamlit component: relative asset links and the bridge api.js.
+
+    With `version`, asset links and module imports get "?v=<version>", so a browser never mixes files it
+    cached from an older deploy with new ones (Streamlit serves component files as cacheable).
+    """
     missing = [name for name in (*PAGE_FILES, BRIDGE_CLIENT) if not (web_dir / name).is_file()]
     if missing:
         raise FileNotFoundError(f"Web page files missing from {web_dir}: {', '.join(missing)}")
@@ -147,6 +169,11 @@ def build_component_dir(web_dir: Path, target: Path) -> Path:
     for name in PAGE_FILES:
         shutil.copyfile(web_dir / name, target / name)
     shutil.copyfile(web_dir / BRIDGE_CLIENT, target / "api.js")
-    index = (target / "index.html").read_text(encoding="utf-8")
-    (target / "index.html").write_text(index.replace("/static/", ""), encoding="utf-8")
+    index = (target / "index.html").read_text(encoding="utf-8").replace("/static/", "")
+    if version:
+        tag = rf"\1?v={version}\2"
+        index = _ASSET_LINK.sub(tag, index)
+        for script in [target / name for name in (*PAGE_FILES, "api.js") if name.endswith(".js")]:
+            script.write_text(_RELATIVE_IMPORT.sub(tag, script.read_text(encoding="utf-8")), encoding="utf-8")
+    (target / "index.html").write_text(index, encoding="utf-8")
     return target

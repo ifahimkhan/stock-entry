@@ -1,6 +1,7 @@
 """Streamlit bridge tests: same services as the Flask API, driven by request dicts instead of HTTP."""
 from __future__ import annotations
 
+import shutil
 import time
 from dataclasses import replace
 from datetime import datetime, timedelta
@@ -9,7 +10,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from stock_entry.bridge import build_component_dir, handle_request, is_new_request
+from stock_entry.bridge import build_component_dir, handle_request, is_new_request, page_fingerprint
 from stock_entry.config import PROJECT_ROOT, Settings
 from stock_entry.fundamentals import Fundamentals
 from stock_entry.market_data import MarketDataError
@@ -134,6 +135,26 @@ def test_build_component_dir_swaps_in_the_bridge_client(tmp_path: Path) -> None:
     for name in ("app.js", "chart.js", "detail.js", "format.js", "table.js", "styles.css"):
         assert (target / name).read_bytes() == (web / name).read_bytes()
     assert build_component_dir(web, tmp_path / "component") == target  # safe to run again
+
+
+def test_versioned_component_dir_tags_every_asset_and_import(tmp_path: Path) -> None:
+    web = PROJECT_ROOT / "web"
+    target = build_component_dir(web, tmp_path / "component", version="abc123")
+    index = (target / "index.html").read_text(encoding="utf-8")
+    assert 'src="app.js?v=abc123"' in index and 'href="styles.css?v=abc123"' in index
+    app = (target / "app.js").read_text(encoding="utf-8")
+    assert 'from "./api.js?v=abc123"' in app and 'from "./cards.js?v=abc123"' in app
+    assert 'from "./format.js"' not in app  # no import left without the version
+    assert (target / "styles.css").read_bytes() == (web / "styles.css").read_bytes()
+
+
+def test_page_fingerprint_changes_with_the_page_files(tmp_path: Path) -> None:
+    web = tmp_path / "web"
+    shutil.copytree(PROJECT_ROOT / "web", web)
+    before = page_fingerprint(web)
+    assert before == page_fingerprint(web) and len(before) == 12
+    (web / "styles.css").write_text("body { color: red; }", encoding="utf-8")
+    assert page_fingerprint(web) != before
 
 
 def test_build_component_dir_needs_the_web_files(tmp_path: Path) -> None:
