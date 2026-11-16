@@ -3,6 +3,11 @@
 Scans a list of NSE stocks with daily prices from Yahoo Finance and shows entry signals
 (breakout, pullback, first up day), CCI / RSI screens and MRI SPV / PV zones, with a chart per stock.
 
+It also runs the swing rules of `TradingView.ipynb` on 2-hour candles (Yahoo hourly bars combined from
+the 09:15 open, latest 500 kept): HH / HL / LH / LL labels, LL→LL and LL→HL angles, **3 LL then HH**,
+**4 LL then HH** and **LH breakout** (`stock_entry/swings.py`, `stock_entry/intraday.py`). A swing label is
+confirmed 5 bars after its pivot, so these lists show signals from the last 20 two-hour bars.
+
 ## Run on Streamlit Community Cloud
 
 1. Push this repository to GitHub.

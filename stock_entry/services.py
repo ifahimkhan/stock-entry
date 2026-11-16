@@ -10,6 +10,7 @@ import pandas as pd
 from stock_entry.config import Settings
 from stock_entry.fundamentals import FetchOne, FundamentalsService, fetch_from_yahoo
 from stock_entry.history import HistoryService
+from stock_entry.intraday import fetch_two_hour
 from stock_entry.market_data import download_history
 from stock_entry.scanner import Scanner
 from stock_entry.store import ScanStore
@@ -36,9 +37,20 @@ class Services:
             return Ticker(symbol)  # the single-stock view still works without a ticker list
 
 
+def _two_hour_fetch(settings: Settings) -> Fetch:
+    """symbols -> {symbol: latest 2-hour bars}, built from Yahoo hourly bars (retried like the daily download)."""
+    hourly = partial(download_history, period=settings.swing_period, interval=settings.swing_interval,
+                     normalize=False)
+    return partial(fetch_two_hour, fetch_hourly=hourly, max_bars=settings.swing_bars)
+
+
 def build_services(settings: Settings, fetch: Fetch | None = None,
-                   fetch_fundamentals: FetchOne | None = None) -> Services:
-    """`fetch` (symbols -> {symbol: bars}) and `fetch_fundamentals` can be replaced in tests."""
+                   fetch_fundamentals: FetchOne | None = None, swing_fetch: Fetch | None = None) -> Services:
+    """`fetch` (symbols -> {symbol: daily bars}), `swing_fetch` (symbols -> {symbol: 2-hour bars}) and
+    `fetch_fundamentals` can be replaced in tests. Passing `fetch` without `swing_fetch` turns the
+    2-hour swing scan off, so tests never reach Yahoo by accident."""
+    if swing_fetch is None and fetch is None:
+        swing_fetch = _two_hour_fetch(settings)
     # The re-ask for stocks a batch dropped makes one attempt only: those are often delisted symbols.
     refetch = fetch or partial(download_history, period=settings.history_period, interval=settings.interval,
                                attempts=1)
@@ -49,7 +61,8 @@ def build_services(settings: Settings, fetch: Fetch | None = None,
     fundamentals = FundamentalsService(settings.fundamentals_path, fetch_fundamentals or fetch_from_yahoo,
                                        settings.fundamentals_max_age_days, settings.fundamentals_workers)
     scanner = Scanner(load_universe, fetch, store, settings.batch_size, settings.max_failed_share,
-                      enrich=fundamentals.enrich, refetch=refetch)
-    history = HistoryService(fetch, settings.history_cache_seconds, settings.detail_rows)
+                      enrich=fundamentals.enrich, refetch=refetch, swing_fetch=swing_fetch)
+    history = HistoryService(fetch, settings.history_cache_seconds, settings.detail_rows,
+                             swing_fetch=swing_fetch, swing_points=settings.swing_detail_points)
     return Services(settings=settings, load_universe=load_universe, store=store, fundamentals=fundamentals,
                     scanner=scanner, history=history)

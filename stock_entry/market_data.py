@@ -8,6 +8,7 @@ from typing import Callable
 import pandas as pd
 
 logger = logging.getLogger(__name__)
+EXCHANGE_TZ = "Asia/Kolkata"   # intraday bar times are kept in NSE local time
 
 PRICE_COLUMNS = ("Open", "High", "Low", "Close", "Volume")
 DOWNLOAD_ATTEMPTS = 3
@@ -28,23 +29,26 @@ def _yfinance_download(symbols: list[str], period: str, interval: str) -> pd.Dat
                        auto_adjust=False, progress=False, threads=True)
 
 
-def _tidy(frame: pd.DataFrame) -> pd.DataFrame:
-    """Columns Date + OHLCV, rows without a Close dropped, oldest bar first."""
+def _tidy(frame: pd.DataFrame, normalize: bool = True) -> pd.DataFrame:
+    """Columns Date + OHLCV, rows without a Close dropped, oldest bar first.
+
+    normalize=True keeps only the day (daily bars); False keeps the exchange-local bar time (intraday).
+    """
     columns = [column for column in PRICE_COLUMNS if column in frame.columns]
     if "Close" not in columns:
         return pd.DataFrame(columns=["Date", *PRICE_COLUMNS])
     kept = frame[columns].dropna(subset=["Close"])
     dates = pd.DatetimeIndex(pd.to_datetime(kept.index))
     if dates.tz is not None:
-        dates = dates.tz_localize(None)
+        dates = (dates if normalize else dates.tz_convert(EXCHANGE_TZ)).tz_localize(None)
     # Drop the "Date" index before adding the Date column: having both makes sorting ambiguous.
     tidy = kept.reset_index(drop=True)
-    tidy.insert(0, "Date", dates.normalize())
+    tidy.insert(0, "Date", dates.normalize() if normalize else dates)
     tidy.columns.name = None
     return tidy.sort_values("Date").reset_index(drop=True)
 
 
-def split_by_symbol(raw: pd.DataFrame, symbols: list[str]) -> dict[str, pd.DataFrame]:
+def split_by_symbol(raw: pd.DataFrame, symbols: list[str], normalize: bool = True) -> dict[str, pd.DataFrame]:
     """Split a yfinance download into {symbol: tidy frame}. Symbols with no bars are left out."""
     if raw is None or raw.empty:
         return {}
@@ -57,15 +61,16 @@ def split_by_symbol(raw: pd.DataFrame, symbols: list[str]) -> dict[str, pd.DataF
             return {}
         present = set(raw.columns.get_level_values(level))
         candidates = {symbol: raw.xs(symbol, axis=1, level=level) for symbol in symbols if symbol in present}
-    tidied = {symbol: _tidy(frame) for symbol, frame in candidates.items()}
+    tidied = {symbol: _tidy(frame, normalize) for symbol, frame in candidates.items()}
     return {symbol: frame for symbol, frame in tidied.items() if not frame.empty}
 
 
 def download_history(symbols: list[str], period: str, interval: str = "1d",
                      downloader: Downloader = _yfinance_download, attempts: int = DOWNLOAD_ATTEMPTS,
                      retry_wait: float = RETRY_WAIT_SECONDS,
-                     sleep: Callable[[float], None] = time.sleep) -> dict[str, pd.DataFrame]:
-    """Download daily bars for `symbols`. Returns only the symbols that came back with data.
+                     sleep: Callable[[float], None] = time.sleep,
+                     normalize: bool = True) -> dict[str, pd.DataFrame]:
+    """Download bars for `symbols` (normalize=False keeps intraday bar times). Returns only the symbols that came back with data.
 
     Errors are retried with a growing wait, since Yahoo often refuses bursts of requests for a moment.
     An empty reply is retried too when several symbols were asked for (throttling); for one symbol it
@@ -75,7 +80,7 @@ def download_history(symbols: list[str], period: str, interval: str = "1d",
         return {}
     for attempt in range(1, attempts + 1):
         try:
-            frames = split_by_symbol(downloader(symbols, period=period, interval=interval), symbols)
+            frames = split_by_symbol(downloader(symbols, period=period, interval=interval), symbols, normalize)
         except Exception as exc:  # yfinance raises many unrelated error types; surface one clear error
             if attempt == attempts:
                 raise MarketDataError(f"Could not download prices from Yahoo Finance: {exc}") from exc

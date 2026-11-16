@@ -10,6 +10,7 @@ import pandas as pd
 
 from stock_entry.analysis import analyze, build_row
 from stock_entry.clock import now_ist
+from stock_entry.intraday import analyze_swings
 from stock_entry.market_data import MarketDataError
 from stock_entry.store import ScanStore
 from stock_entry.tickers import Ticker
@@ -62,9 +63,23 @@ def _fetch_batch(symbols: list[str], fetch: Fetch, refetch: Fetch) -> dict[str, 
     return frames
 
 
-def _scan_batch(batch: list[Ticker], fetch: Fetch, refetch: Fetch) -> tuple[list[dict[str, Any]], list[str]]:
+def _swings_safely(symbol: str, frame: pd.DataFrame | None) -> pd.DataFrame | None:
+    """Analysed 2-hour bars, or None. A swing failure never drops the stock from the scan."""
+    if frame is None or frame.empty:
+        return None
+    try:
+        return analyze_swings(frame)
+    except Exception:  # any swing bug must leave the daily scan intact
+        logger.exception("Swing signals failed for %s", symbol)
+        return None
+
+
+def _scan_batch(batch: list[Ticker], fetch: Fetch, refetch: Fetch,
+                swing_fetch: Fetch | None = None) -> tuple[list[dict[str, Any]], list[str]]:
     """Rows for the stocks that produced signals, and the symbols that did not."""
-    frames = _fetch_batch([ticker.symbol for ticker in batch], fetch, refetch)
+    symbols = [ticker.symbol for ticker in batch]
+    frames = _fetch_batch(symbols, fetch, refetch)
+    swing_frames = _fetch_safely(symbols, swing_fetch) if swing_fetch is not None else {}
     rows, failed = [], []
     for ticker in batch:
         frame = frames.get(ticker.symbol)
@@ -72,7 +87,8 @@ def _scan_batch(batch: list[Ticker], fetch: Fetch, refetch: Fetch) -> tuple[list
             failed.append(ticker.symbol)
             continue
         try:
-            rows.append(build_row(ticker, analyze(frame)))
+            swings = _swings_safely(ticker.symbol, swing_frames.get(ticker.symbol))
+            rows.append(build_row(ticker, analyze(frame), swings))
         except (ValueError, KeyError, TypeError) as exc:
             logger.warning("Signals failed for %s: %s", ticker.symbol, exc)
             failed.append(ticker.symbol)
@@ -80,11 +96,14 @@ def _scan_batch(batch: list[Ticker], fetch: Fetch, refetch: Fetch) -> tuple[list
 
 
 def run_scan(tickers: list[Ticker], fetch: Fetch, batch_size: int, on_progress: OnProgress | None = None,
-             max_failed_share: float = DEFAULT_MAX_FAILED_SHARE, refetch: Fetch | None = None) -> dict[str, Any]:
+             max_failed_share: float = DEFAULT_MAX_FAILED_SHARE, refetch: Fetch | None = None,
+             swing_fetch: Fetch | None = None) -> dict[str, Any]:
     """Scan every ticker and return {scanned_at, data_date, total, rows, failed}.
 
     `refetch` asks again for stocks missing from a batch (default: `fetch`). Give it a fetch without
     retries, so a delisted stock costs one extra request instead of a full retry-with-wait cycle.
+    `swing_fetch` (symbols -> {symbol: 2-hour bars}) adds the TradingView.ipynb swing signals; without it
+    the rows carry empty swing fields.
     Raises MarketDataError when more than `max_failed_share` of the tickers return no data.
     """
     refetch = refetch or fetch
@@ -94,7 +113,7 @@ def run_scan(tickers: list[Ticker], fetch: Fetch, batch_size: int, on_progress: 
     failed: list[str] = []
     done = 0
     for batch in _batches(tickers, batch_size):
-        batch_rows, batch_failed = _scan_batch(batch, fetch, refetch)
+        batch_rows, batch_failed = _scan_batch(batch, fetch, refetch, swing_fetch)
         rows = [*rows, *batch_rows]
         failed = [*failed, *batch_failed]
         done += len(batch)
@@ -117,8 +136,10 @@ class Scanner:
 
     def __init__(self, load_universe: Callable[[], list[Ticker]], fetch: Fetch,
                  store: ScanStore, batch_size: int, max_failed_share: float = DEFAULT_MAX_FAILED_SHARE,
-                 enrich: Enrich | None = None, refetch: Fetch | None = None) -> None:
+                 enrich: Enrich | None = None, refetch: Fetch | None = None,
+                 swing_fetch: Fetch | None = None) -> None:
         self._enrich = enrich
+        self._swing_fetch = swing_fetch
         self._load_universe = load_universe
         self._fetch = fetch
         self._refetch = refetch or fetch
@@ -175,7 +196,8 @@ class Scanner:
             self._update(stage="prices", done=0, total=len(tickers))
             scan = run_scan(tickers, self._fetch, self._batch_size,
                             on_progress=lambda done, total: self._update(done=done, total=total),
-                            max_failed_share=self._max_failed_share, refetch=self._refetch)
+                            max_failed_share=self._max_failed_share, refetch=self._refetch,
+                            swing_fetch=self._swing_fetch)
             self._store.save(scan)
             self._update(running=False, finished_at=_now())
             logger.info("Scan finished: %d stocks, %d without data", len(scan["rows"]), len(scan["failed"]))

@@ -23,6 +23,15 @@ export function formatDateTime(iso) {
   return `${formatDate(iso, true)}, ${iso.slice(11, 16)}`;
 }
 
+/** 2-hour bar start "2026-11-16 09:15" -> "16 Nov, 09:15" */
+export function formatBarTime(text) {
+  if (typeof text !== "string" || text.length < 16) return DASH;
+  return `${formatDate(text)}, ${text.slice(11, 16)}`;
+}
+
+/** Angle in degrees with sign, e.g. "-45.12°" */
+export const formatAngle = (value) => (isNumber(value) ? `${value > 0 ? "+" : ""}${value.toFixed(2)}°` : DASH);
+
 export const signClass = (value) => (!isNumber(value) || value === 0 ? "" : value > 0 ? "up" : "down");
 
 /** Create an element. Text always goes through textContent, never innerHTML. */

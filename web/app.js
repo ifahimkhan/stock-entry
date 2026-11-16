@@ -4,7 +4,7 @@ import { POLL_MS, getScan, getScanStatus, getStock, getTickers, startScan } from
 import { renderDetail, renderDetailMessage } from "./detail.js";
 import { renderCards } from "./cards.js";
 import { MARKET_HOURS_TEXT, isMarketHours } from "./market.js";
-import { DASH, el, formatDate, formatDateTime, formatPercent, formatPrice, isNumber } from "./format.js";
+import { DASH, el, formatAngle, formatBarTime, formatDate, formatDateTime, formatPercent, formatPrice, isNumber } from "./format.js";
 import { renderTable, sortRows } from "./table.js";
 
 const RECENT_SESSIONS = 5;
@@ -33,10 +33,68 @@ const fixed = (value) => (isNumber(value) ? value.toFixed(2) : DASH);
 const days = (count) => `${count} day${count === 1 ? "" : "s"}`;
 const STAGE_TEXT = { fundamentals: "Loading market cap and debt", prices: "Scanning prices" };
 const NO_FUNDAMENTALS = " Market cap and debt/equity are not loaded for this scan, so those filters were skipped: run the scan again.";
+const NO_SWINGS = " 2-hour prices did not load for this scan, so this list is empty: run the scan again.";
 const OLD_SCAN = " This scan was made before this screen was added: run the scan again.";
 
+// Swing lists (TradingView.ipynb on 2-hour bars). A swing label is only known 5 bars after its pivot,
+// so each list keeps records up to a fixed number of 2-hour bars old (NSE has about 4 per session).
+const SWING_NOTE = " Labels are confirmed 5 bars (about 1 session) after the pivot, and an HH can still turn into LH if price later closes below the previous LL.";
+/** True when a record `bars` 2-hour bars old is at most `maxBars` old. */
+const withinBars = (bars, maxBars) => isNumber(bars) && bars <= maxBars;
+const BEFORE_ENTRY_MAX_BARS = 7;   // Before Entry list: only HHs at most this many 2-hour bars old
+const LL_HH_MAX_BARS = 12;         // 3 LL -> HH and 4 LL -> HH lists: same idea, a wider window
+const LH_BREAKOUT_MAX_BARS = 3;    // LH breakout list: only fresh breakouts
+const barsAgo = (key) => ({ key, label: "Bars ago", type: "int", title: "2-hour bars since the record (about 4 per session)" });
+const ANG_LL_LL = { key: "ang_ll_ll", label: "LL→LL", type: "angle", title: "Angle of the latest LL low to the next LL low (% change vs bars)" };
+const ANG_LL_HL = { key: "ang_ll_hl", label: "LL→HL", type: "angle", title: "Angle of the latest LL low to the HL low, when an HH followed" };
+const llThenHhView = (count) => ({
+  id: `ll${count}`, label: `${count} LL then HH (2h)`, mark: null, needsKey: "swing_bars",
+  chip: `${count} LL → HH`,
+  note: (row) => `HH ${formatBarTime(row[`ll${count}_hh_at`])} after ${count} lower lows · LL→LL ${formatAngle(row.ang_ll_ll)}`,
+  hint: `Exactly ${count} lower lows (LL) since the previous higher high, then a new HH (2-hour bars), in the last ${LL_HH_MAX_BARS} two-hour bars.${SWING_NOTE}`,
+  filter: (row) => withinBars(row[`ll${count}_hh_bars`], LL_HH_MAX_BARS),
+  columns: [TICKER, { key: `ll${count}_hh_at`, label: "HH bar", type: "bartime" }, barsAgo(`ll${count}_hh_bars`),
+    CLOSE, CHANGE, ANG_LL_LL, ANG_LL_HL],
+  sort: { key: `ll${count}_hh_at`, dir: "desc" },
+});
+const PATTERN_FILTERS = [
+  { id: "all", label: "All" }, { id: "3LL-HH", label: "3LL-HH" },
+  { id: "4LL-HH", label: "4LL-HH" },
+];
+const patternText = (row) => row.before_entry_pattern || `${row.before_entry_ll ?? "?"} LL (other)`;
+const patternMatches = (row, id) => id === "all" || (id === "other" ? !row.before_entry_pattern : row.before_entry_pattern === id);
+const SWING_VIEWS = [
+  {
+    id: "before", label: "TBC Zone Entry (2h)", mark: null, needsKey: "swing_bars", patternFilter: true,
+    chip: "TBC Zone Entry",
+    note: (row) => `TBC Zone Entry ${formatBarTime(row.before_entry_at)} · ${patternText(row)} · LL→HL ${formatAngle(row.ang_ll_hl)}`,
+    hint: `TBC Zone Entry (the notebook's Final = "Before Entry"): a higher high (HH) that survived the clean-up (2-hour bars). Only HHs that complete a 3LL-HH or 4LL-HH pattern (3 or 4 lower lows before it), from the last ${BEFORE_ENTRY_MAX_BARS} two-hour bars.${SWING_NOTE}`,
+    filter: (row) => Boolean(row.before_entry_pattern)   // 3LL-HH or 4LL-HH only
+      && withinBars(row.before_entry_bars, BEFORE_ENTRY_MAX_BARS),
+    columns: [TICKER, { key: "before_entry_at", label: "Zone entry", type: "bartime" }, barsAgo("before_entry_bars"),
+      { key: "before_entry_pattern", label: "Pattern", type: "pattern", title: "Lower lows since the previous HH: 3LL-HH, 4LL-HH or other" },
+      { key: "before_entry_close", label: "HH close", type: "price" }, CLOSE, CHANGE, ANG_LL_LL, ANG_LL_HL],
+    sort: { key: "before_entry_at", dir: "desc" },
+  },
+  llThenHhView(3),
+  llThenHhView(4),
+  {
+    id: "lhbreak", label: "LH breakout (2h)", mark: null, needsKey: "swing_bars",
+    chip: "LH breakout",
+    note: (row) => `Closed above LH high ${formatPrice(row.lh_breakout_level)} on ${formatBarTime(row.lh_breakout_at)}`,
+    hint: `3 or more LLs or LHs since the last HH, then a 2-hour candle closed above the high of the last LH, in the last ${LH_BREAKOUT_MAX_BARS} two-hour bars.${SWING_NOTE}`,
+    filter: (row) => withinBars(row.lh_breakout_bars, LH_BREAKOUT_MAX_BARS),
+    columns: [TICKER, { key: "lh_breakout_at", label: "Breakout bar", type: "bartime" }, barsAgo("lh_breakout_bars"),
+      { key: "lh_breakout_level", label: "LH high", type: "price", title: "High of the last LH that the close broke" },
+      CLOSE, CHANGE, ANG_LL_LL],
+    sort: { key: "lh_breakout_at", dir: "desc" },
+  },
+];
+
 /** Each list: which rows it shows (given the latest market date), its columns and default sort. */
-const VIEWS = [
+// Lists kept in the code but not shown as chips (turn one back on by removing its id here).
+const HIDDEN_VIEWS = new Set(["cci", "spv", "pv"]);
+const ALL_VIEWS = [
   {
     id: "entry", label: "Entry today", mark: "entry",
     chip: "Entry today",
@@ -88,8 +146,8 @@ const VIEWS = [
     sort: { key: "cci", dir: "asc" },
   },
   {
-    id: "screen", label: "Breakout screen", mark: null, usesFundamentals: true,
-    chip: "Breakout",
+    id: "screen", label: "TBC 5-Day Breakout", mark: null, usesFundamentals: true,
+    chip: "TBC 5-Day Breakout",
     note: (row) => `${row.cap_category || DASH} cap · debt/equity ${fixed(row.debt_to_equity)}${row.top_pick ? " · Top pick" : ""}`,
     hint: "Close above the previous 5 closes, CCI above its EMA (gap ≥ 2, CCI ≤ 100), RSI ≥ 40, 3-rule candle, close above EMA 7, debt/equity ≤ 0.3. Top pick: small cap, RSI ≥ 45, CCI ≤ 0, debt/equity ≤ 0.2.",
     filter: (row, dataDate) => row.breakout_setup === true && row.date === dataDate,
@@ -120,6 +178,7 @@ const VIEWS = [
       { key: "pv_high", label: "PV high", type: "price" }, { key: "pv_low", label: "PV low", type: "price" }],
     sort: { key: "pv_date", dir: "desc" },
   },
+  ...SWING_VIEWS,
   {
     id: "all", label: "All stocks", mark: null,
     chip: "All",
@@ -131,6 +190,7 @@ const VIEWS = [
     sort: { key: "ticker", dir: "asc" },
   },
 ];
+const VIEWS = ALL_VIEWS.filter((view) => !HIDDEN_VIEWS.has(view.id));
 
 const $ = (id) => document.getElementById(id);
 const dom = {
@@ -142,12 +202,13 @@ const dom = {
   searchForm: $("search-form"), searchInput: $("search-input"), tickerList: $("ticker-list"),
   listTitle: $("list-title"), listCount: $("list-count"), listHint: $("list-hint"),
   table: $("stock-table"), listEmpty: $("list-empty"), detail: $("detail"), capFilter: $("cap-filter"),
+  patternFilter: $("pattern-filter"),
 };
 
 let state = {
   scan: undefined,  // undefined until the first load answers; null when there is no scan yet
   progress: { running: false }, tickers: [], viewId: "entry",
-  sort: VIEWS[0].sort, query: "", selected: null, capFilter: "all",
+  sort: VIEWS[0].sort, query: "", selected: null, capFilter: "all", patternFilter: "all",
 };
 let pollTimer = null;
 let detailCleanup = null;
@@ -162,8 +223,11 @@ const rows = () => (state.scan ? state.scan.rows : []);
 /** Rows of a list before the market-cap filter. */
 const viewRows = (view) => rows().filter((row) => view.filter(row, state.scan.data_date));
 const capMatches = (row, capId) => capId === "all" || row.cap_category === capId;
-/** Rows of a list for the selected market-cap group. */
-const rowsFor = (view) => viewRows(view).filter((row) => capMatches(row, state.capFilter));
+/** Rows of a list for the selected market-cap group (chip counts ignore the pattern filter). */
+const capRows = (view) => viewRows(view).filter((row) => capMatches(row, state.capFilter));
+/** Rows of a list for the selected market-cap group and, on Before Entry, the selected pattern. */
+const rowsFor = (view) => viewRows(view).filter((row) => capMatches(row, state.capFilter)
+  && (!view.patternFilter || patternMatches(row, state.patternFilter)));
 const errorText = (error) => (error instanceof Error ? error.message : "Something went wrong.");
 
 function showNotice(text) {
@@ -206,7 +270,7 @@ function renderTiles() {
     }, [
       view.mark ? el("span", { class: `mark ${view.mark}`, "aria-hidden": "true" }) : null,
       el("span", { text: view.chip }),
-      el("span", { class: "chip-count", text: scan ? String(rowsFor(view).length) : DASH }),
+      el("span", { class: "chip-count", text: scan ? String(capRows(view).length) : DASH }),
     ]);
   }));
   // Keep the selected chip visible by scrolling the chip row only (scrollIntoView would also move the page).
@@ -240,9 +304,22 @@ function renderCapFilter(view) {
   dom.capFilter.hidden = !state.scan;
 }
 
+/** All / 3LL-HH / 4LL-HH buttons, only on the Before Entry list. */
+function renderPatternFilter(view) {
+  dom.patternFilter.hidden = !(view.patternFilter && state.scan);
+  if (dom.patternFilter.hidden) return;
+  const inList = viewRows(view).filter((row) => capMatches(row, state.capFilter));
+  dom.patternFilter.replaceChildren(...PATTERN_FILTERS.map((option) => el("button", {
+    type: "button", "aria-pressed": String(state.patternFilter === option.id),
+    text: `${option.label} ${inList.filter((row) => patternMatches(row, option.id)).length}`,
+    onclick: () => setState({ patternFilter: option.id }),
+  })));
+}
+
 function renderList() {
   const view = currentView();
   renderCapFilter(view);
+  renderPatternFilter(view);
   const inView = state.scan ? rowsFor(view) : [];
   const visible = sortRows(inView.filter((row) => matchesQuery(row, state.query)), state.sort);
   dom.listTitle.textContent = view.label;
@@ -250,6 +327,7 @@ function renderList() {
   const needsKey = view.needsKey || "screen_count";
   if (state.scan && rows().length && rows()[0][needsKey] === undefined) hint += OLD_SCAN;
   else if (view.usesFundamentals && state.scan && !rows().some((row) => row.fundamentals_known)) hint += NO_FUNDAMENTALS;
+  else if (view.needsKey === "swing_bars" && rows().length && !rows().some((row) => row.swing_bars > 0)) hint += NO_SWINGS;
   dom.listHint.textContent = hint;
   const shown = state.query.trim() ? `${visible.length} of ${inView.length}` : String(inView.length);
   dom.listCount.textContent = state.scan ? `· ${shown} stock${inView.length === 1 ? "" : "s"}` : "";
@@ -459,7 +537,7 @@ async function init() {
     if (event.matches) setSheetOpen(false);  // rotated / resized to the side-by-side layout
   });
   watchScroll();
-  // Bookmarkable lists, e.g. /?list=screen&cap=Large opens the Breakout screen for large caps.
+  // Bookmarkable lists, e.g. /?list=screen&cap=Large opens TBC 5-Day Breakout for large caps.
   const params = new URLSearchParams(location.search);
   const linkedView = VIEWS.find((view) => view.id === params.get("list"));
   const linkedCap = CAP_FILTERS.find((cap) => cap.id === params.get("cap"));

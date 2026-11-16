@@ -92,6 +92,7 @@ input[type="search"] {
 .segmented { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
 .segmented button { border: 0; background: transparent; color: var(--ink-2); padding: 6px 2px; font-size: 12.5px; border-radius: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .segmented button[aria-pressed="true"] { background: var(--surface-2); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); }
+#pattern-filter { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 .notice {
   margin: 12px var(--gutter) 0; padding: 10px 12px; border-radius: 10px;

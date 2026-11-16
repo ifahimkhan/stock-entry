@@ -1,7 +1,7 @@
 // Single-stock panel: headline, plain-language status, chart, and the bars as a table.
 
 import { renderChart } from "./chart.js";
-import { DASH, el, formatDate, formatPercent, formatPrice, isNumber, signClass, statusBadge, statusKind } from "./format.js";
+import { DASH, el, formatAngle, formatBarTime, formatDate, formatPercent, formatPrice, isNumber, signClass, statusBadge, statusKind } from "./format.js";
 import { renderTable } from "./table.js";
 
 const HISTORY_ROWS = 40;
@@ -144,6 +144,61 @@ function indicators(summary) {
   ]);
 }
 
+const SWING_COLUMNS = [
+  { key: "time", label: "2h bar", type: "bartime" },
+  { key: "label", label: "Swing", type: "text" },
+  { key: "low", label: "Low", type: "price" },
+  { key: "high", label: "High", type: "price" },
+  { key: "close", label: "Close", type: "price" },
+  { key: "ang_ll_ll", label: "LL→LL", type: "angle", title: "LL low to next LL low, written on the first LL" },
+  { key: "ang_ll_hl", label: "LL→HL", type: "angle", title: "LL low to HL low, when an HH followed" },
+  { key: "signal", label: "Signal", type: "text" },
+];
+
+function swingSignal(point) {
+  const before = point.before_entry && `TBC Zone Entry (${point.pattern || `${point.ll_count} LL, other`})`;
+  return [
+    before,
+    point.lh_breakout && `LH breakout > ${formatPrice(point.lh_breakout_level)}`,
+    point.raw_label && point.raw_label !== point.label && `was ${point.raw_label}`,
+  ].filter(Boolean).join(" · ");
+}
+
+function swingFacts(summary) {
+  const ago = (bars) => (isNumber(bars) ? ` (${plural(bars, "bar")} ago)` : "");
+  const signal = (at, bars, text) => (at ? `${text} on ${formatBarTime(at)}${ago(bars)}.` : null);
+  return [
+    summary.swing_last_label
+      ? `Last swing: ${summary.swing_last_label} on ${formatBarTime(summary.swing_last_label_at)}. Latest 2h bar ${formatBarTime(summary.swing_last_bar)}.`
+      : "No swing label in the loaded 2h bars.",
+    summary.before_entry_at
+      ? `TBC Zone Entry on ${formatBarTime(summary.before_entry_at)}${ago(summary.before_entry_bars)}: HH after ${plural(summary.before_entry_ll, "lower low")} → ${summary.before_entry_pattern || "not a 3LL / 4LL pattern"}.`
+      : "No TBC Zone Entry (confirmed HH) in the loaded 2h bars.",
+    signal(summary.ll3_hh_at, summary.ll3_hh_bars, "3 LL then HH"),
+    signal(summary.ll4_hh_at, summary.ll4_hh_bars, "4 LL then HH"),
+    summary.lh_breakout_at
+      ? `LH breakout on ${formatBarTime(summary.lh_breakout_at)}${ago(summary.lh_breakout_bars)}: closed above the LH high of ${formatPrice(summary.lh_breakout_level)}.`
+      : null,
+    isNumber(summary.ang_ll_ll) ? `Latest LL→LL angle ${formatAngle(summary.ang_ll_ll)} (from the LL on ${formatBarTime(summary.ang_ll_ll_at)}).` : null,
+    isNumber(summary.ang_ll_hl) ? `Latest LL→HL angle ${formatAngle(summary.ang_ll_hl)} (from the LL on ${formatBarTime(summary.ang_ll_hl_at)}).` : null,
+  ].filter(Boolean);
+}
+
+/** TradingView.ipynb swings on 2-hour bars. Nothing for scans / servers without them. */
+function swingSection(summary, swings) {
+  if (summary.swing_bars === undefined) return null;
+  const title = el("h3", { class: "section-title", text: "Swings (2-hour bars)" });
+  if (!summary.swing_bars) return el("div", {}, [title, el("p", { class: "dim", text: "No 2-hour swing data for this stock (2-hour prices were not available)." })]);
+  const table = el("table", { class: "compact" }, [el("thead"), el("tbody")]);
+  const rows = [...(swings || [])].reverse().map((point) => ({ ...point, signal: swingSignal(point) }));
+  renderTable(table, { rows, columns: SWING_COLUMNS });
+  return el("div", {}, [
+    title,
+    el("div", { class: "facts facts-none" }, swingFacts(summary).map((text) => el("p", { text }))),
+    rows.length ? el("div", { class: "table-wrap" }, [table]) : null,
+  ]);
+}
+
 /** A row of pick-one buttons above the chart. `onChange` receives the chosen option. */
 function picker(options, selectedLabel, groupLabel, onChange) {
   const buttons = options.map((option) => el("button", {
@@ -165,7 +220,7 @@ export function renderDetailMessage(panel, text) {
  * @param {{summary: object, history: object[]}} detail
  * @returns {() => void} cleanup that stops the chart's resize tracking
  */
-export function renderDetail(panel, { summary, history }) {
+export function renderDetail(panel, { summary, history, swings }) {
   const subtitle = [summary.name, summary.sector].filter(Boolean).join(" · ");
   const chart = el("div", { class: "chart" });
   const table = el("table", { class: "compact" }, [el("thead"), el("tbody")]);
@@ -196,6 +251,7 @@ export function renderDetail(panel, { summary, history }) {
     el("div", { class: `facts facts-${statusKind(summary.status, summary.valid) || "none"}` },
       factLines(summary).map((text) => el("p", { text }))),
     indicators(summary),
+    swingSection(summary, swings),
     el("div", { class: "chart-controls" }, [legend, el("div", { class: "pickers" }, [
       picker(MODES, DEFAULT_MODE === "candles" ? "Candles" : "Line", "Chart type", (option) => {
         chartMode = option.mode;
