@@ -4,8 +4,15 @@
 name: Daily scan
 
 on:
+  # GitHub can delay or silently drop scheduled runs when it is busy, so there are backup times.
+  # Extra runs are harmless: the commit step skips when the trading day has not changed.
+  # Odd minutes avoid the :00/:30 rush when most scheduled jobs start.
   schedule:
-    - cron: "30 10 * * 1-5"   # 10:30 UTC = 16:00 IST, Monday to Friday (GitHub may start it a little late)
+    - cron: "43 10 * * 1-5"   # 16:13 IST, Monday to Friday (after NSE closing prices settle)
+    - cron: "47 11 * * 1-5"   # 17:17 IST backup
+    - cron: "23 14 * * 1-5"   # 19:53 IST backup
+    # No morning backup on purpose: a late start could run during market hours, commit a half-day
+    # candle, and the evening runs would then skip that date.
   workflow_dispatch:
 
 permissions:
