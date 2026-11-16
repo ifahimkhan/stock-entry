@@ -93,7 +93,7 @@ const SWING_VIEWS = [
 
 /** Each list: which rows it shows (given the latest market date), its columns and default sort. */
 // Lists kept in the code but not shown as chips (turn one back on by removing its id here).
-const HIDDEN_VIEWS = new Set(["cci", "spv", "pv"]);
+const HIDDEN_VIEWS = new Set(["recent", "cci", "spv", "pv"]);
 const ALL_VIEWS = [
   {
     id: "entry", label: "Entry today", mark: "entry",
@@ -127,8 +127,8 @@ const ALL_VIEWS = [
     sort: { key: "wait_days", dir: "asc" },
   },
   {
-    id: "breakout", label: "Valid today", mark: "breakout",
-    chip: "Valid today",
+    id: "breakout", label: "TBC Trigger Day", mark: "breakout",
+    chip: "TBC Trigger Day",
     note: (row) => `Closed above the 4-day high of ${formatPrice(row.prev4_max_close)}`,
     hint: "Valid = True on the latest bar: up day closing above the previous 4-day high.",
     filter: (row, dataDate) => row.valid === true && row.date === dataDate,
