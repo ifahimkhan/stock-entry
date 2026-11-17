@@ -1,0 +1,828 @@
+Stock Name,Ticker,Close,MarketCap_Cr,Debt_to_Equity,Stock_PE,Industry,Sector
+KRN Heat Exchanger and Refrigeration Ltd,KRN,879.1,5464,0.067117899,80.651375,Electronic Components,Technology
+Vesuvius India Limited,VESUVIUS,556.55,11305,0.009357158,46.301994,Specialty Industrial Machinery,Industrials
+Control Print Limited,CONTROLPR,673.55,1078,0.019016318,10.88126,Business Equipment & Supplies,Industrials
+Balaji Telefilms Limited,BALAJITELE,100.16,1221,0.011846632,16.419674,Entertainment,Communication Services
+Hyundai Motor India Ltd,HYUNDAI,2293.4,186348,0.052172664,32.156475,Auto Manufacturers,Consumer Cyclical
+Hmt Limited,HMT,47.78,5753,-0.54226777,,Farm & Heavy Construction Machinery,Industrials
+Divgi Torqtransfer Systems Ltd,DIVGIITTS,781.5,2390,0.001801358,78.700905,Auto Parts,Consumer Cyclical
+Abb India Limited,ABB,5987,126877,0.007332448,71.94184,Specialty Industrial Machinery,Industrials
+Apar Industries Limited,APARINDS,10519,42255,0.129831199,43.477722,Electrical Equipment & Parts,Industrials
+Bajaj Consumer Care Ltd,BAJAJCON,383,5003,0.005573764,32.903778,Household & Personal Products,Consumer Defensive
+Hitachi Energy India Ltd,POWERINDIA,23871,106477,0.020989011,124.99869,Electrical Equipment & Parts,Industrials
+Happy Forgings Ltd,HAPPYFORGE,1347.5,12711,0.123268136,44.44261,Metal Fabrication,Industrials
+Kei Industries Limited,KEI,4756,45468,0.037541892,52.633907,Electrical Equipment & Parts,Industrials
+NGL Fine Chem Ltd,NGLFINE,2346.4,1463,0.272973637,40.98515,Drug Manufacturers - General,Healthcare
+Tube Investments of India Ltd,TIINDIA,2585.8,50080,0.559539573,84.0364,Conglomerates,Industrials
+Gujarat Ambuja Exports Limited,GAEL,147.11,6748,0.076172363,33.586758,Packaged Foods,Consumer Defensive
+Euro Pratik Sales Ltd,EUROPRATIK,258.74,2644,0.082993029,37.33622,Building Materials,Basic Materials
+Morepen Laboratories Limited,MOREPENLAB,39.23,2153,0.090894663,21.794445,Drug Manufacturers - Specialty & Generic,Healthcare
+Yatharth Hospital & Trauma Care Services Ltd,YATHARTH,720.3,6940,0.007216623,41.3253,Medical Care Facilities,Healthcare
+Himadri Speciality Chemical Limited,HSCL,489.7,24739,0.084218695,34.607777,Specialty Chemicals,Basic Materials
+Network People Services Technologies Ltd,NPST,1217.1,2538,0.092444081,68.032425,Software - Application,Technology
+PB Fintech Ltd,POLICYBZR,1513.6,70109,0.050094212,120.509544,Insurance Brokers,Financial Services
+Siemens Limited,SIEMENS,3206.2,114179,0.010984608,67.57007,Specialty Industrial Machinery,Industrials
+Canara Bank,CANBK,154.15,139824,0.789605555,6.9218674,Banks - Regional,Financial Services
+Ind-swift Laboratories Limited,INDSWFTLAB,141.89,1161,0.034830699,4.113946,Drug Manufacturers - Specialty & Generic,Healthcare
+Updater Services Ltd,UDS,165.06,1115,0.106847508,12.004363,Specialty Business Services,Industrials
+Netweb Technologies India Ltd,NETWEB,3636.5,20725,0.014988724,151.52083,Computer Hardware,Technology
+Nava Ltd,NAVA,567.3,16055,0.117349572,18.015244,Conglomerates,Industrials
+GE Vernova T&D India Ltd,GVT&D,3648.6,93421,0.019491177,87.72782,Specialty Industrial Machinery,Industrials
+J.G.Chemicals Ltd,JGCHEM,379.65,1488,0.000430338,23.522305,Other Industrial Metals & Mining,Basic Materials
+Bharat Dynamics Ltd,BDL,1310.4,48034,0.000527569,82.622955,Aerospace & Defense,Industrials
+Quality Power Electrical Equipments Ltd,QPOWER,882.5,6834,0.020964504,64.08859,Electrical Equipment & Parts,Industrials
+Punjab National Bank,PNB,129.59,148961,0.540785438,8.366042,Banks - Regional,Financial Services
+Advanced Enzyme Technologies Limited,ADVENZYMES,312.95,3503,0.027694436,23.04492,Specialty Chemicals,Basic Materials
+Tips Music Ltd,TIPSMUSIC,554,7082,0.016468329,37.584805,Entertainment,Communication Services
+Cupid Limited,CUPID,425.35,11471,0.055496281,136.7685,Household & Personal Products,Consumer Defensive
+Jaykay Enterprises Ltd,JAYKAY,158.54,2066,0.15,65.29,Defence,Capital Goods
+Foseco India Limited,FOSECOIND,4723.5,3578,0.005265343,38.022217,Chemicals,Basic Materials
+Gtl Infrastructure Limited,GTLINFRA,1.17,1499,-0.623253949,,Communication Equipment,Technology
+Vardhman Textiles Limited,VTL,536.45,15516,0.125127071,19.117962,Textile Manufacturing,Consumer Cyclical
+Gujarat Themis Biosyn Ltd,GUJTHEM,335.75,3665,0.122672385,76.306816,Drug Manufacturers - Specialty & Generic,Healthcare
+Indian Railway Catering & Tourism Corporation Ltd,IRCTC,645.3,51624,0.024511973,36.232452,Travel Services,Consumer Cyclical
+Jyothy Laboratories Limited,JYOTHYLAB,246.05,9035,0.02989983,26.45699,Household & Personal Products,Consumer Defensive
+Sharda Cropchem Limited,SHARDACROP,1202.9,10868,0.003103174,19.194193,Agricultural Inputs,Basic Materials
+Thejo Engineering Ltd,THEJO,1712,1857,0.100677718,38.171684,Specialty Industrial Machinery,Industrials
+Aditya Birla Sun Life AMC Ltd,ABSLAMC,917.9,26546,0.018261973,26.10637,Asset Management,Financial Services
+Data Patterns (India) Ltd,DATAPATTNS,2984.6,16709,0.004090915,67.570755,Aerospace & Defense,Industrials
+GMR Power & Urban Infra Ltd,GMRP&UI,115.08,8988,17.46363156,9.7691,Thermal Coal,Energy
+K.p.r. Mill Limited,KPRMILL,933.5,31974,0.093154738,37.88555,Textile Manufacturing,Consumer Cyclical
+Alivus Life Sciences Ltd,ALIVUS,910.95,11211,0.020091773,20.57714,Drug Manufacturers - Specialty & Generic,Healthcare
+Union Bank Of India,UNIONBANK,193.98,148115,0.241490019,7.8186216,Banks - Regional,Financial Services
+Voltas Limited,VOLTAS,1546.9,51185,0.136946993,102.03826,"Furnishings, Fixtures & Appliances",Consumer Cyclical
+CG Power and Industrial Solutions Ltd,CGPOWER,712.15,112173,0.010689525,99.04729,Electrical Equipment & Parts,Industrials
+Shree Digvijay Cement Co. Ltd,SHREDIGCEM,71.67,1060,0.304158445,29.862497,Building Materials,Basic Materials
+CIE Automotive India Ltd,CIEINDIA,469.35,17833,0.086664394,22.223011,Auto Parts,Consumer Cyclical
+Tata Investment Corporation Limited,TATAINVEST,707.1,35776,7.13E-05,87.72952,Capital Markets,Financial Services
+Indian Bank,INDIANB,946.7,127563,0.466689161,11.073811,Banks - Regional,Financial Services
+Genesys International Corporation Limited,GENESYS,316.95,1325,0.219898013,32.87863,Software - Application,Technology
+InfoBeans Technologies Ltd,INFOBEAN,886.25,2148,0.059296271,28.487623,Software - Application,Technology
+Gujarat Pipavav Port Limited,GPPL,175.6,8492,0.027109801,17.507479,Marine Shipping,Industrials
+Heg Limited,HEG,556.45,10773,0.131949208,28.174685,Electrical Equipment & Parts,Industrials
+Shivalik Bimetal Controls Ltd,SBCL,497.9,2868,0.103415779,31.552599,Metal Fabrication,Industrials
+Cummins India Limited,CUMMINSIND,4733.9,131224,0.003922554,58.47931,Specialty Industrial Machinery,Industrials
+Paras Defence and Space Technologies Ltd,PARAS,642.15,5175,0.037539683,70.41119,Aerospace & Defense,Industrials
+Vardhman Holdings Limited,VHL,3360.5,1084,,4.621086,Credit Services,Financial Services
+Whirlpool Of India Limited,WHIRLPOOL,930.25,11807,0.071996415,35.46512,"Furnishings, Fixtures & Appliances",Consumer Cyclical
+SBI Life Insurance Company Ltd,SBILIFE,2080,208589,,84.040405,Insurance - Life,Financial Services
+Sasken Communication Technologies Limited,SASKEN,1229.3,1867,0.032478656,49.270542,Information Technology Services,Technology
+Idbi Bank Limited,IDBI,112.83,121331,0.323466043,13.059028,Banks - Regional,Financial Services
+Coal India Limited,COALINDIA,423.55,261022,0.092283309,8.742002,Thermal Coal,Energy
+Supreme Petrochem Ltd,SPLPETRO,661.9,12446,0.058051169,46.51441,Specialty Chemicals,Basic Materials
+Nippon Life India Asset Management Ltd,NAM-INDIA,957.05,60995,0.020895246,42.91704,Asset Management,Financial Services
+Tenneco Clean Air India Ltd,TENNIND,552.7,22307,0.02,40.43,Auto Ancillary,Automobile & Ancillaries
+Balu Forge Industries Ltd,BALUFORGE,492.1,5659,0.037774028,22.126799,Metal Fabrication,Industrials
+Vinati Organics Limited,VINATIORGA,1506.6,15630,0.022421669,35.20916,Specialty Chemicals,Basic Materials
+Petronet Lng Limited,PETRONET,306.65,45998,0.13364739,12.655799,Oil & Gas Refining & Marketing,Energy
+Dabur India Limited,DABUR,509.7,90405,0.08796475,49.009617,Household & Personal Products,Consumer Defensive
+JNK India Ltd,JNKINDIA,245.31,1373,0.037022277,29.952383,Specialty Industrial Machinery,Industrials
+Hindustan Unilever Limited,HINDUNILVR,2314.5,543892,0.033358973,53.763065,Household & Personal Products,Consumer Defensive
+Bank Of Baroda,BANKBARODA,309.05,159821,0.722258066,8.21068,Banks - Regional,Financial Services
+Kirloskar Pneumatic Company Ltd,KIRLPNU,1142,7418,0.009672134,38.90971,Specialty Industrial Machinery,Industrials
+DDev Plastiks Industries Ltd,DDEVPLSTIK,280.85,2906,0.055462169,14.597194,Specialty Chemicals,Basic Materials
+Bank Of India,BANKINDIA,171.7,78169,1.162819178,7.9601297,Banks - Regional,Financial Services
+The Federal Bank  Limited,FEDERALBNK,292.6,71964,0.878613331,17.733334,Banks - Regional,Financial Services
+Multi Commodity Exchange Of India Limited,MCX,2395.9,60979,0.00053598,96.143654,Financial Data & Stock Exchanges,Financial Services
+Fiem Industries Limited,FIEMIND,2282.6,6008,0.021278465,24.690105,Auto Parts,Consumer Cyclical
+Transport Corporation Of India Limited,TCI,1034.5,7937,0.112245092,17.762705,Integrated Freight & Logistics,Industrials
+Colgate Palmolive (india) Limited,COLPAL,2197.9,59780,0.036552176,45.048164,Household & Personal Products,Consumer Defensive
+Dlf Limited,DLF,629.3,155828,0.096420963,35.215443,Real Estate - Development,Real Estate
+Steelcast Ltd,STEELCAS,236.06,2393,0.000139625,26.464125,Steel,Basic Materials
+Force Motors Ltd,FORCEMOT,24475,32249,0.005745971,23.584906,Auto Manufacturers,Consumer Cyclical
+Lloyds Metals & Energy Ltd,LLOYDSME,1143,62230,0.156833986,26.04238,Steel,Basic Materials
+Indraprastha Medical Corporation Limited,INDRAMEDCO,411.35,3773,0.054903801,20.619047,Medical Care Facilities,Healthcare
+Oberoi Realty Limited,OBEROIRLTY,1523.2,55392,0.210151291,24.75138,Real Estate - Development,Real Estate
+Finolex Industries Limited,FINPIPE,189.89,11741,0.038831464,23.356703,Building Products & Equipment,Industrials
+Azad Engineering Ltd,AZAD,1720.1,11109,0.188956012,90.10477,Specialty Industrial Machinery,Industrials
+Bharat Electronics Limited,BEL,441.15,322471,0.003065502,54.0625,Aerospace & Defense,Industrials
+Schaeffler India Ltd,SCHAEFFLER,3888.9,60785,0.010409734,57.13929,Auto Parts,Consumer Cyclical
+Orkla India Ltd,ORKLAINDIA,580.55,7953,,32.145626,Packaged Foods,Consumer Defensive
+Mahanagar Gas Limited,MGL,1133.5,11196,0.034187729,11.750985,Utilities - Regulated Gas,Utilities
+LMW Ltd,LMW,15380,16430,,142.85713,Specialty Industrial Machinery,Industrials
+Orient Electric Ltd,ORIENTELEC,177.07,3778,0.124485093,43.50614,"Furnishings, Fixtures & Appliances",Consumer Cyclical
+Indian Energy Exchange Ltd,IEX,125.42,11154,0.005416425,23.182995,Capital Markets,Financial Services
+AU Small Finance Bank,AUBANK,1029.65,76933,0.679232847,33.332794,Banks - Regional,Financial Services
+Sharda Motor Industries Limited,SHARDAMOTR,954.7,5481,0.048622888,16.261284,Auto Parts,Consumer Cyclical
+R R Kabel Ltd,RRKABEL,1442.8,16318,0.134778626,35.97108,Electrical Equipment & Parts,Industrials
+Paramount Communications Limited,PARACABLES,36.52,1120,0.046326584,15.280334,Communication Equipment,Technology
+Grindwell Norton Limited,GRINDWELL,1672.4,18517,0.03704243,47.61959,Building Products & Equipment,Industrials
+Havells India Limited,HAVELLS,1412.9,88630,0.038268625,59.515587,Electrical Equipment & Parts,Industrials
+Eih Associated Hotels Limited,EIHAHOTELS,337.8,2058,0.007959053,21.502228,Lodging,Consumer Cyclical
+Gujarat Mineral Development Corporation Limited,GMDCLTD,567.6,18053,0.019720076,18.250803,Thermal Coal,Energy
+Kotak Mahindra Bank Limited,KOTAKBANK,421.35,419053,0.550837466,22.270084,Banks - Regional,Financial Services
+Garden Reach Shipbuilders & Engineers Ltd,GRSE,2477.3,28383,0.004650111,41.15116,Aerospace & Defense,Industrials
+Polycab India Ltd,POLYCAB,7869,118592,0.153554215,45.250145,Electrical Equipment & Parts,Industrials
+Indiamart Intermesh Ltd,INDIAMART,2185.7,13129,0.015117902,21.739605,Internet Content & Information,Communication Services
+Supreme Industries Limited,SUPREMEIND,3918.3,49794,0.013391185,60.975723,Building Products & Equipment,Industrials
+Nmdc Limited,NMDC,80.13,70449,0.143987511,10.2076435,Steel,Basic Materials
+Bank Of Maharashtra,MAHABANK,68.79,52910,0.830867181,8.169834,Banks - Regional,Financial Services
+Asian Paints Limited,ASIANPAINT,2428.1,232756,0.118057342,60.611584,Specialty Chemicals,Basic Materials
+Graphite India Limited,GRAPHITE,690.85,13506,0.029437938,40.975677,Electrical Equipment & Parts,Industrials
+Shree Cements Limited,SHREECEM,26510,95650,0.048571926,53.475613,Building Materials,Basic Materials
+Ratnamani Metals & Tubes Limited,RATNAMANI,2504.8,17559,0.043276161,30.029972,Steel,Basic Materials
+Avt Natural Products Limited,AVTNPL,65.96,1013,0.222579721,17.542553,Specialty Chemicals,Basic Materials
+Bandhan Bank Ltd,BANDHANBNK,171.35,27604,0.452692119,27.416,Banks - Regional,Financial Services
+Balmer Lawrie & Company Limited,BALMLAWRIE,180.43,3090,0.053664245,11.543825,Conglomerates,Industrials
+Pi Industries Limited,PIIND,3048,46239,0.018125431,31.846203,Agricultural Inputs,Basic Materials
+Life Insurance Corporation of India,LICI,873.3,552362,,10.416269,Insurance - Life,Financial Services
+Sun Tv Network Limited,SUNTV,584.65,23040,0.010609344,14.598003,Broadcasting,Communication Services
+Navneet Education Limited,NAVNETEDUL,153.15,3395,0.108853031,10.223632,Publishing,Communication Services
+Marico Limited,MARICO,788.2,102096,0.139371069,59.531723,Household & Personal Products,Consumer Defensive
+Tata Technologies Ltd,TATATECH,607.7,24662,0.066094507,46.495792,Information Technology Services,Technology
+Syngene International Limited,SYNGENE,442.7,17786,0.122260303,50.76835,Diagnostics & Research,Healthcare
+Prudent Corporate Advisory Services Ltd,PRUDENT,2595.5,10749,0.045730416,50,Asset Management,Financial Services
+UTI Asset Management Company Ltd,UTIAMC,1067.35,13717,,24.633047,Asset Management,Financial Services
+Crisil Limited,CRISIL,4567,33426,0.09784601,43.669918,Financial Data & Stock Exchanges,Financial Services
+Exide Industries Limited,EXIDEIND,336.45,28606,0.144946484,34.614197,Auto Parts,Consumer Cyclical
+Karur Vysya Bank Limited,KARURVYSYA,322.6,31183,0.102014158,13.566022,Banks - Regional,Financial Services
+Astral Ltd,ASTRAL,1636.6,43967,0.06447332,87.70632,Building Products & Equipment,Industrials
+Hindustan Copper Limited,HINDCOPPER,569.05,55050,0.062576966,83.31625,Copper,Basic Materials
+Tilaknagar Industries Limited,TI,450.75,11141,0.050076033,78.80245,Beverages - Wineries & Distilleries,Consumer Defensive
+Max Financial Services Limited,MFSL,1849.3,63862,0.273411415,435.12943,Insurance - Life,Financial Services
+Reliance Industrial Infrastructure Limited,RIIL,730.35,1103,,89.284836,Engineering & Construction,Industrials
+Hero Motocorp Limited,HEROMOTOCO,5465,109349,0.036318418,20.0801,Auto Manufacturers,Consumer Cyclical
+Ajax Engineering Ltd,AJAXENGG,488.45,5588,0.001527909,25.440104,Farm & Heavy Construction Machinery,Industrials
+Meesho Ltd,MEESHO,158.18,71389,0.040308042,,Internet Retail,Consumer Cyclical
+The Orissa Minerals Development Company Limited,ORISSAMINE,4230.5,2538,-3.605220045,,Other Industrial Metals & Mining,Basic Materials
+Veedol Corporation Ltd,VEEDOL,1421.9,2416,0.024024944,12.468432,Specialty Chemicals,Basic Materials
+Cipla Limited,CIPLA,1341.1,108331,0.0140475,23.867237,Drug Manufacturers - Specialty & Generic,Healthcare
+Hindustan Aeronautics Ltd,HAL,4170,278879,3.32E-05,31.34867,Aerospace & Defense,Industrials
+Izmo Limited,IZMO,872.1,1305,0.032660424,35.207912,Software - Application,Technology
+Amara Raja Energy & Mobility Ltd,ARE&M,856.25,15673,0.035295089,21.095097,Electrical Equipment & Parts,Industrials
+Easy Trip Planners Ltd,EASEMYTRIP,9.3,3382,0.052245633,,Travel Services,Consumer Cyclical
+Summit Securities Limited,SUMMITSEC,1757.5,1916,,15.551721,Capital Markets,Financial Services
+Axis Bank Limited,AXISBANK,1368.3,425046,1.178658757,16.233242,Banks - Regional,Financial Services
+State Bank Of India,SBIN,1216.1,1122535,1.269155621,13.244391,Banks - Regional,Financial Services
+Avenue Supermarts,DMART,3866.4,251599,0.0382532,87.71324,Discount Stores,Consumer Defensive
+Marksans Pharma Limited,MARKSANS,178.38,8084,0.130489454,22.409548,Drug Manufacturers - General,Healthcare
+Pix Transmission Ltd,PIXTRANS,1523.2,2079,0.059351521,18.975956,Specialty Industrial Machinery,Industrials
+Rallis India Limited,RALLIS,284.4,5531,0.033136405,33.108265,Agricultural Inputs,Basic Materials
+Waaree Energies Ltd,WAAREEENER,2897.6,83347,0.157436282,25.509289,Solar,Technology
+Bajaj Auto Limited,BAJAJ-AUTO,9807,273863,0.262485102,30.863886,Auto Manufacturers,Consumer Cyclical
+KSB Ltd,KSB,719.25,12518,0.00231326,47.63245,Specialty Industrial Machinery,Industrials
+Fino Payments Bank Ltd,FINOPB,213.08,1774,1.123957023,25.641396,Banks - Regional,Financial Services
+Ideaforge Technology Ltd,IDEAFORGE,414,1791,0.027063615,,Computer Hardware,Technology
+Sona BLW Precision Forgings Ltd,SONACOMS,532.1,33088,0.03680518,54.0752,Auto Parts,Consumer Cyclical
+PTC Industries Ltd,PTCIL,17808,26699,0.043870517,400,Metal Fabrication,Industrials
+Glaxosmithkline Pharmaceuticals Limited,GLAXO,2596.9,43993,0.005099752,43.102074,Drug Manufacturers - General,Healthcare
+Mazagon Dock Shipbuilders Ltd,MAZDOCK,2360.2,95206,0.002560492,39.527718,Aerospace & Defense,Industrials
+Delhivery Ltd,DELHIVERY,430.95,32365,0.150718643,212.29065,Integrated Freight & Logistics,Industrials
+GMR Airports Ltd,GMRAIRPORT,99.75,105326,-15.26121066,,Airports & Air Services,Industrials
+Expleo Solutions Ltd,EXPLEOSOL,829.15,1287,0.046863696,12.092023,Information Technology Services,Technology
+La Opala Rg Limited,LAOPALA,203.39,2262,0.01312734,22.179934,"Furnishings, Fixtures & Appliances",Consumer Cyclical
+Endurance Technologies Limited,ENDURANCE,2465.2,34676,0.16505201,37.734577,Auto Parts,Consumer Cyclical
+One 97 Communications Ltd,PAYTM,1153.3,73800,0.010674333,,Software - Infrastructure,Technology
+India Motor Parts And Accessories Limited,IMPAL,1024.4,1278,0,14.684633,Auto Parts,Consumer Cyclical
+Equitas Small Finance Bank Ltd,EQUITASBNK,67.44,7717,0.351911545,,Banks - Regional,Financial Services
+Techno Electric & Engineering Company Ltd,TECHNOE,1144.4,13309,0.01045357,28.326733,Engineering & Construction,Industrials
+DCX Systems Ltd,DCXINDIA,180.42,2010,0.002728996,151.61343,Aerospace & Defense,Industrials
+Basf India Limited,BASF,3573.6,15469,0.052307472,40.817818,Specialty Chemicals,Basic Materials
+Unimech Aerospace and Manufacturing Ltd,UNIMECH,907.35,4614,0.126032729,68.94757,Aerospace & Defense,Industrials
+Gujarat Narmada Valley Fertilizers And Chemicals Limited,GNFC,464.2,6821,0.01231395,10.940372,Chemicals,Basic Materials
+AvenuesAI Ltd,CCAVENUE,18.46,6426,0.04617371,23.666666,Software - Infrastructure,Technology
+Sun Pharmaceuticals Industries Limited,SUNPHARMA,1724.4,413741,0.032709149,37.882248,Drug Manufacturers - Specialty & Generic,Healthcare
+Aether Industries Ltd,AETHER,966.2,12825,0.089793498,59.531734,Specialty Chemicals,Basic Materials
+IDFC First Bank Ltd,IDFCFIRSTB,83.51,71800,0.86811985,43.952633,Banks - Regional,Financial Services
+Insecticides (india) Limited,INSECTICID,619.85,1804,0.096500341,12.7227,Agricultural Inputs,Basic Materials
+Goldiam International Limited,GOLDIAM,380.95,4302,0.036503319,27.249643,Luxury Goods,Consumer Cyclical
+NIIT Learning Systems Ltd,NIITMTS,344.9,4731,0.084968098,22.080666,Education & Training Services,Consumer Defensive
+Triveni Turbine Limited,TRITURBINE,490.2,15583,0.032189856,45.4731,Specialty Industrial Machinery,Industrials
+Amagi Media Labs Ltd,AMAGI,410.75,8890,0.07,,Miscelleneous,Miscelleneous
+Siemens Energy India Ltd,ENRIN,2774.6,98809,0.033688631,83.32133,Utilities - Renewable,Utilities
+Dodla Dairy Ltd,DODLA,1162.8,7015,0.030181728,35.84464,Food Distribution,Consumer Defensive
+Sunteck Realty Limited,SUNTECK,408.9,6004,0.118692282,31.35736,Real Estate - Development,Real Estate
+Central Bank Of India,CENTRALBK,38.31,34694,0.350545682,7.0422797,Banks - Regional,Financial Services
+Diamond Power Infrastructure Ltd,DIACABS,135.3,7130,-0.526624172,67.98995,Specialty Industrial Machinery,Industrials
+Indian Overseas Bank,IOB,36.21,69767,1.249689082,14.719512,Banks - Regional,Financial Services
+Utkarsh Small Finance Bank Ltd,UTKARSHBNK,13.97,2486,0.791649849,,Banks - Regional,Financial Services
+Bosch Limited,BOSCHLTD,35215,103892,0.00856421,37.73575,Auto Parts,Consumer Cyclical
+Tamilnad Mercantile Bank Ltd,TMB,689.55,10919,0.055501949,8.695459,Banks - Regional,Financial Services
+Butterfly Gandhimathi Appliances Limited,BUTTERFLY,603,1078,0.037615685,24.937965,"Furnishings, Fixtures & Appliances",Consumer Cyclical
+Rategain Travel Technologies Ltd,RATEGAIN,547.9,6468,0.009537869,36.093544,Software - Application,Technology
+Uco Bank,UCOBANK,28.93,36302,0.766960038,14.04369,Banks - Regional,Financial Services
+Nesco Limited,NESCO,1142.7,8061,0.000368901,19.72553,Conglomerates,Industrials
+Prakash Industries Limited,PRAKASH,137.98,2473,0.127506667,7.4745398,Steel,Basic Materials
+Mrf Limited,MRF,146390,62086,0.203973722,27.85516,Auto Parts,Consumer Cyclical
+Anant Raj Limited,ANANTRAJ,548.7,19757,0.11574648,36.098686,Real Estate - Development,Real Estate
+Canara HSBC Life Insurance Company Ltd,CANHLIFE,149.57,14209,,115.053856,Insurance - Life,Financial Services
+Bayer Cropscience Limited,BAYERCROP,4800,21585,0.036872018,32.154343,Agricultural Inputs,Basic Materials
+Maharashtra Seamless Limited,MAHSEAMLES,532.55,7136,1.58E-05,8.489558,Steel,Basic Materials
+Jana Small Finance Bank Ltd,JSFB,382.6,4029,0.819945033,12.969492,Banks - Regional,Financial Services
+Automotive Axles Limited,AUTOAXLES,2023.5,3060,0.015816939,19.569632,Auto Parts,Consumer Cyclical
+Siyaram Silk Mills Limited,SIYSIL,551.7,2504,0.204233322,12.19496,Textile Manufacturing,Consumer Cyclical
+Maruti Suzuki India Limited,MARUTI,14977,470881,0.000903991,31.545801,Auto Manufacturers,Consumer Cyclical
+Eicher Motors Limited,EICHERMOT,7936.5,217709,0.021511996,40.649967,Auto Manufacturers,Consumer Cyclical
+Capillary Technologies India Ltd,CAPILLARY,543.6,4311,0.187288274,196.24548,Software - Infrastructure,Technology
+Eureka Forbes Ltd,EUREKAFORB,514.55,9956,0.00579617,62.14372,"Furnishings, Fixtures & Appliances",Consumer Cyclical
+IFGL Refractories Ltd,IFGLEXPOR,178.27,1285,0.192653984,44.6792,Building Materials,Basic Materials
+Ujjivan Small Finance Bank Ltd,UJJIVANSFB,62.53,12136,0.30498749,24.813492,Banks - Regional,Financial Services
+Seshasayee Paper And Boards Limited,SESHAPAPER,276.14,1742,0.041168779,19.88049,Paper & Paper Products,Basic Materials
+Arkade Developers Ltd,ARKADE,118.65,2203,0.129730271,14.96217,Real Estate - Development,Real Estate
+Intellect Design Arena Limited,INTELLECT,704.2,9750,0.025765382,27.550861,Software - Application,Technology
+Saregama India Limited,SAREGAMA,343,6589,0.001708688,34.36874,Entertainment,Communication Services
+Alembic Limited,ALEMBICLTD,93.96,2413,0.00617778,7.451229,Real Estate - Development,Real Estate
+Subros Limited,SUBROS,804.65,5249,0.037415501,32.26343,Auto Parts,Consumer Cyclical
+Inox Green Energy Services Ltd,INOXGREEN,181.53,7292,0.091976265,108.7006,Utilities - Renewable,Utilities
+Page Industries Limited,PAGEIND,32740,36530,0.186052973,48.78049,Apparel Manufacturing,Consumer Cyclical
+Indiabulls Limited,IBULLSLTD,9.47,2200,-0.951957167,,Real Estate - Development,Real Estate
+Icici Bank Limited,ICICIBANK,1394.5,997868,0.648760484,19.047945,Banks - Regional,Financial Services
+Icici Prudential Life Insurance Company Limited,ICICIPRULI,651.3,94320,0.21786894,68.993645,Insurance - Life,Financial Services
+Tata Elxsi Limited,TATAELXSI,4859,30286,0.067235286,52.084896,Software - Application,Technology
+Unichem Laboratories Limited,UNICHEMLAB,367.05,2584,0.187616043,8.778999,Drug Manufacturers - Specialty & Generic,Healthcare
+Unitech Limited,UNITECH,5.02,1317,-1.073831477,,Real Estate - Diversified,Real Estate
+Bajaj Electricals Limited,BAJAJELEC,384.55,4441,0.141028096,124.8539,"Furnishings, Fixtures & Appliances",Consumer Cyclical
+Natco Pharma Limited,NATCOPHARM,891.7,15980,0.036729328,10.256498,Drug Manufacturers - Specialty & Generic,Healthcare
+Man Infraconstruction Limited,MANINFRA,111.27,4492,0.020188209,18.361385,Engineering & Construction,Industrials
+Yes Bank Limited,YESBANK,21.04,66084,1.481577823,20.831684,Banks - Regional,Financial Services
+Windlas Biotech Ltd,WINDLAS,780.4,1645,0.064449989,24.813992,Drug Manufacturers - Specialty & Generic,Healthcare
+Godawari Power And Ispat Limited,GPIL,262.85,17050,0.062949342,22.370213,Steel,Basic Materials
+The South Indian Bank Limited,SOUTHBANK,40.19,10524,0.257268268,7.568738,Banks - Regional,Financial Services
+Wealth First Portfolio Managers Ltd,WEALTH,954.65,1017,0,42.73277,Capital Markets,Financial Services
+Amrutanjan Health Care Limited,AMRUTANJAN,616.25,1781,0.006362545,31.345371,Drug Manufacturers - Specialty & Generic,Healthcare
+National Aluminium Company Limited,NATIONALUM,341.2,62736,0.017472188,10.20335,Aluminum,Basic Materials
+Tata Consultancy Services Limited,TCS,2686.2,971891,0.099117734,20.366972,Information Technology Services,Technology
+Itc Limited,ITC,327,409706,0.004067397,20.123077,Tobacco,Consumer Defensive
+Lincoln Pharmaceuticals Limited,LINCOLN,622.6,1247,,15.576681,Drug Manufacturers - Specialty & Generic,Healthcare
+Nocil Limited,NOCIL,150.93,2521,0.005844834,42.396065,Specialty Chemicals,Basic Materials
+Avanti Feeds Limited,AVANTIFEED,1350.7,18412,0.005404177,23.92313,Packaged Foods,Consumer Defensive
+Sundram Fasteners Limited,SUNDRMFAST,914.65,19219,0.216118898,34.724754,Auto Parts,Consumer Cyclical
+The Jammu & Kashmir Bank Limited,J&KBANK,103.57,11405,0.167707784,5.292284,Banks - Regional,Financial Services
+Alkem Laboratories Limited,ALKEM,5392,64469,0.115220274,27.173311,Drug Manufacturers - Specialty & Generic,Healthcare
+Ttk Healthcare Limited,TTKHLTCARE,929.1,1313,0.022740285,21.835487,Drug Manufacturers - General,Healthcare
+Honda Siel Power Products Limited,HONDAPOWER,2210.9,2243,0.000115804,30.486763,Specialty Industrial Machinery,Industrials
+Olectra Greentech Ltd,OLECTRA,1014.5,8327,0.242882766,58.137535,Farm & Heavy Construction Machinery,Industrials
+Patanjali Foods Ltd,PATANJALI,534.4,58321,0.069271295,35.204216,Packaged Foods,Consumer Defensive
+eMudhra Ltd,EMUDHRA,466.2,3823,0,37.596775,Software - Application,Technology
+Gabriel India Limited,GABRIEL,952.3,13679,0.05838492,,Auto Parts,Consumer Cyclical
+Pricol Ltd.,PRICOLLTD,603.3,7353,0.13258281,34.592888,Auto Parts,Consumer Cyclical
+Orient Cement Limited,ORIENTCEM,158.37,3255,0.03856669,10.029765,Building Materials,Basic Materials
+Jagsonpal Pharmaceuticals Limited,JAGSNPHARM,173.35,1162,0.038503855,28.558485,Drug Manufacturers - Specialty & Generic,Healthcare
+Acutaas Chemicals Ltd,ACUTAAS,2106.5,17246,0.00987967,60.237343,Specialty Chemicals,Basic Materials
+Bosch Home Comfort India Ltd,BOSCH-HCIL,1394.4,3805,0.06558707,312.64575,"Furnishings, Fixtures & Appliances",Consumer Cyclical
+63 Moons Technologies,63MOONS,641.9,2958,0.00083413,,Software - Application,Technology
+Jsw Holdings Limited,JSWHL,17281,19208,,135.1345,Conglomerates,Industrials
+Wendt (india) Limited,WENDT,6832.5,1367,0.006483647,60.97724,Tools & Accessories,Industrials
+Timken India Limited,TIMKEN,3155.2,23778,0.00584105,54.949497,Tools & Accessories,Industrials
+Inox India Ltd,INOXINDIA,1132.8,10282,0.049501621,41.494507,Specialty Industrial Machinery,Industrials
+Asian Energy Services Ltd,ASIANENE,309.6,1385,0.060355631,32.90117,Oil & Gas Equipment & Services,Energy
+Capital Small Finance Bank Ltd,CAPITALSFB,263.7,1198,0.239214635,8.843059,Banks - Regional,Financial Services
+Indraprastha Gas Limited,IGL,168.2,23570,0.008806709,14.1701765,Utilities - Regulated Gas,Utilities
+Ganesh Housing Ltd,GANESHHOU,713.45,5949,0.003170339,14.164186,Real Estate - Development,Real Estate
+Eih Limited,EIHOTEL,326.6,20424,0.057461818,31.739553,Lodging,Consumer Cyclical
+Jai Corp Limited,JAICORPLTD,115.57,2030,0,11.780835,Specialty Chemicals,Basic Materials
+Motherson Sumi Wiring India Ltd,MSUMI,42.93,28470,0.158511453,45.67021,Auto Parts,Consumer Cyclical
+Dcb Bank Limited,DCBBANK,191.04,6158,1.300403198,8.644343,Banks - Regional,Financial Services
+Apeejay Surrendra Park Hotels Ltd,PARKHOTELS,127.49,2720,0.130540759,33.816975,Lodging,Consumer Cyclical
+LG Electronics India Ltd,LGEINDIA,1549.1,105149,,60.229393,Consumer Electronics,Technology
+General Insurance Corporation of India,GICRE,380.8,66808,,6.94004,Insurance - Reinsurance,Financial Services
+Systematix Corporate Services Ltd,SYSTMTXC,78.4,1072,0.034530623,37.333336,Capital Markets,Financial Services
+Syncom Formulations (India) Ltd,SYNCOMF,13.12,1234,0.013396166,20.184616,Drug Manufacturers - Specialty & Generic,Healthcare
+Linde India Limited,LINDEINDIA,6794,57942,0.011092047,98.03751,Specialty Chemicals,Basic Materials
+Gm Breweries Limited,GMBREW,1021.45,2334,0.059349652,14.306023,Beverages - Wineries & Distilleries,Consumer Defensive
+Kewal Kiran Clothing Limited,KKCL,518.45,3195,0.19987977,22.940266,Apparel Manufacturing,Consumer Cyclical
+Ivalue Infosolutions Ltd,IVALUE,225.26,1230,0.151395393,13.10413,Information Technology Services,Technology
+Federal-mogul Goetze (india) Limited.,FMGOETZE,425.05,2365,0.002391116,13.070417,Auto Parts,Consumer Cyclical
+Bf Investment Limited,BFINVEST,402.45,1526,,9.21571,Asset Management,Financial Services
+Religare Enterprises Limited,RELIGARE,221.04,7419,0.092784985,71.53398,Insurance - Life,Financial Services
+Castrol India Limited,CASTROLIND,187.74,18570,0.03475767,19.576643,Oil & Gas Refining & Marketing,Energy
+Procter & Gamble Health Ltd,PGHL,5019.5,8332,0.017761593,35.212204,Drug Manufacturers - Specialty & Generic,Healthcare
+Sanofi India Limited,SANOFI,4026.1,9283,0.022426214,26.042044,Drug Manufacturers - General,Healthcare
+Bannari Amman Sugars Limited,BANARISUG,3601,4516,0.08424833,31.949251,Confectioners,Consumer Defensive
+International Gemmological Institute (India) Ltd,IGIL,331.65,14333,0.101156896,28.010979,Other Precious Metals & Mining,Basic Materials
+Everest Kanto Cylinder Limited,EKC,118.2,1328,0.141163793,11.599607,Specialty Industrial Machinery,Industrials
+JTL Industries Ltd,JTLIND,65.02,2556,0.062524568,32.029556,Steel,Basic Materials
+ICICI Lombard General Insurance Company Ltd,ICICIGI,1936.1,96798,,35.45971,Insurance - Diversified,Financial Services
+Central Depository Services Ltd,CDSL,1320.4,27596,0.001692112,57.81086,Capital Markets,Financial Services
+Bajaj Holdings & Investment Limited,BAJAJHLDNG,11188,124515,0.000494357,14.164356,Asset Management,Financial Services
+Pidilite Industries Limited,PIDILITIND,1464.9,149085,0.046557165,65.36814,Specialty Chemicals,Basic Materials
+Jio Financial Services Ltd,JIOFIN,258.6,164292,0.032146668,102.21344,Asset Management,Financial Services
+Tata Teleservices (maharashtra) Limited,TTML,42.91,8392,-0.952391099,,Telecom Services,Communication Services
+D-link (india) Limited,DLINKINDIA,411.75,1463,0.008812662,14.0625,Communication Equipment,Technology
+Kalyani Investment Company Limited,KICL,4902,2142,,49.505154,Asset Management,Financial Services
+Shilchar Technologies Ltd,SHILCTECH,3895.1,4456,,24.095888,Electrical Equipment & Parts,Industrials
+Ambuja Cements Limited,AMBUJACEM,512,126557,0.014753968,34.247494,Building Materials,Basic Materials
+Ingersoll Rand (india) Limited,INGERRAND,3843.4,12191,0.017300015,46.95089,Specialty Industrial Machinery,Industrials
+Blue Star Limited,BLUESTARCO,1968.4,40468,0.124305877,81.982506,Building Products & Equipment,Industrials
+Tci Express Limited,TCIEXP,567.2,2179,0.012898837,25.911377,Integrated Freight & Logistics,Industrials
+Den Networks Limited,DEN,28.48,1358,0.006349658,7.155779,Entertainment,Communication Services
+Sanofi Consumer Healthcare India Ltd,SANOFICONR,4044.6,9328,0.074358974,42.736687,Drug Manufacturers - General,Healthcare
+Antelopus Selan Energy Ltd,ANTELOPUS,612.3,2154,0.008535495,13.055436,Oil & Gas E&P,Energy
+ZF Commercial Vehicle Control System India Ltd,ZFCVINDIA,15246,28918,0.020557589,58.139797,Auto Parts,Consumer Cyclical
+BSE (Bombay stock exchange),BSE,2739.5,111259,0.000736935,51.815777,Financial Data & Stock Exchanges,Financial Services
+Carborundum Universal Limited,CARBORUNIV,843.55,16067,0.045616043,64.938416,Conglomerates,Industrials
+Harsha Engineers International Ltd,HARSHA,379.8,3462,0.159838615,32.797928,Tools & Accessories,Industrials
+ICICI Prudential Asset Management Co Ltd,ICICIAMC,3023.8,149454,,46.29919,Asset Management,Financial Services
+One Point One Solutions Ltd,ONEPOINT,48.12,1263,0.117015566,34.869564,Specialty Business Services,Industrials
+Divi's Laboratories Limited,DIVISLAB,6291,167006,0.000267219,67.56525,Drug Manufacturers - Specialty & Generic,Healthcare
+Suven Life Sciences Limited,SUVEN,151.08,3504,0,,Drug Manufacturers - Specialty & Generic,Healthcare
+Mphasis Limited,MPHASIS,2373.8,45260,0.196109819,25.18888,Information Technology Services,Technology
+Nalwa Sons Investments Limited,NSIL,5964,3064,,135.14615,Asset Management,Financial Services
+Shakti Pumps (india) Limited,SHAKTIPUMP,560,6916,0.14615431,20.664206,Specialty Industrial Machinery,Industrials
+Oracle Financial Services Software Limited,OFSS,6642.5,57841,0.00545298,23.752907,Software - Infrastructure,Technology
+Indusind Bank Limited,INDUSINDBK,926.05,72146,0.828302363,,Banks - Regional,Financial Services
+Jupiter Wagons Ltd,JWL,289.35,12366,0.182123588,49.974094,Railroads,Industrials
+Standard Enginnering Technology Ltd,SETL,127.04,2534,0.09594154,33.697613,Specialty Industrial Machinery,Industrials
+Procter & Gamble Hygiene And Health Care Limited,PGHH,11501,37333,0.003974912,52.08314,Household & Personal Products,Consumer Defensive
+Astrazeneca Pharma India Limited,ASTRAZEN,8889.5,22224,0.046381515,111.10486,Drug Manufacturers - Specialty & Generic,Healthcare
+Pilani Investment And Industries Corporation Limited,PILANIINVS,4576.1,5067,0.121207083,4974.022,Asset Management,Financial Services
+Dr. Reddy's Laboratories Limited,DRREDDY,1280.4,106602,0.140274995,18.868258,Drug Manufacturers - Specialty & Generic,Healthcare
+Computer Age Management Services Ltd,CAMS,720.25,17854,0.079136918,38.619305,Information Technology Services,Technology
+Lloyds Enterprises Ltd,LLOYDSENT,55.02,8399,0.24282621,24.13158,Steel,Basic Materials
+Ceinsys Tech Ltd,CEINSYS,1009.1,1800,0.16,15.1,It-Software,Information Technology
+Apollo Pipes Ltd,APOLLOPIPE,332.5,1461,0.115833197,99.84985,Building Products & Equipment,Industrials
+Star Cement Ltd,STARCEMENT,213.48,8628,0.139885672,23.407894,Building Materials,Basic Materials
+Billionbrains Garage Ventures Ltd,GROWW,169.16,104433,,61.289856,Capital Markets,Financial Services
+Asian Granito India Limited,ASIANTILES,69.81,1622,0.198688212,16.821686,Building Products & Equipment,Industrials
+Anand Rathi Wealth Ltd,ANANDRATHI,3017.4,25053,0.117662062,68.02074,Asset Management,Financial Services
+Zydus Lifesciences Ltd,ZYDUSLIFE,900.75,90666,0.134145476,18.348951,Drug Manufacturers - Specialty & Generic,Healthcare
+Td Power Systems Limited,TDPOWERSYS,882.55,13787,0.014201834,62.90449,Specialty Industrial Machinery,Industrials
+Crompton Greaves Consumer Electricals Limited,CROMPTON,265.43,17348,0.141171577,37.019524,"Furnishings, Fixtures & Appliances",Consumer Cyclical
+Va Tech Wabag Limited,WABAG,1272.9,7930,0.16902659,23.528652,Engineering & Construction,Industrials
+Interarch Building Products Ltd,INTERARCH,1937.8,3250,0.026455935,23.808823,Engineering & Construction,Industrials
+Rossari Biotech Ltd,ROSSARI,510.2,2826,0.183894879,20.531187,Specialty Chemicals,Basic Materials
+Rishabh Instruments Ltd,RISHABH,434.9,1675,0.16036367,24.094183,Scientific & Technical Instruments,Technology
+Taj Gvk Hotels & Resorts Limited,TAJGVK,350.1,2195,0.067187792,17.60181,Lodging,Consumer Cyclical
+Skf India Limited,SKFINDIA,1707.5,8442,0.002663628,17.240509,Tools & Accessories,Industrials
+S J S Enterprises Ltd,SJS,1836.4,5872,0.054883487,37.87954,Auto Parts,Consumer Cyclical
+Alkyl Amines Chemicals Limited,ALKYLAMINE,1516.6,7757,0.003940436,42.914543,Specialty Chemicals,Basic Materials
+NDR Auto Components Ltd,NDRAUTO,780.4,1862,0.107221466,30.955973,Auto Parts,Consumer Cyclical
+Zydus Wellness Limited,ZYDUSWELL,399.25,12754,0.033200508,61.328724,Packaged Foods,Consumer Defensive
+Sanstar Ltd,SANSTAR,87.87,1601,0.041073217,82.12149,Chemicals,Basic Materials
+Garware Hi Tech Films Ltd,GRWRHITECH,4190.7,9744,0.006412878,31.644646,Specialty Chemicals,Basic Materials
+Orchid Pharma Ltd,ORCHPHARMA,668.15,3389,0.137781987,178.64973,Drug Manufacturers - Specialty & Generic,Healthcare
+Aia Engineering Limited,AIAENG,3949,36852,0.070819736,31.746925,Specialty Industrial Machinery,Industrials
+ITC Hotels Ltd,ITCHOTELS,176.68,36820,0.006855484,48.53846,Resorts & Casinos,Consumer Cyclical
+Fineotex Chemical Limited,FCL,24.91,2891,0.000297271,28.306818,Specialty Chemicals,Basic Materials
+Atul Limited,ATUL,6581,19376,0.036032544,32.572758,Specialty Chemicals,Basic Materials
+Cartrade Tech Ltd,CARTRADE,1978.1,9468,0.059162404,49.751007,Auto & Truck Dealerships,Consumer Cyclical
+Kirloskar Brothers Limited,KIRLOSBROS,1599.2,12701,0.086740164,31.85023,Specialty Industrial Machinery,Industrials
+Cochin Shipyard,COCHINSHIP,1517.6,39936,0.100444677,54.94569,Aerospace & Defense,Industrials
+Unicommerce eSolutions Ltd,UNIECOM,112.89,1269,0.109823376,62.370167,Software - Application,Technology
+Acc Limited,ACC,1612.6,30283,0.023162151,11.454752,Building Materials,Basic Materials
+United Breweries Limited,UBL,1602.6,42374,0.142069515,103.06109,Beverages - Brewers,Consumer Defensive
+Go Digit General Insurance Ltd,GODIGIT,332.55,30737,0.075882404,60.244564,Insurance - Property & Casualty,Financial Services
+Voltamp Transformers Limited,VOLTAMP,8229.5,8326,0.001340119,23.473959,Electrical Equipment & Parts,Industrials
+Authum Investment & Infrastructure Ltd,AIIL,506,42971,0.071766329,11.819668,Capital Markets,Financial Services
+Rites Ltd,RITES,218.49,10501,0.003420247,25.43539,Engineering & Construction,Industrials
+Tata Motors Commercial Vehicles Ltd,TMCV,472.9,174137,0.615959499,7.7946267,Auto Manufacturers,Consumer Cyclical
+Zen Technologies Limited,ZENTEC,1322.2,11890,0.045689402,45.0494,Aerospace & Defense,Industrials
+TATA Consumer Products Ltd,TATACONSUM,1156.2,114413,0.11962754,78.12162,Packaged Foods,Consumer Defensive
+Abbott India Limited,ABBOTINDIA,26295,55875,0.046459492,36.630215,Drug Manufacturers - Specialty & Generic,Healthcare
+Ador Welding Ltd,ADOR,1081.7,1882,0.004752608,28.571049,Specialty Industrial Machinery,Industrials
+D.b.corp Limited,DBCORP,227.05,4047,0.127209535,12.565025,Publishing,Communication Services
+Shanthi Gears Limited,SHANTIGEAR,450.1,3454,,41.675926,Specialty Industrial Machinery,Industrials
+Gopal Snacks Ltd,GOPAL,311.55,3883,0.164319365,916.3235,Packaged Foods,Consumer Defensive
+Huhtamaki India Ltd,HUHTAMAKI,182.45,1378,0.111377394,11.658147,Packaging & Containers,Consumer Cyclical
+JTEKT India Ltd,JTEKTINDIA,136.48,3786,0.177328046,49.093525,Auto Parts,Consumer Cyclical
+Hdfc Bank Limited,HDFCBANK,911.85,1403156,0.954306336,20.367434,Banks - Regional,Financial Services
+Jindal Photo Limited,JINDALPHOT,1358.8,1399,0.06137581,114.9577,Asset Management,Financial Services
+Vardhman Special Steels Limited,VSSL,251.8,2432,0.150772347,20.913622,Steel,Basic Materials
+Crizac Ltd,CRIZAC,236.65,4141,0.000164276,21.552824,Education & Training Services,Consumer Defensive
+Urban Company Ltd,URBANCO,117.77,17220,0.066771131,,Software - Application,Technology
+The Great Eastern Shipping Company Limited,GESHIP,1287.2,18377,0.151692666,8.143227,Marine Shipping,Industrials
+India Tourism Development Corporation Ltd,ITDC,532,4563,0.001745267,57.4514,Lodging,Consumer Cyclical
+Berger Paints (i) Limited,BERGEPAINT,455.45,53234,0.108914382,50.493347,Specialty Chemicals,Basic Materials
+Canara Robeco Asset Management Company Ltd,CRAMC,259.1,5167,,25.32747,Asset Management,Financial Services
+Dr. Lal Path Labs Ltd.,LALPATHLAB,1402.3,23415,0.072457731,44.250553,Diagnostics & Research,Healthcare
+Borosil Ltd,BOROLTD,256.25,3064,0.115223164,40.80414,"Furnishings, Fixtures & Appliances",Consumer Cyclical
+Cera Sanitaryware Limited,CERA,5095.4,6569,0.049769065,30.960018,Building Products & Equipment,Industrials
+Ghcl Limited,GHCL,497,4569,0.034079705,9.345618,Chemicals,Basic Materials
+Bharat Bijlee Limited,BBL,2491.6,2817,0.044787653,21.458961,Electrical Equipment & Parts,Industrials
+Kajaria Ceramics Limited,KAJARIACER,993.8,15828,0.099790842,39.064465,Building Products & Equipment,Industrials
+Ahluwalia Contracts (india) Limited,AHLUCONT,805.75,5398,0.042331958,20.204363,Engineering & Construction,Industrials
+Surya Roshni Limited,SURYAROSNI,222.3,4837,0.006611986,15.215607,Steel,Basic Materials
+GPT Healthcare Ltd,GPTHEALTH,127.08,1043,0.142414019,25.724697,Medical Care Facilities,Healthcare
+Stylam Industries Ltd,STYLAMIND,2219.4,3761,0.054870794,26.665863,"Furnishings, Fixtures & Appliances",Consumer Cyclical
+Safari Industries (India) Ltd,SAFARI,1836.3,8996,0.130898069,53.474083,Footwear & Accessories,Consumer Cyclical
+Cyient Limited,CYIENT,988.6,10916,0.096694604,20.200245,Conglomerates,Industrials
+Bhagiradha Chemicals & Industries Ltd,BHAGCHEM,205.38,2668,0.130330029,203.34654,Agricultural Inputs,Basic Materials
+Esab India Limited,ESABINDIA,5486,8457,0.010878893,40.161053,Tools & Accessories,Industrials
+Nazara Technologies Ltd,NAZARA,270.7,10028,0.076442954,,Electronic Gaming & Multimedia,Communication Services
+Navkar Corporation Limited,NAVKARCORP,95.7,1440,0.087330165,,Integrated Freight & Logistics,Industrials
+Prataap Snacks Ltd,DIAMONDYD,1077.5,2580,0.110717824,,Packaged Foods,Consumer Defensive
+Container Corporation Of India Limited,CONCOR,503,38309,0.067624972,29.940477,Railroads,Industrials
+Fine Organic Industries Ltd,FINEORG,4470.4,13706,0.001217873,34.603294,Specialty Chemicals,Basic Materials
+Galaxy Surfactants Ltd,GALAXYSURF,1900.2,6737,0.0890059,23.980312,Specialty Chemicals,Basic Materials
+Shree Renuka Sugars Limited,RENUKA,23.67,5046,-3.514595966,,Confectioners,Consumer Defensive
+Garware Technical Fibres Ltd,GARFIBRES,657.9,6531,0.052241618,30.771751,Textile Manufacturing,Consumer Cyclical
+Protean eGov Technologies Ltd,PROTEAN,609.15,2474,0.068613709,27.40216,Information Technology Services,Technology
+Waaree Renewables Technologies Ltd,WAAREERTL,877.8,9159,0.060104441,21.977968,Utilities - Renewable,Utilities
+Alembic Pharmaceuticals Limited,APLLTD,763.05,15035,0.242248995,23.808113,Drug Manufacturers - Specialty & Generic,Healthcare
+Accelya Kale Solutions Limited,ACCELYA,1183,1771,0.223376606,16.394123,Information Technology Services,Technology
+C.E. Info Systems Ltd,MAPMYINDIA,1111.8,6084,0.03774945,46.305706,Software - Infrastructure,Technology
+HDFC Asset Management Company Ltd,HDFCAMC,2715.7,116316,,40.648106,Asset Management,Financial Services
+Indo Tech Transformers Limited,INDOTECH,1417.4,1506,0.029060471,16.750177,Electrical Equipment & Parts,Industrials
+Maithan Alloys Limited,MAITHANALL,1017.3,2962,0.154820506,6.684407,Steel,Basic Materials
+CMS Info Systems Ltd,CMSINFO,315,5181,0.083623573,16.287487,Specialty Business Services,Industrials
+New India Assurance Company Ltd,NIACL,149.85,24716,,20.697515,Insurance - Diversified,Financial Services
+Nbcc (india) Limited,NBCC,94.91,25626,0.0001624,39.21901,Engineering & Construction,Industrials
+HDFC Life Insurance Company Ltd,HDFCLIFE,728.65,157175,0.1826103,83.36957,Insurance - Life,Financial Services
+Bhansali Engineering Polymers Limited,BEPL,83.7,2089,,12.4,Chemicals,Basic Materials
+Studds Accessories Ltd,STUDDS,517.7,2037,,24.997587,Auto Parts,Consumer Cyclical
+Wonderla Holidays Limited,WONDERLA,484.55,3073,0.003087107,41.16822,Leisure,Consumer Cyclical
+Excel Industries Limited,EXCELINDUS,935.5,1177,0.007728437,15.526971,Specialty Chemicals,Basic Materials
+Jagran Prakashan Limited,JAGRAN,63.49,1382,0.043924354,7.996222,Publishing,Communication Services
+Usha Martin Limited,USHAMART,402.4,12270,0.151427388,28.002783,Steel,Basic Materials
+Responsive Industries Limited,RESPONIND,182.37,4862,0.190458493,27.017776,Specialty Chemicals,Basic Materials
+Honeywell Automation India Limited,HONAUT,30895,27334,0.02498638,54.053818,Electrical Equipment & Parts,Industrials
+Niit Limited,NIITLTD,73.86,1007,0.00535083,44.227547,Education & Training Services,Consumer Defensive
+Lg Balakrishnan & Bros Limited,LGBBROSLTD,1851.6,5906,0.082545397,17.605782,Auto Parts,Consumer Cyclical
+Monarch Networth Capital Ltd,MONARCH,286.5,2271,0.011545442,14.303544,Capital Markets,Financial Services
+Ajanta Pharma Limited,AJANTPHARM,2939.4,36741,0.012510916,36.23074,Drug Manufacturers - Specialty & Generic,Healthcare
+Windsor Machines Limited,WINDMACHIN,242.95,2134,0.04747249,,Specialty Industrial Machinery,Industrials
+Bikaji Foods International Ltd,BIKAJI,635.35,15921,0.166965818,64.50253,Packaged Foods,Consumer Defensive
+Texmaco Infrastructure & Holdings Limited,TEXINFRA,94.14,1201,0.022652419,105.77528,Real Estate Services,Real Estate
+Caplin Point Laboratories Limited,CAPLIPOINT,1692.1,12884,0.001761101,21.009436,Drug Manufacturers - Specialty & Generic,Healthcare
+Hathway Cable & Datacom Limited,HATHWAY,11.08,1961,0.002875124,18.779661,Entertainment,Communication Services
+Ramco Industries Limited,RAMCOIND,307.2,2668,0.060963477,10.459653,Building Products & Equipment,Industrials
+Asian Hotels (north) Limited,ASIANHOTNR,297.85,1272,2.096748876,14.264848,Lodging,Consumer Cyclical
+Prince Pipes & Fittings Ltd,PRINCEPIPE,259.66,2871,0.175573856,66.23979,Building Products & Equipment,Industrials
+Lloyds Engineering Works Ltd,LLOYDSENGG,50.37,7425,0.127548054,42.686443,Specialty Industrial Machinery,Industrials
+Gujarat Alkalies And Chemicals Limited,GUJALKALI,464.5,3413,0.137321338,,Chemicals,Basic Materials
+Flair Writing Industries Ltd,FLAIR,315.1,3321,0.060706617,24.636435,Business Equipment & Supplies,Industrials
+Eclerx Services Limited,ECLERX,3553.5,16460,0.155318285,25.509691,Information Technology Services,Technology
+Punjab & Sind Bank,PSB,27.28,19385,0.889534759,16.335331,Banks - Regional,Financial Services
+Shipping Corporation of India Land & Assets Ltd,SCILAL,45.24,2107,3.00E-05,,Real Estate Services,Real Estate
+Beml Limited,BEML,1706.5,14217,0.109842141,57.150032,Conglomerates,Industrials
+KFin Technologies Ltd,KFINTECH,1007.4,17377,0.033045893,50.244392,Software - Application,Technology
+Gallant Ispat Ltd,GALLANTT,569.15,13734,0.132860956,28.730442,Steel,Basic Materials
+Sumitomo Chemical India Ltd,SUMICHEM,406.85,20308,0.017887076,38.166042,Agricultural Inputs,Basic Materials
+Gillette India Limited,GILLETTE,8444.5,27517,5.15E-05,51.54743,Household & Personal Products,Consumer Defensive
+Tanla Solutions Limited,TANLA,454.05,6001,0.028235932,12.345024,Software - Application,Technology
+Eternal Ltd,ETERNAL,269.45,245527,0.067453904,1122.7084,Internet Retail,Consumer Cyclical
+Sunflag Iron And Steel Company Limited,SUNFLAG,245.23,4420,0.07118682,20.92406,Steel,Basic Materials
+Ncc Limited,NCC,149.07,9359,0.217591904,12.951347,Engineering & Construction,Industrials
+Rajoo Engineers Ltd,RAJOOENG,63.07,1127,0.001675737,17.866856,Specialty Industrial Machinery,Industrials
+Elecon Engineering Company Limited,ELECON,421.3,9454,0.090674845,19.604467,Specialty Industrial Machinery,Industrials
+Shyam Metalics & Energy Ltd,SHYAMMETL,850.1,23652,0.074803877,24.449236,Steel,Basic Materials
+Swiggy Ltd,SWIGGY,323.8,84074,0.166637034,,Internet Retail,Consumer Cyclical
+The Karnataka Bank Limited,KTKBANK,202.76,7667,0.160577266,6.6435122,Banks - Regional,Financial Services
+Filatex India Limited,FILATEX,46.55,2067,0.110618729,11.243961,Textile Manufacturing,Consumer Cyclical
+Bajel Projects Ltd,BAJEL,163.3,1891,0.210140912,171.89474,Utilities - Regulated Electric,Utilities
+Vodafone Idea Ltd,IDEA,11.16,120911,-3.316667188,,Telecom Services,Communication Services
+Icra Limited,ICRA,5722.5,5507,0.012471644,29.85133,Financial Data & Stock Exchanges,Financial Services
+Jindal Drilling And Industries Limited,JINDRILL,467.65,1356,0.485599106,5.7239904,Oil & Gas Equipment & Services,Energy
+Adf Foods Limited,ADFFOODS,226.51,2489,0.120232062,30.943987,Packaged Foods,Consumer Defensive
+Kansai Nerolac Paints Limited,KANSAINER,198.69,16065,0.046143954,27.481329,Specialty Chemicals,Basic Materials
+Titagarh Rail Systems Ltd,TITAGARH,743.5,10013,0.252523178,55.23774,Railroads,Industrials
+HBL Engineering Ltd,HBLENGINE,720.35,19968,0.050106488,25.06437,Electrical Equipment & Parts,Industrials
+Bharat Coking Coal Ltd,BHARATCOAL,33.94,15806,0.04,12.74,Industrial Gases & Fuel,Industrial Gases & Fuel
+Associated Alcohols & Breweries Ltd,ASALCBR,857.65,1631,0.195131539,19.012415,Beverages - Wineries & Distilleries,Consumer Defensive
+Chambal Fertilizers & Chemicals Limited,CHAMBLFERT,454.4,18206,0.011315281,9.514238,Agricultural Inputs,Basic Materials
+Hcl Technologies Limited,HCLTECH,1436.5,388667,0.090144283,23.6968,Information Technology Services,Technology
+Heritage Foods Limited,HERITGFOOD,340.75,3168,0.179514589,19.30595,Packaged Foods,Consumer Defensive
+Supriya Lifescience Ltd,SUPRIYA,677.95,5456,0.005397488,29.41215,Biotechnology,Healthcare
+Sundrop Brands Ltd,SUNDROP,666.35,2512,0.009949388,,Packaged Foods,Consumer Defensive
+Deep Industries Ltd,DEEPINDS,373.05,2388,0.112861839,,Oil & Gas E&P,Energy
+Kiocl Limited,KIOCL,340.85,20715,0.112945541,,Steel,Basic Materials
+City Union Bank Limited,CUB,281.7,20932,0.189128805,16.718102,Banks - Regional,Financial Services
+Heidelbergcement India Limited,HEIDELBERG,164.03,3726,0.054050373,26.671545,Building Materials,Basic Materials
+Gland Pharma Ltd,GLAND,1821.7,30014,0.034284983,35.462334,Drug Manufacturers - Specialty & Generic,Healthcare
+Gujarat State Fertilizers & Chemicals Limited,GSFC,171.98,6853,0.000144993,9.889592,Agricultural Inputs,Basic Materials
+Affle India Ltd,AFFLE,1486.2,20901,0.027862277,47.619354,Advertising Agencies,Communication Services
+Balaji Amines Limited,BALAMINES,1089,3528,0.005976668,24.510466,Specialty Chemicals,Basic Materials
+Nucleus Software Exports Limited,NUCLEUS,839.2,2209,0.002456339,15.061019,Software - Application,Technology
+Vst Industries Limited,VSTIND,238.74,4048,,17.737,Tobacco,Consumer Defensive
+Oricon Enterprises Limited,ORICONENT,65.45,1034,0.008754058,32.562187,Packaging & Containers,Consumer Cyclical
+Indegene Ltd,INDGN,485.05,11657,0.03884386,26.592653,Health Information Services,Healthcare
+Rbl Bank Limited,RBLBANK,329,20321,0.926331996,27.857746,Banks - Regional,Financial Services
+Talbros Automotive Components Limited,TALBROAUTO,273.05,1685,0.148297043,17.001867,Auto Parts,Consumer Cyclical
+Avantel Ltd,AVANTEL,145.46,3866,0.110973326,372.9744,Communication Equipment,Technology
+Mmtc Limited,MMTC,62.07,9319,0.001433456,35.267044,Conglomerates,Industrials
+Swaraj Engines Limited,SWARAJENG,3555.1,4330,0.004735678,23.094063,Auto Parts,Consumer Cyclical
+Kingfa Science & Technology (india) Limited,KINGFA,4045,5487,0.059020004,31.646065,Specialty Chemicals,Basic Materials
+Mahanagar Telephone Nigam Limited,MTNL,30.24,1905,-1.205149675,,Telecom Services,Communication Services
+CARE Ratings Ltd,CARERATING,1609.6,4836,0.029480268,30.11976,Financial Data & Stock Exchanges,Financial Services
+Apex Frozen Foods,APEX,437.55,1371,0.146922008,41.31728,Farm Products,Consumer Defensive
+ESAF Small Finance Bank Ltd,ESAFSFB,27.47,1416,0.721238996,,Banks - Regional,Financial Services
+Mahindra Holidays & Resorts India Limited,MHRIL,285.35,5754,4.011156263,56.842632,Resorts & Casinos,Consumer Cyclical
+Gandhi Special Tubes Limited,GANDHITUBE,888.35,1083,0.000938148,15.221898,Metal Fabrication,Industrials
+Rolex Rings Ltd,ROLEXRINGS,141.1,3843,0.013196444,19.597223,Metal Fabrication,Industrials
+BLS E-Services Ltd,BLSE,159.71,1448,0.014767882,25.92695,Specialty Business Services,Industrials
+Honasa Consumer Ltd,HONASA,300.8,9791,0.115609876,62.928864,Household & Personal Products,Consumer Defensive
+Rpg Life Sciences Limited,RPGLIFE,1903.7,3149,,15.527732,Drug Manufacturers - Specialty & Generic,Healthcare
+Pfizer Limited,PFIZER,4931.7,22561,0.025702979,26.45478,Drug Manufacturers - General,Healthcare
+Moil Limited,MOIL,298.2,6068,0,20.882355,Other Industrial Metals & Mining,Basic Materials
+Archean Chemical Industries Ltd,ACI,559.8,6911,0.125844173,47.160908,Chemicals,Basic Materials
+Engineers India Limited,ENGINERSIN,214.9,12088,0.00829302,22.479078,Engineering & Construction,Industrials
+Andhra Paper Ltd,ANDHRAPAP,68.31,1358,0.144117662,72.67021,Paper & Paper Products,Basic Materials
+Dhanuka Agritech Limited,DHANUKA,1093.7,4930,0.052920998,6.9929667,Agricultural Inputs,Basic Materials
+Finolex Cables Limited,FINCABLES,791.9,12111,0.003637694,17.795506,Electrical Equipment & Parts,Industrials
+Escorts Kubota Ltd,ESCORTS,3417.8,37604,0.01014585,28.572145,Farm & Heavy Construction Machinery,Industrials
+Teamlease Services Limited,TEAMLEASE,1309.4,2195,0.12990757,16.806572,Staffing & Employment Services,Industrials
+Emami Limited,EMAMILTD,479.6,20937,0.033320149,26.380638,Household & Personal Products,Consumer Defensive
+Ramco Systems Limited,RAMCOSYS,510.95,1913,0.171483854,85.443146,Software - Application,Technology
+Bombay Dyeing & Mfg Company Limited,BOMDYEING,115.41,2384,0.001240041,137.39287,Textile Manufacturing,Consumer Cyclical
+Infosys Limited,INFY,1353.2,547463,0.085854529,19.41742,Information Technology Services,Technology
+United Spirits Ltd,UNITDSPR,1379.3,100330,0.05923001,56.80807,Beverages - Wineries & Distilleries,Consumer Defensive
+Jk Lakshmi Cement Limited,JKLAKSHMI,712.7,8848,0.735570889,19.081661,Building Materials,Basic Materials
+Alok Industries Ltd,ALOKINDS,14.72,7309,-1.086771672,,Textile Manufacturing,Consumer Cyclical
+Moschip Technologies Ltd,MOSCHIP,191.81,3701,0.064516218,106.56111,Semiconductor Equipment & Materials,Technology
+Sun Pharma Advanced Research Company Limited,SPARC,129.21,4193,-1.22211175,,Drug Manufacturers - Specialty & Generic,Healthcare
+Iol Chemicals And Pharmaceuticals Limited,IOLCP,73.32,2152,0.069350462,18.562025,Drug Manufacturers - Specialty & Generic,Healthcare
+RHI Magnesita India Ltd,RHIM,458.5,9468,0.094967926,55.240963,Metal Fabrication,Industrials
+Hemisphere Properties India Ltd,HEMIPROP,141.94,4047,0.150031102,,Real Estate - Diversified,Real Estate
+Panacea Biotec Limited,PANACEABIO,341.5,2092,0.017968677,,Biotechnology,Healthcare
+Star Health & Allied Insurance Company Ltd,STARHEALTH,453.35,26678,0.066084188,59.887714,Insurance - Diversified,Financial Services
+Railtel Corporation of India Ltd,RAILTEL,324.35,10410,0.022274232,32.795753,Telecom Services,Communication Services
+Mps Limited,MPSLTD,1618.9,2747,0.007708886,15.873125,Publishing,Communication Services
+Vaibhav Global Limited,VAIBHAVGBL,234.7,3919,0.16879869,18.942696,Luxury Goods,Consumer Cyclical
+Uniparts India Ltd,UNIPARTS,474.85,2141,0.135148752,16.499306,Farm & Heavy Construction Machinery,Industrials
+Vimta Labs Limited,VIMTALABS,469.3,2096,0.022476033,28.254063,Diagnostics & Research,Healthcare
+EMS Ltd,EMSLIMITED,307.4,1708,0.088133254,13.003385,Engineering & Construction,Industrials
+Greaves Cotton Limited,GREAVESCOT,161.62,3764,0.057798204,34.982685,Specialty Industrial Machinery,Industrials
+IKIO Lighting Ltd,IKIO,145.72,1128,0.094084842,48.251656,Electronic Components,Technology
+Delta Corp Limited,DELTACORP,65.44,1753,0.012958988,7.036559,Resorts & Casinos,Consumer Cyclical
+West Coast Paper Mills Limited,WSTCSTPAPR,409.5,2705,0.130569442,18.940794,Paper & Paper Products,Basic Materials
+Wework India Management Ltd,WEWORK,532.05,7131,,156.02638,Real Estate Services,Real Estate
+LTI Mindtree Ltd,LTM,4889.5,144944,0.096364045,30.486967,Information Technology Services,Technology
+Godfrey Phillips India Limited,GODFRYPHLP,2487.8,38805,0.033833955,29.851213,Tobacco,Consumer Defensive
+Route Mobile Ltd,ROUTE,514.75,3243,0.192504112,17.419628,Telecom Services,Communication Services
+Bliss Gvs Pharma Limited,BLISSGVS,223.26,2363,0.083878472,21.931236,Drug Manufacturers - Specialty & Generic,Healthcare
+KPIT Technologies Ltd,KPITTECH,835.4,22756,0.118423176,31.84903,Software - Infrastructure,Technology
+Jeena Sikho Lifecare Ltd,JSLL,689.8,8574,0.039313548,40.3156,Medical Care Facilities,Healthcare
+Vidhi Specialty Food Ingredients,VIDHIING,310.55,1558,0.217865001,32.586567,Specialty Chemicals,Basic Materials
+Cello World Ltd,CELLO,443.45,9798,0.002440525,31.743021,"Furnishings, Fixtures & Appliances",Consumer Cyclical
+L&t Technology Services Limited,LTTS,3396.6,36003,0.095,28.65362,Information Technology Services,Technology
+Venky's (india) Limited,VENKEYS,1377.6,1941,0.114977585,37.877373,Farm Products,Consumer Defensive
+Action Construction Equipment Limited,ACE,864.15,10285,0.010179253,24.328548,Farm & Heavy Construction Machinery,Industrials
+Raymond Lifestyle Ltd,RAYMONDLSL,909.9,5556,0.238797828,104.10756,Apparel Manufacturing,Consumer Cyclical
+Venus Remedies Limited,VENUSREM,759.35,1016,0.003017205,13.298599,Drug Manufacturers - Specialty & Generic,Healthcare
+Sky Gold Ltd,SKYGOLD,361.25,5595,0.921771093,23.750822,Luxury Goods,Consumer Cyclical
+Coforge (Niit Tech),COFORGE,1340.6,45015,0.167795335,39.994034,Information Technology Services,Technology
+Precision Camshafts Limited,PRECAM,144.13,1369,0.151886087,16.759302,Auto Parts,Consumer Cyclical
+Tech Mahindra Limited,TECHM,1456.9,129010,0.07401641,27.931366,Information Technology Services,Technology
+Mamata Machinery Ltd,MAMATA,408.75,1006,0.03069112,23.861647,Specialty Industrial Machinery,Industrials
+Sirca Paints India Ltd,SIRCA,458.85,2612,0.143034096,41.48734,Specialty Chemicals,Basic Materials
+Coromandel International Limited,COROMANDEL,2274.8,67245,0.070381671,28.01133,Agricultural Inputs,Basic Materials
+Zensar Technologies Limited,ZENSARTECH,560.25,12698,0.030763938,17.393667,Information Technology Services,Technology
+Bgr Energy Systems Limited,BGRENERGY,329.85,2380,-2.158549629,,Engineering & Construction,Industrials
+Saksoft Limited,SAKSOFT,155.28,1988,0.12186439,16.449154,Information Technology Services,Technology
+The Anup Engineering Ltd,ANUP,1700.5,3427,0.052973398,29.671959,Specialty Industrial Machinery,Industrials
+Jupiter Life Line Hospitals Ltd,JLHL,1211.7,7945,0.289878208,42.01456,Medical Care Facilities,Healthcare
+Tsf Investments Ltd,TSFINV,416.05,9182,0.002871009,19.764845,Asset Management,Financial Services
+Suryoday Small Finance Bank Ltd,SURYODAY,122.1,1298,1.289750733,18.989113,Banks - Regional,Financial Services
+Precision Wires India Limited,PRECWIRE,286.14,5233,0.106735499,40.01958,Electrical Equipment & Parts,Industrials
+Concord Biotech Ltd,CONCORDBIO,1097.9,11486,0.001638038,36.9042,Biotechnology,Healthcare
+Suzlon Energy Limited,SUZLON,44.46,60976,0.121217481,18.838984,Specialty Industrial Machinery,Industrials
+Poly Medicure Limited,POLYMED,1255.8,12744,0.065172703,36.762295,Medical Instruments & Supplies,Healthcare
+Info Edge (india) Limited,NAUKRI,1074.8,69593,0.007659672,51.822567,Internet Content & Information,Communication Services
+Platinum Industries Ltd,PLATIND,226.32,1282,,,Specialty Chemicals,Basic Materials
+Lux Industries Limited,LUXIND,933.05,2806,0.181854433,25.97578,Apparel Manufacturing,Consumer Cyclical
+Dolat Algotech Ltd,DOLATALGO,75.21,1325,0.065595194,10.868497,Capital Markets,Financial Services
+Praj Industries Limited,PRAJIND,311.45,5725,0.141037372,110.05301,Engineering & Construction,Industrials
+Akums Drugs & Pharmaceuticals Ltd,AKUMS,478.35,7328,0.02895031,22.88756,Drug Manufacturers - Specialty & Generic,Healthcare
+Birlasoft Ltd,BSOFT,378.65,10553,0.043412048,22.782791,Information Technology Services,Technology
+Savita Oil Technologies Limited,SOTL,362.45,2485,1.55E-05,17.88993,Specialty Chemicals,Basic Materials
+Indo Thai Securities Limited,INDOTHAI,254.59,3259,0.017866535,86.890785,Capital Markets,Financial Services
+Madras Fertilizers Limited,MADRASFERT,69.25,1116,-49.35944272,14.075203,Agricultural Inputs,Basic Materials
+Bharat Rasayan Limited,BHARATRAS,1591.5,2645,0.075415275,19.921143,Agricultural Inputs,Basic Materials
+BlackBuck Ltd,BLACKBUCK,601.5,10917,0.030578092,28.738653,Software - Application,Technology
+Raghav Productivity Enhancers Ltd,RPEL,686.45,3152,0.036531524,63.26728,Chemicals,Basic Materials
+Thyrocare Technologies Limited,THYROCARE,399.45,6358,0.045138635,45.86108,Diagnostics & Research,Healthcare
+Hindustan Oil Exploration Company Limited,HINDOILEXP,132.3,1750,0.091263835,16.475718,Oil & Gas E&P,Energy
+3m India Limited,3MINDIA,36145,40718,0.053904938,107.526405,Conglomerates,Industrials
+Fdc Limited,FDC,368.9,6009,0.009279988,27.695196,Drug Manufacturers - Specialty & Generic,Healthcare
+Relaxo Footwears Limited,RELAXO,357.95,8911,0.101293093,53.18722,Footwear & Accessories,Consumer Cyclical
+Aarti Pharmalabs Ltd,AARTIPHARM,698.75,6344,0.211476228,29.670914,Drug Manufacturers - Specialty & Generic,Healthcare
+Metropolis Healthcare Ltd,METROPOLIS,1860.1,9641,0.153367163,57.463703,Diagnostics & Research,Healthcare
+Anthem Biosciences Ltd,ANTHEM,681.9,38303,0.047022156,79.383,Biotechnology,Healthcare
+Zee Entertainment Enterprises Limited,ZEEL,90.7,8712,0.027823297,15.425169,Broadcasting,Communication Services
+Jindal Poly Investment And Finance Company Limited,JPOLYINVST,1278.5,1344,0.017684528,1.5117118,Asset Management,Financial Services
+Maharashtra Scooters Limited,MAHSCOOTER,13396,15327,,42.73455,Asset Management,Financial Services
+Deepak Nitrite Limited,DEEPAKNTR,1604,21877,0.235124808,40.981094,Chemicals,Basic Materials
+Aeroflex Industries Ltd,AEROFLEX,223.3,2957,0.001704067,58.76316,Metal Fabrication,Industrials
+Indigo Paints Ltd,INDIGOPNTS,944,4501,0.026461231,31.247932,Specialty Chemicals,Basic Materials
+V-guard Industries Limited,VGUARD,315.4,13762,0.063646721,48.30015,Electrical Equipment & Parts,Industrials
+Blue Jet Healthcare Ltd,BLUEJET,355.85,6173,0.017638166,21.056213,Biotechnology,Healthcare
+R Systems International Limited,RSYSTEMS,307.7,3643,0.517649184,20.48602,Information Technology Services,Technology
+Diffusion Engineers Ltd,DIFFNKG,273.18,1014,0.062931546,21.595257,Specialty Industrial Machinery,Industrials
+V.s.t Tillers Tractors Limited,VSTTILLERS,6006,5192,0.001960354,42.017628,Farm & Heavy Construction Machinery,Industrials
+Dam Capital Advisors Ltd,DAMCAPITAL,163.8,1158,0.338599682,14.305677,Capital Markets,Financial Services
+Krbl Limited,KRBL,363.55,8321,0.077606096,12.869026,Packaged Foods,Consumer Defensive
+Embassy Development Limited,EMBDL,60.93,8469,0.493439664,,Real Estate - Diversified,Real Estate
+Just Dial Limited,JUSTDIAL,603.15,5131,0.021673722,8.913108,Internet Content & Information,Communication Services
+Rajesh Exports Limited,RAJESHEXPO,157.91,4667,0.058881106,27.801058,Luxury Goods,Consumer Cyclical
+Bls International Services Limited,BLS,268.4,11050,0.207452211,17.183098,Specialty Business Services,Industrials
+Mayur Uniquoters Ltd,MAYURUNIQ,554,2411,0.009450362,13.85,Textile Manufacturing,Consumer Cyclical
+E2E Networks Ltd,E2E,2878.6,5750,0.045809772,,Software - Infrastructure,Technology
+Zaggle Prepaid Ocean Services Ltd,ZAGGLE,234.55,3160,0.015928242,27.626621,Software - Infrastructure,Technology
+Aurionpro Solutions Limited,AURIONPRO,945.8,5222,0.020291333,26.250347,Software - Infrastructure,Technology
+Neuland Laboratories Limited,NEULANDLAB,12638,16231,0.103054139,90.90778,Drug Manufacturers - Specialty & Generic,Healthcare
+Laxmi Organic Industries Ltd,LXCHEM,137.28,3805,0.135082277,47.832752,Specialty Chemicals,Basic Materials
+Kwality Walls India Ltd,KWIL,27.73,6518,0,,Consumer Food,FMCG
+Kaveri Seed Company Limited,KSCL,812.3,4122,0,13.7748,Agricultural Inputs,Basic Materials
+Brightcom Group Ltd,BCG,11.05,2233,0,2.546083,Advertising Agencies,Communication Services
+Cohance Lifesciences Ltd,COHANCE,305.4,11684,0.164489738,60.236683,Drug Manufacturers - Specialty & Generic,Healthcare
+CSB Bank Ltd,CSBBANK,384.85,6517,1.166428876,10.729022,Banks - Regional,Financial Services
+Ttk Prestige Limited,TTKPRESTIG,534.35,7318,0.095682396,87.742195,"Furnishings, Fixtures & Appliances",Consumer Cyclical
+Shadowfax Technologies Ltd,SHADOWFAX,116.85,6755,0.200221978,389.49997,Integrated Freight & Logistics,Industrials
+Orient Technologies Ltd,ORIENTTECH,311.6,1427,0.018047159,67.155174,Information Technology Services,Technology
+Persistent Systems Limited,PERSISTENT,5092,79622,0.049199842,46.081448,Information Technology Services,Technology
+Bharat Wire Ropes Limited,BHARATWIRE,178.75,1226,0.177890678,16.002686,Steel,Basic Materials
+Clean Science & Technology Ltd,CLEAN,711.05,7570,0.001502383,30.768064,Specialty Chemicals,Basic Materials
+Paushak Ltd,PAUSHAKLTD,498.45,1226,0.12,33.68,Chemicals,Chemicals
+Garuda Construction and Engineering Ltd,GARUDA,183.5,1707,0.00032398,19.837837,Engineering & Construction,Industrials
+Indian Metals & Ferro Alloys Limited,IMFA,1267.9,6843,0.165493453,18.552826,Other Industrial Metals & Mining,Basic Materials
+Panama Petrochem Limited,PANAMAPET,275.55,1670,0.025975889,9.00196,Oil & Gas Refining & Marketing,Energy
+Tatva Chintan Pharma Chem Ltd,TATVA,1194.4,2794,0.049251243,85.4975,Specialty Chemicals,Basic Materials
+Atul Auto Limited,ATULAUTO,475.3,1319,0.16879082,36.089596,Auto Manufacturers,Consumer Cyclical
+Yatra Online Ltd,YATRA,147.23,2310,0.100017863,42.924194,Travel Services,Consumer Cyclical
+India Pesticides Ltd,IPL,153.99,1775,0.066807658,16.17542,Agricultural Inputs,Basic Materials
+India Nippon Electricals Limited,INDNIPPON,857.2,1939,0.0029669,19.723885,Auto Parts,Consumer Cyclical
+Krishna Defence & Allied Industries Ltd,KRISHNADEF,1103.2,1551,0.071877562,53.76218,Specialty Industrial Machinery,Industrials
+Stallion India Fluorochemicals Ltd,STALLION,135.59,1265,0.008092566,32.05437,Specialty Chemicals,Basic Materials
+Latent View Analytics Ltd,LATENTVIEW,365.2,7557,0.019173154,38.041668,Consulting Services,Industrials
+Le Travenues Technology Ltd,IXIGO,186.74,8183,0.063416359,131.50705,Travel Services,Consumer Cyclical
+Datamatics Global Services Limited,DATAMATICS,792.35,4683,0.139177335,24.039745,Information Technology Services,Technology
+Newgen Software Technologies Ltd,NEWGEN,556.9,7840,0.035270158,26.380863,Software - Infrastructure,Technology
+,IFBIND,,4673,0.297010653,38.978348,"Furnishings, Fixtures & Appliances",Consumer Cyclical
+,PARAGMILK,,2342,0.639329685,19.297642,Packaged Foods,Consumer Defensive
+,RAINBOW,,12182,0.520082169,47.50594,Medical Care Facilities,Healthcare
+,SUPRAJIT,,5665,0.63782887,40.891087,Auto Parts,Consumer Cyclical
+,PDMJEPAPER,,6633,0.157877129,47.523075,Packaged Foods,Consumer Defensive
+,BECTORFOOD,,2233,0.828754481,32.90174,Specialty Industrial Machinery,Industrials
+,HLEGLAS,,259676,1.039831466,0.32942536,Steel,Basic Materials
+,TATASTEEL,,350046,0.546870026,9.2044325,Oil & Gas Integrated,Energy
+,ONGC,,1709,0.401514757,16.410675,Apparel Manufacturing,Consumer Cyclical
+,DOLLAR,,10411,0.918403162,58.35735,Footwear & Accessories,Consumer Cyclical
+,BATAINDIA,,2740,0.561208049,20.92481,Real Estate - Development,Real Estate
+,AJMERA,,2531,0.136703299,56.949253,Electrical Equipment & Parts,Industrials
+,ARTEMISMED,,1078,0.700448352,16.67812,Drug Manufacturers - Specialty & Generic,Healthcare
+,MARINE,,2371,1.045407552,26.669802,Apparel Manufacturing,Consumer Cyclical
+,BETA,,3778,0.296925725,57.48988,Electronics & Computer Distribution,Technology
+,CANTABIL,,2319,0.383378161,13.685422,Rental & Leasing Services,Industrials
+,OPTIEMUS,,3778,0.35,57.2,,
+,SANGHVIMOV,,2312,0.41,13.2,,
+,HUDCO,,,,,,
+Premier Explosives Limited,PREMEXPLN,,,,,,
+Roto Pumps Ltd,ROTO,,,,,,
+Tasty Bite Eatables Ltd,TASTYBITE,,,,,,
+Marathon Nextgen Realty Limited,MARATHON,,,,,,
+Jamna Auto Industries Limited,JAMNAAUTO,,,,,,
+Molbio Diagnostics Ltd,MOLBIO,,,,,,
+Eimco Elecon (india) Limited,EIMCOELECO,,,,,,
+Pine Labs Ltd,PINELABS,,,,,,
+Cyient DLM Ltd,CYIENTDLM,,,,,,
+Manali Petrochemicals Limited,MANALIPETC,,,,,,
+Bluspring Enterprises Ltd,BLUSPRING,,,,,,
+ESDS Software Solution Ltd,ESDS,,,,,,
+BN Agrochem Ltd,BNAGROCHEM,,,,,,
+Fractal Analytics Ltd,FRACTAL,,,,,,
+Radico Khaitan Limited,RADICO,,,,,,
+John Cockerill India Ltd,COCKERILL,,,,,,
+Dhanlaxmi Bank Limited,DHANBANK,,,,,,
+SKF India (Industrial) Ltd,SKFINDUS,,,,,,
+Glass Wall Systems (India) Ltd,GLASSWALL,,,,,,
+Sobha Limited,SOBHA,,,,,,
+ICICI Life Insurance Ltd,ICICILIFE,,,,,,
+Aeroflex Enterprises Ltd,AEROENTER,,,,,,
+Frontier Springs Ltd,FRONTSP,,,,,,
+Turtlemint Fintech Solutions Ltd,TURTLEMINT,,,,,,
+Macpower CNC Machines Ltd,MACPOWER,,,,,,
+Tega Industries Ltd,TEGA,,,,,,
+Kaynes Technology India Ltd,KAYNES,,,,,,
+Asset Reconstruction Company (India) Ltd,ARCIL,,,,,,
+Quadrant Future Tek Ltd,QUADFUTURE,,,,,,
+OneSource Specialty Pharma Ltd,ONESOURCE,,,,,,
+HD Fire Protect Ltd,HDFIRE,,,,,,
+GE Power India Ltd,GVPIL,,,,,,
+Atlanta Electricals Ltd,ATLANTAELE,,,,,,
+GYFTR Ltd,GYFTR,,,,,,
+LTIMindtree Ltd,LTM,,,,,,
+Shiprocket Ltd,SHIPROCKET,,,,,,
+SBI Funds Management Ltd,SBIFUNDS,,,,,,
+Solar Industries India Limited,SOLARINDS,,,,,,
+Oriental Hotels Limited,ORIENTHOT,,,,,,
+Pg Electroplast Limited,PGEL,,,,,,
+Kalyani Steels Limited,KSL,,,,,,
+Jubilant Agri & Consumer Products Ltd,JUBLCPL,,,,,,
+Elantas Beck India Ltd,ELANTAS,,,,,,
+Behari Lal Engineering Ltd,BLEL,,,,,,
+Niva Bupa Health Insurance Company Ltd,NIVABUPA,,,,,,
+Omaxe Limited,OMAXE,,,,,,
+Sika Interplant Systems Ltd,SIKA,,,,,,
+Apl Apollo Tubes Limited,APLAPOLLO,,,,,,
+Dynamic Cables Ltd,DYCL,,,,,,
+Dhunseri Ventures Ltd,DVL,,,,,,
+Marsons Ltd,MARSONS,,,,,,
+Sansera Engineering Ltd,SANSERA,,,,,,
+The Indian Hotels Company Limited,INDHOTEL,,,,,,
+Augmont Enterprises Ltd,AUGMONT,,,,,,
+Jyoti Resins and Adhesives Ltd,JYOTIRES,,,,,,
+Borosil Renewables Ltd,BORORENEW,,,,,,
+Bonfiglioli Transmissions Ltd,BONFIG,,,,,,
+Symphony Limited,SYMPHONY,,,,,,
+Kross Ltd,KROSS,,,,,,
+Mcnally Bharat Engineering Company Limited,MBECL,,,,,,
+JSW Dulux Ltd,JSWDULUX,,,,,,
+RIR Power Electronics Ltd,RIR,,,,,,
+Hawkins Cookers Ltd,HAWKINCOOK,,,,,,
+Kamdhenu Limited,KAMDHENU,,,,,,
+Pc Jeweller Limited,PCJEWELLER,,,,,,
+Dixon Technologies Ltd,DIXON,,,,,,
+Gandhar Oil Refinery (India) Ltd,GANDHAR,,,,,,
+Sedemac Mechatronics Ltd,SEDEMAC,,,,,,
+Indo Borax & Chemicals Ltd,INDOBORAX,,,,,,
+Laxmi Dental Ltd,LAXMIDENTL,,,,,,
+TAAL Tech Ltd,TAALTECH,,,,,,
+Travel Food Services Ltd,TRAVELFOOD,,,,,,
+Disa India Ltd,DISAQ,,,,,,
+Doms Industries Ltd,DOMS,,,,,,
+Vikram Solar Ltd,VIKRAMSOLR,,,,,,
+Grauer & Weil (India) Ltd,GRAUWEIL,,,,,,
+AWL Agri Business Ltd,AWL,,,,,,
+Gravita India Limited,GRAVITA,,,,,,
+Gocl Corporation Limited,GOCLCORP,,,,,,
+NINtec Systems Ltd,NINSYS,,,,,,
+Motisons Jewellers Ltd,MOTISONS,,,,,,
+Refex Industries Limited,REFEX,,,,,,
+Jai Balaji Industries Limited,JAIBALAJI,,,,,,
+Varun Beverages Limited,VBL,,,,,,
+Ultramarine & Pigments Ltd,ULTRAMAR,,,,,,
+Imagicaaworld Entertainment Ltd,IMAGICAA,,,,,,
+Jash Engineering Ltd,JASH,,,,,,
+Mastek Limited,MASTEK,,,,,,
+Chamanlal Setia Exports Ltd,CLSEL,,,,,,
+Shukra Pharmaceuticals Ltd,SHUKRAPHAR,,,,,,
+PSP Projects Ltd,PSPPROJECT,,,,,,
+Hinduja Global Solutions Limited,HGS,,,,,,
+Nrb Bearing Limited,NRBBEARING,,,,,,
+Benares Hotels Ltd,BENARAS,,,,,,
+Consolidated Finvest & Holdings Limited,CONSOFINVT,,,,,,
+Sudeep Pharma Ltd,SUDEEPPHRM,,,,,,
+Polyplex Corporation Limited,POLYPLEX,,,,,,
+Gretex Corporate Services Ltd,GCSL,,,,,,
+Apcotex Industries Limited,APCOTEXIND,,,,,,
+Nupur Recyclers Ltd,NRL,,,,,,
+AGI Greenpac Ltd,AGI,,,,,,
+Vedanta Oil and Gas Ltd,VOGL,,,,,,
+Central Mine Planning & Design Institute Ltd,CMPDI,,,,,,
+Prime Securities Limited,PRIMESECU,,,,,,
+Pondy Oxides & Chemicals Ltd,POCL,,,,,,
+Gujarat Kidney & Super Speciality Ltd,GKSL,,,,,,
+Bengal & Assam Company Ltd,BENGALASM,,,,,,
+Sri Lotus Developers & Realty Ltd,LOTUSDEV,,,,,,
+Gaja Alternative Asset Management Ltd,GAJA,,,,,,
+Goodyear India Ltd,GOODYEAR,,,,,,
+Syrma SGS Technology Ltd,SYRMA,,,,,,
+Borosil Scientific Ltd,BOROSCI,,,,,,
+Sagility India Ltd,SAGILITY,,,,,,
+Belding India Ltd,BELDING,,,,,,
+Century Enka Limited,CENTENKA,,,,,,
+Shanti Educational Initiatives Ltd,SEIL,,,,,,
+Glenmark Pharmaceuticals Limited,GLENMARK,,,,,,
+Sai Life Sciences Ltd,SAILIFE,,,,,,
+MSTC Ltd,MSTCLTD,,,,,,
+Kiri Industries Limited,KIRIINDUS,,,,,,
+Tonbo Imaging India Ltd,TONBO,,,,,,
+Kilburn Engineering Ltd,KLBRENG-B,,,,,,
+Welspun Specialty Solutions Ltd,WELSPLSOL,,,,,,
+Wipro Limited,WIPRO,,,,,,
+Nitta Gelatin India Ltd,NITTAGELA,,,,,,
+Gujarat Energy Ltd,GUJENERGY,,,,,,
+Vedanta Iron & Steel Ltd,VISL,,,,,,
+Saraswati Commercial (India) Ltd,ZSARACOM,,,,,,
+Tempsens Instruments (India) Ltd,TEMPSENS,,,,,,
+Corona Remedies Ltd,CORONA,,,,,,
+Timex Group India Ltd,TIMEX,,,,,,
+Viyash Scientific Ltd,VIYASH,,,,,,
+Bhageria Industries Limited,BHAGERIA,,,,,,
+Hi-Tech Pipes Ltd,HITECH,,,,,,
+Aurobindo Pharma Limited,AUROPHARMA,,,,,,
+Arrow Greentech Limited,ARROWGREEN,,,,,,
+Time Technoplast Limited,TIMETECHNO,,,,,,
+Ig Petrochemicals Limited,IGPL,,,,,,
+Onix Solar Energy Ltd,ONIXSOLAR,,,,,,
+Balmer Lawrie Investment Ltd,BLIL,,,,,,
+Geojit Financial Services Ltd,GEOJITFSL,,,,,,
+Automobile Corporation Of Goa Ltd,ACGL,,,,,,
+Stel Holdings Limited,STEL,,,,,,
+SUNSHINE,SUNSHINE,,,,,,
+Gala Precision Engineering Ltd,GALAPREC,,,,,,
+Seshaasai Technologies Ltd,STYL,,,,,,
+Nephrocare Health Services Ltd,NEPHROPLUS,,,,,,
+Kennametal India Ltd,KENNAMET,,,,,,
+Ipca Laboratories Limited,IPCALAB,,,,,,
+IRM Energy Ltd,IRMENERGY,,,,,,
+Vedanta Aluminium Metal Ltd,VAML,,,,,,
+MIC Electronics Ltd,MICEL,,,,,,
+Nestle India Limited,NESTLEIND,,,,,,
+Medi Assist Healthcare Services Ltd,MEDIASSIST,,,,,,
+Crest Ventures Limited,CREST,,,,,,
+Welspun Corp Limited,WELCORP,,,,,,
+The Andhra Sugars Limited,ANDHRSUGAR,,,,,,
+Share India Securities Ltd,SHAREINDIA,,,,,,
+Kothari Industrial Corporation Ltd,KOTIC,,,,,,
+3B Blackbio DX Ltd,3BBLACKBIO,,,,,,
+J.kumar Infraprojects Limited,JKIL,,,,,,
+GHCL Textiles Ltd,GHCLTEXTIL,,,,,,
+Quess Corp Limited,QUESS,,,,,,
+HEG Advanced Materials Ltd,HEGAM,,,,,,
+GSPL Transmission Ltd,GSPLTRANS,,,,,,
+Kirloskar Industries Limited,KIRLOSIND,,,,,,
+Shree Pushkar Chemicals & Fertilisers Limited,SHREEPUSHK,,,,,,
+Matrimony.com Ltd,MATRIMONY,,,,,,
+SEPC Ltd,SEPC,,,,,,
+Fedders Holding Ltd,FEDDERSHOL,,,,,,

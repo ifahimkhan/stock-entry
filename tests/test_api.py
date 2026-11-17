@@ -124,7 +124,8 @@ def test_notebook_file_is_the_stock_list_when_present(client: FlaskClient, setti
         encoding="utf-8",
     )
     listed = client.get("/api/tickers").get_json()["data"]
-    assert listed == [{"ticker": "ENTRY.NS", "name": "Entry Co", "sector": "Technology"}]  # name from tickers.csv
+    assert listed[0] == {"ticker": "ENTRY.NS", "name": "Entry Co", "sector": "Technology"}  # name from tickers.csv
+    assert [item["ticker"] for item in listed] == ["ENTRY.NS", "BANK.NS"]   # every sector is scanned
     summary = client.get("/api/stocks/ENTRY").get_json()["data"]["summary"]
     assert (summary["market_cap_cr"], summary["debt_to_equity"], summary["cap_category"]) == (120_000, 0.05, "Large")
 

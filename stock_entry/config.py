@@ -13,8 +13,8 @@ DEFAULT_PORT = 8765  # not 5000: Windows reserves port 5000 for a system service
 class Settings:
     host: str = "127.0.0.1"          # local only: do not expose this server to the network
     port: int = DEFAULT_PORT
-    # Stock list: the notebook's own file (ticker, market cap, debt/equity, sector) is used when present.
-    universe_path: Path = PROJECT_ROOT / "stock_M_d_S_I.csv"
+    # Stock list (ticker, name, market cap in crore, debt/equity, sector), used when present.
+    universe_path: Path = PROJECT_ROOT / "Final_data_greater_1000_debt_0.02.csv"
     tickers_path: Path = PROJECT_ROOT / "tickers.csv"   # fallback list; also supplies company names
     scan_path: Path = PROJECT_ROOT / "data" / "scan_latest.json"
     web_dir: Path = PROJECT_ROOT / "web"
@@ -31,7 +31,7 @@ class Settings:
     batch_size: int = 40             # tickers per yfinance request
     max_failed_share: float = 0.25   # if more stocks than this return no data, keep the previous scan
     default_suffix: str = ".NS"      # appended to symbols typed without an exchange suffix
-    excluded_sectors: tuple[str, ...] = ("Financial Services",)  # same filter as the notebook (non-BFSI)
+    excluded_sectors: tuple[str, ...] = ()  # every stock in the list is scanned, Financial Services included
     history_cache_seconds: int = 600
     detail_rows: int = 130           # bars returned for the single-stock view
     # Streamlit (public) only: how soon a visitor may start another scan. Prices are daily, so a

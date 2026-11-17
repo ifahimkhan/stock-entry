@@ -43,7 +43,7 @@ Tests: `.venv\Scripts\python -m pytest --cov=stock_entry`
 
 - `stock_entry/` - signals, indicators, scanner, Flask API (`app.py`) and the Streamlit bridge (`bridge.py`)
 - `web/` - the page (plain HTML / CSS / JS); `api.streamlit.js` replaces `api.js` under Streamlit
-- `stock_M_d_S_I.csv`, `tickers.csv` - the stock list
+- `Final_data_greater_1000_debt_0.02.csv` - the stock list (all sectors scanned); `tickers.csv` - fallback list and company names
 - `tests/` - pytest suite
 
 Not investment advice.
