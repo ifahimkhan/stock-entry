@@ -1,6 +1,7 @@
 """Builds the objects both front doors share: the Flask API (app.py) and the Streamlit bridge (bridge.py)."""
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from functools import partial
 from typing import Callable
@@ -14,10 +15,12 @@ from stock_entry.intraday import fetch_two_hour
 from stock_entry.market_data import download_history
 from stock_entry.scanner import Scanner
 from stock_entry.store import ScanStore
+from stock_entry.tradingview import TradingViewFeed, credentials, with_fallback
 from stock_entry.tickers import Ticker
 from stock_entry.tickers import load_universe as read_universe
 
 Fetch = Callable[[list[str]], dict[str, pd.DataFrame]]
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -37,11 +40,25 @@ class Services:
             return Ticker(symbol)  # the single-stock view still works without a ticker list
 
 
-def _two_hour_fetch(settings: Settings) -> Fetch:
+def _yahoo_two_hour_fetch(settings: Settings) -> Fetch:
     """symbols -> {symbol: latest 2-hour bars}, built from Yahoo hourly bars (retried like the daily download)."""
     hourly = partial(download_history, period=settings.swing_period, interval=settings.swing_interval,
                      normalize=False)
     return partial(fetch_two_hour, fetch_hourly=hourly, max_bars=settings.swing_bars)
+
+
+def _no_bars(symbols: list[str]) -> dict[str, pd.DataFrame]:
+    return {}
+
+
+def _two_hour_fetch(settings: Settings) -> Fetch:
+    """2-hour bars from TradingView (TV_USERNAME / TV_PASSWORD set), with Yahoo for any stock it misses.
+    Without the credentials every stock uses Yahoo. Each frame's Source column says which one."""
+    login = credentials()
+    if login is None:
+        logger.warning("TV_USERNAME / TV_PASSWORD not set: 2-hour bars come from Yahoo")
+    primary = _no_bars if login is None else TradingViewFeed(*login, n_bars=settings.swing_bars)
+    return with_fallback(primary, _yahoo_two_hour_fetch(settings))
 
 
 def build_services(settings: Settings, fetch: Fetch | None = None,

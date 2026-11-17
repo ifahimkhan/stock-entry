@@ -35,9 +35,12 @@ jobs:
           cache: pip
 
       - name: Install scanner dependencies
-        run: pip install numpy pandas yfinance   # the scan needs only these, not Streamlit or Flask
+        run: pip install numpy pandas yfinance "tvdatafeed @ git+https://github.com/rongardF/tvdatafeed.git@e6f6aaa7de439ac6e454d9b26d2760ded8dc4923"   # not Streamlit or Flask
 
       - name: Run scan
+        env:   # 2-hour bars from TradingView; without these secrets they come from Yahoo
+          TV_USERNAME: ${{ secrets.TV_USERNAME }}
+          TV_PASSWORD: ${{ secrets.TV_PASSWORD }}
         run: python -m stock_entry.scan_job
 
       - name: Commit scan results

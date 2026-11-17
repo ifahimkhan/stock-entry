@@ -170,8 +170,15 @@ function swingSignal(point) {
   ].filter(Boolean).join(" · ");
 }
 
+const SOURCE_TEXT = {
+  tradingview: "2-hour prices from TradingView.",
+  "tradingview-nologin": "2-hour prices from TradingView without login (the sign-in failed, so the latest bars may be missing).",
+  yahoo: "2-hour prices from Yahoo Finance (TradingView was not available for this stock).",
+};
+
 function swingFacts(summary, frame) {
   const get = (key) => summary[`${frame.prefix}${key}`];
+  const source = SOURCE_TEXT[get("swing_source")] || null;
   const when = frame.format;
   const ago = (bars) => (isNumber(bars) ? ` (${plural(bars, frame.bar)} ago)` : "");
   const signal = (at, bars, text) => (at ? `${text} on ${when(at)}${ago(bars)}.` : null);
@@ -182,6 +189,7 @@ function swingFacts(summary, frame) {
     get("before_entry_at")
       ? `TBC Zone Entry on ${when(get("before_entry_at"))}${ago(get("before_entry_bars"))}: HH after ${plural(get("before_entry_ll"), "lower low")} → ${get("before_entry_pattern") || "not a 3LL / 4LL pattern"}.`
       : `No TBC Zone Entry (confirmed HH) in the loaded ${frame.short} bars.`,
+    source,
     signal(get("ll3_hh_at"), get("ll3_hh_bars"), "3 LL then HH"),
     signal(get("ll4_hh_at"), get("ll4_hh_bars"), "4 LL then HH"),
     get("lh_breakout_at")

@@ -405,6 +405,16 @@ function renderPatternFilter(view) {
   })));
 }
 
+const SOURCE_NAMES = { tradingview: "TradingView", "tradingview-nologin": "TradingView (no login)", yahoo: "Yahoo" };
+
+/** " 2-hour prices: TradingView 820, Yahoo 6." for the scan rows that carry a source. */
+function sourceNote(scanRows) {
+  const counts = scanRows.reduce((acc, row) => (row.swing_source
+    ? { ...acc, [row.swing_source]: (acc[row.swing_source] || 0) + 1 } : acc), {});
+  const parts = Object.entries(counts).map(([source, count]) => `${SOURCE_NAMES[source] || source} ${count}`);
+  return parts.length ? ` 2-hour prices: ${parts.join(", ")}.` : "";
+}
+
 function renderList() {
   const view = currentView();
   renderCapFilter(view);
@@ -420,6 +430,7 @@ function renderList() {
   else if (needsKey.endsWith("swing_bars") && rows().length && !rows().some((row) => row[needsKey] > 0)) {
     hint += view.prefix === DAILY ? NO_DAILY_SWINGS : NO_SWINGS;
   }
+  if (view.tf === "2h" && state.scan) hint += sourceNote(rows());
   dom.listHint.textContent = hint;
   const shown = state.query.trim() ? `${visible.length} of ${inView.length}` : String(inView.length);
   dom.listCount.textContent = state.scan ? `· ${shown} stock${inView.length === 1 ? "" : "s"}` : "";

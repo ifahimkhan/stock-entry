@@ -3,3 +3,5 @@ numpy>=1.26
 pandas>=2.2
 streamlit==1.67.0
 yfinance>=0.2.50
+# 2-hour bars from TradingView (not on PyPI; pinned to the commit the notebook was run with)
+tvdatafeed @ git+https://github.com/rongardF/tvdatafeed.git@e6f6aaa7de439ac6e454d9b26d2760ded8dc4923

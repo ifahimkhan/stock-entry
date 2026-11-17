@@ -303,7 +303,7 @@ def _before_entry(frame: pd.DataFrame) -> dict[str, Any]:
 
 def empty_swing_summary() -> dict[str, Any]:
     """Row fields when no 2-hour bars came back for a stock."""
-    return {"swing_bars": 0, "swing_last_bar": None, "swing_last_label": None, "swing_last_label_at": None,
+    return {"swing_bars": 0, "swing_source": None, "swing_last_bar": None, "swing_last_label": None, "swing_last_label_at": None,
             "before_entry_at": None, "before_entry_bars": None, "before_entry_ll": None,
             "before_entry_pattern": None, "before_entry_close": None,
             "ll3_hh_at": None, "ll3_hh_bars": None, "ll4_hh_at": None, "ll4_hh_bars": None,
@@ -322,6 +322,7 @@ def swing_summary(frame: pd.DataFrame) -> dict[str, Any]:
     ang_hl, ang_hl_at = _last_value(frame, "ang_ll_hl")
     return {
         "swing_bars": len(frame),
+        "swing_source": frame["Source"].iloc[-1] if "Source" in frame.columns else None,   # tradingview / yahoo
         "swing_last_bar": bar_time(frame["Date"].iloc[-1]),
         "swing_last_label": labelled["swing_clean"].iloc[-1] if len(labelled) else None,
         "swing_last_label_at": bar_time(labelled["Date"].iloc[-1]) if len(labelled) else None,

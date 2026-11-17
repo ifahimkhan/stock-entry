@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import threading
+from collections import Counter
 from dataclasses import asdict, dataclass, replace
 from typing import Any, Callable, TypeVar
 
@@ -201,6 +202,8 @@ class Scanner:
             self._store.save(scan)
             self._update(running=False, finished_at=_now())
             logger.info("Scan finished: %d stocks, %d without data", len(scan["rows"]), len(scan["failed"]))
+            sources = Counter(row.get("swing_source") or "none" for row in scan["rows"])
+            logger.info("2-hour bars by source: %s", dict(sources))
         except (MarketDataError, FileNotFoundError, ValueError, OSError) as exc:
             logger.error("Scan failed: %s", exc)
             self._update(running=False, finished_at=_now(), error=str(exc))
