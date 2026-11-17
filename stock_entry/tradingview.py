@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 IST = ZoneInfo("Asia/Kolkata")
 NOLOGIN_TOKEN = "unauthorized_user_token"   # what tvDatafeed uses when the sign-in did not work
 SOURCE_COLUMN = "Source"
-TRADINGVIEW, TRADINGVIEW_NOLOGIN, YAHOO = "tradingview", "tradingview-nologin", "yahoo"
+TRADINGVIEW, TRADINGVIEW_NOLOGIN = "tradingview", "tradingview-nologin"
 EXCHANGES = {"NS": "NSE", "BO": "BSE"}
 SYMBOL_FIXES = str.maketrans({"-": "_", "&": "_"})
 DEFAULT_WORKERS = 3      # parallel websockets; kept small so the account is not flagged
@@ -153,22 +153,3 @@ class TradingViewFeed:
         with ThreadPoolExecutor(max_workers=max(1, self._workers)) as pool:
             frames = dict(zip(symbols, pool.map(self.fetch_one, symbols)))
         return {symbol: frame for symbol, frame in frames.items() if frame is not None}
-
-
-def with_fallback(primary: Fetch, fallback: Fetch) -> Fetch:
-    """Ask `primary` (TradingView), then `fallback` (Yahoo) for the symbols it did not return.
-    Every frame says where it came from in the Source column."""
-    def fetch(symbols: list[str]) -> dict[str, pd.DataFrame]:
-        try:
-            found = primary(symbols)
-        except Exception:
-            logger.exception("TradingView 2-hour fetch failed; using Yahoo for this batch")
-            found = {}
-        missing = [symbol for symbol in symbols if symbol not in found]
-        rest = fallback(missing) if missing else {}
-        if missing:
-            logger.info("2-hour bars from Yahoo for %d of %d stocks", len(rest), len(symbols))
-        tagged = {symbol: frame if SOURCE_COLUMN in frame.columns else frame.assign(**{SOURCE_COLUMN: YAHOO})
-                  for symbol, frame in rest.items()}
-        return {**found, **tagged}
-    return fetch

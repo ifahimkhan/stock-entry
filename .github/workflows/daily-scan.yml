@@ -14,6 +14,11 @@ on:
     # No morning backup on purpose: a late start could run during market hours, commit a half-day
     # candle, and the evening runs would then skip that date.
   workflow_dispatch:
+    inputs:
+      force:
+        description: "Save even if this trading day is already saved (replaces that day's scan)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write   # needed to commit data/
@@ -44,18 +49,28 @@ jobs:
         run: python -m stock_entry.scan_job
 
       - name: Commit scan results
+        env:
+          FORCE: ${{ inputs.force }}   # empty on scheduled runs
         run: |
           data_date() { python -c "import json, sys; print(json.load(sys.stdin).get('data_date'))"; }
           new_date=$(data_date < data/scan_latest.json)
           old_date=$(git show HEAD:data/scan_latest.json 2>/dev/null | data_date || echo none)
+          message="chore: daily scan for $new_date"
           if [ "$new_date" = "$old_date" ]; then
-            echo "No new trading day since the last commit ($new_date), e.g. an NSE holiday. Nothing to commit."
+            if [ "$FORCE" != "true" ]; then
+              echo "No new trading day since the last commit ($new_date), e.g. an NSE holiday. Nothing to commit."
+              exit 0
+            fi
+            message="chore: rescan $new_date"
+          fi
+          if git diff --quiet -- data/; then
+            echo "Scan results unchanged. Nothing to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/scan_latest.json data/fundamentals.json
-          git commit -m "chore: daily scan for $new_date"
+          git commit -m "$message"
           for attempt in 1 2 3; do   # someone may push at the same moment: rebase onto it and try again
             if git pull --rebase && git push; then
               exit 0

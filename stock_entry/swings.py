@@ -322,7 +322,7 @@ def swing_summary(frame: pd.DataFrame) -> dict[str, Any]:
     ang_hl, ang_hl_at = _last_value(frame, "ang_ll_hl")
     return {
         "swing_bars": len(frame),
-        "swing_source": frame["Source"].iloc[-1] if "Source" in frame.columns else None,   # tradingview / yahoo
+        "swing_source": frame["Source"].iloc[-1] if "Source" in frame.columns else None,   # tradingview / tradingview-nologin
         "swing_last_bar": bar_time(frame["Date"].iloc[-1]),
         "swing_last_label": labelled["swing_clean"].iloc[-1] if len(labelled) else None,
         "swing_last_label_at": bar_time(labelled["Date"].iloc[-1]) if len(labelled) else None,

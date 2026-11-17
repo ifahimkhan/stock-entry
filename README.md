@@ -4,8 +4,9 @@ Scans a list of NSE stocks with daily prices from Yahoo Finance and shows entry 
 (breakout, pullback, first up day), CCI / RSI screens and MRI SPV / PV zones, with a chart per stock.
 
 It also runs the swing rules of `TradingView.ipynb` on 2-hour candles: TradingView 2-hour bars (latest 500, via
-`tvDatafeed`, `stock_entry/tradingview.py`) when `TV_USERNAME` / `TV_PASSWORD` are set, otherwise Yahoo hourly bars
-combined from the 09:15 open. Stocks TradingView misses use Yahoo, and each stock shows its source. Signals: HH / HL / LH / LL labels, LL→LL and LL→HL angles, **3 LL then HH**,
+`tvDatafeed`, `stock_entry/tradingview.py`); set `TV_USERNAME` / `TV_PASSWORD` (environment, GitHub Actions secrets,
+Streamlit secrets). There is no Yahoo fallback: without them, or for a stock TradingView misses, the 2-hour fields
+stay empty. Signals: HH / HL / LH / LL labels, LL→LL and LL→HL angles, **3 LL then HH**,
 **4 LL then HH** and **LH breakout** (`stock_entry/swings.py`, `stock_entry/intraday.py`). A swing label is
 confirmed 5 bars after its pivot, so these lists show signals from the last 20 two-hour bars.
 The same swing rules also run on the daily bars of the scan (latest 500, fields prefixed `d1_`): the

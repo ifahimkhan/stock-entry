@@ -11,7 +11,7 @@ import pytest
 from stock_entry.analysis import DAILY_SWING_BARS, analyze, build_row
 from stock_entry.config import Settings
 from stock_entry.history import HistoryService
-from stock_entry.intraday import analyze_swings, fetch_two_hour, to_two_hour
+from stock_entry.intraday import analyze_swings
 from stock_entry.market_data import MarketDataError, split_by_symbol
 from stock_entry.scanner import run_scan
 from stock_entry.services import build_services
@@ -165,33 +165,6 @@ def test_summary_reports_bars_since_signal() -> None:
 
 
 # ---------------------------------------------------------------- 2-hour bars
-
-def hourly(day: str, values: list[tuple[str, float, float, float, float, float]]) -> pd.DataFrame:
-    return pd.DataFrame([(pd.Timestamp(f"{day} {t}"), o, h, l, c, v) for t, o, h, l, c, v in values],
-                        columns=["Date", "Open", "High", "Low", "Close", "Volume"])
-
-
-SESSION = [("09:15", 10, 12, 9, 11, 100), ("10:15", 11, 13, 10, 12, 50), ("11:15", 12, 12.5, 11, 11.5, 10),
-           ("12:15", 11.5, 14, 11, 13, 20), ("13:15", 13, 13, 12, 12.5, 5), ("14:15", 12.5, 15, 12, 14, 5),
-           ("15:15", 14, 14.2, 13.8, 14.1, 1)]
-
-
-def test_to_two_hour_pairs_hours_from_the_open() -> None:
-    bars = to_two_hour(hourly("2026-11-16", SESSION))
-    assert bars["Date"].dt.strftime("%H:%M").tolist() == ["09:15", "11:15", "13:15", "15:15"]
-    first = bars.iloc[0]
-    assert (first["Open"], first["High"], first["Low"], first["Close"], first["Volume"]) == (10, 13, 9, 12, 150)
-    assert bars.iloc[3]["Close"] == 14.1  # the short 15:15 candle stays on its own
-    assert to_two_hour(hourly("2026-11-16", [])).empty
-
-
-def test_fetch_two_hour_keeps_latest_bars_and_drops_empty() -> None:
-    two_days = pd.concat([hourly("2026-11-13", SESSION), hourly("2026-11-16", SESSION)], ignore_index=True)
-    fetched = fetch_two_hour(["A.NS", "B.NS"], lambda symbols: {"A.NS": two_days, "B.NS": two_days.iloc[0:0]},
-                             max_bars=5)
-    assert list(fetched) == ["A.NS"] and len(fetched["A.NS"]) == 5
-    assert fetched["A.NS"]["Date"].iloc[-1] == pd.Timestamp("2026-11-16 15:15")
-
 
 def test_split_by_symbol_keeps_intraday_time_when_asked() -> None:
     index = pd.DatetimeIndex(["2026-11-16 09:15", "2026-11-16 10:15"]).tz_localize("Asia/Kolkata")

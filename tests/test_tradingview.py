@@ -11,8 +11,8 @@ from stock_entry.config import Settings
 from stock_entry.intraday import analyze_swings
 from stock_entry.services import _two_hour_fetch
 from stock_entry.tickers import Ticker
-from stock_entry.tradingview import (NOLOGIN_TOKEN, SOURCE_COLUMN, TRADINGVIEW, TRADINGVIEW_NOLOGIN, YAHOO,
-                                     TradingViewFeed, credentials, to_bars, tv_symbol, with_fallback)
+from stock_entry.tradingview import (NOLOGIN_TOKEN, SOURCE_COLUMN, TRADINGVIEW, TRADINGVIEW_NOLOGIN,
+                                     TradingViewFeed, credentials, to_bars, tv_symbol)
 from tests.conftest import SANSERA_CLOSES, make_prices
 
 pytestmark = pytest.mark.unit
@@ -105,23 +105,12 @@ def test_failed_sign_in_still_uses_tradingview_and_says_so() -> None:
     assert feed(["A.NS"])["A.NS"][SOURCE_COLUMN].iloc[-1] == TRADINGVIEW_NOLOGIN
 
 
-def test_fallback_fills_missing_symbols_from_yahoo_and_tags_them() -> None:
-    yahoo_asked: list[list[str]] = []
-
-    def yahoo(symbols: list[str]) -> dict[str, pd.DataFrame]:
-        yahoo_asked.append(symbols)
-        return {symbol: to_bars(raw_frame(), "x").drop(columns=SOURCE_COLUMN) for symbol in symbols}
-
-    feed, _ = make_feed({"A": [raw_frame()]})
-    frames = with_fallback(feed, yahoo)(["A.NS", "B.NS"])
-    assert yahoo_asked == [["B.NS"]]
-    assert frames["A.NS"][SOURCE_COLUMN].iloc[-1] == TRADINGVIEW
-    assert frames["B.NS"][SOURCE_COLUMN].iloc[-1] == YAHOO
-
-    def broken(symbols: list[str]) -> dict[str, pd.DataFrame]:
-        raise RuntimeError("tradingview down")
-
-    assert set(with_fallback(broken, yahoo)(["A.NS"])) == {"A.NS"}   # whole batch falls back
+def test_with_credentials_two_hour_bars_come_from_tradingview_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TV_USERNAME", "user")
+    monkeypatch.setenv("TV_PASSWORD", "pw")
+    monkeypatch.setattr("stock_entry.services.download_history",
+                        lambda *args, **kwargs: pytest.fail("Yahoo must not be asked for 2-hour bars"))
+    assert isinstance(_two_hour_fetch(Settings()), TradingViewFeed)
 
 
 def test_credentials_need_both_values(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -132,17 +121,12 @@ def test_credentials_need_both_values(monkeypatch: pytest.MonkeyPatch) -> None:
     assert credentials() == ("user", "pw")
 
 
-def test_without_credentials_two_hour_bars_come_from_yahoo(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_without_credentials_there_are_no_two_hour_bars(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("TV_USERNAME", raising=False)
     monkeypatch.delenv("TV_PASSWORD", raising=False)
-    calls: list[list[str]] = []
-
-    def hourly(symbols: list[str], **kwargs: object) -> dict[str, pd.DataFrame]:
-        calls.append(symbols)
-        return {}
-
-    monkeypatch.setattr("stock_entry.services.download_history", hourly)
-    assert _two_hour_fetch(Settings())(["A.NS"]) == {} and calls == [["A.NS"]]
+    monkeypatch.setattr("stock_entry.services.download_history",
+                        lambda *args, **kwargs: pytest.fail("Yahoo must not be asked for 2-hour bars"))
+    assert _two_hour_fetch(Settings())(["A.NS"]) == {}
 
 
 def test_scan_row_reports_the_two_hour_source() -> None:

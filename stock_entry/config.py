@@ -23,9 +23,7 @@ class Settings:
     fundamentals_workers: int = 6        # parallel Yahoo requests while fetching them
     history_period: str = "2y"       # price history per stock; swing structure (50) and EMA 200 need long history
     interval: str = "1d"
-    # Swing scan (TradingView.ipynb): Yahoo hourly bars combined into 2-hour candles, latest 500 kept.
-    swing_period: str = "1y"         # Yahoo serves hourly bars for up to 730 days
-    swing_interval: str = "60m"
+    # Swing scan (TradingView.ipynb): TradingView 2-hour bars (TV_USERNAME / TV_PASSWORD), latest 500.
     swing_bars: int = 500            # same as the notebook's n_bars
     swing_detail_points: int = 30    # swing points listed in the single-stock view
     batch_size: int = 40             # tickers per yfinance request

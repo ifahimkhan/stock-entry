@@ -173,7 +173,6 @@ function swingSignal(point) {
 const SOURCE_TEXT = {
   tradingview: "2-hour prices from TradingView.",
   "tradingview-nologin": "2-hour prices from TradingView without login (the sign-in failed, so the latest bars may be missing).",
-  yahoo: "2-hour prices from Yahoo Finance (TradingView was not available for this stock).",
 };
 
 function swingFacts(summary, frame) {

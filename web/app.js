@@ -33,7 +33,7 @@ const fixed = (value) => (isNumber(value) ? value.toFixed(2) : DASH);
 const days = (count) => `${count} day${count === 1 ? "" : "s"}`;
 const STAGE_TEXT = { fundamentals: "Loading market cap and debt", prices: "Scanning prices" };
 const NO_FUNDAMENTALS = " Market cap and debt/equity are not loaded for this scan, so those filters were skipped: run the scan again.";
-const NO_SWINGS = " 2-hour prices did not load for this scan, so this list is empty: run the scan again.";
+const NO_SWINGS = " 2-hour prices did not load from TradingView for this scan (check TV_USERNAME / TV_PASSWORD), so this list is empty: run the scan again.";
 const NO_DAILY_SWINGS = " No stock had enough daily prices for swing labels in this scan, so this list is empty.";
 const OLD_SCAN = " This scan was made before this screen was added: run the scan again.";
 
@@ -405,9 +405,9 @@ function renderPatternFilter(view) {
   })));
 }
 
-const SOURCE_NAMES = { tradingview: "TradingView", "tradingview-nologin": "TradingView (no login)", yahoo: "Yahoo" };
+const SOURCE_NAMES = { tradingview: "TradingView", "tradingview-nologin": "TradingView (no login)" };
 
-/** " 2-hour prices: TradingView 820, Yahoo 6." for the scan rows that carry a source. */
+/** " 2-hour prices: TradingView 826." for the scan rows that carry a source. */
 function sourceNote(scanRows) {
   const counts = scanRows.reduce((acc, row) => (row.swing_source
     ? { ...acc, [row.swing_source]: (acc[row.swing_source] || 0) + 1 } : acc), {});

@@ -11,11 +11,10 @@ import pandas as pd
 from stock_entry.config import Settings
 from stock_entry.fundamentals import FetchOne, FundamentalsService, fetch_from_yahoo
 from stock_entry.history import HistoryService
-from stock_entry.intraday import fetch_two_hour
 from stock_entry.market_data import download_history
 from stock_entry.scanner import Scanner
 from stock_entry.store import ScanStore
-from stock_entry.tradingview import TradingViewFeed, credentials, with_fallback
+from stock_entry.tradingview import TradingViewFeed, credentials
 from stock_entry.tickers import Ticker
 from stock_entry.tickers import load_universe as read_universe
 
@@ -40,25 +39,18 @@ class Services:
             return Ticker(symbol)  # the single-stock view still works without a ticker list
 
 
-def _yahoo_two_hour_fetch(settings: Settings) -> Fetch:
-    """symbols -> {symbol: latest 2-hour bars}, built from Yahoo hourly bars (retried like the daily download)."""
-    hourly = partial(download_history, period=settings.swing_period, interval=settings.swing_interval,
-                     normalize=False)
-    return partial(fetch_two_hour, fetch_hourly=hourly, max_bars=settings.swing_bars)
-
-
 def _no_bars(symbols: list[str]) -> dict[str, pd.DataFrame]:
     return {}
 
 
 def _two_hour_fetch(settings: Settings) -> Fetch:
-    """2-hour bars from TradingView (TV_USERNAME / TV_PASSWORD set), with Yahoo for any stock it misses.
-    Without the credentials every stock uses Yahoo. Each frame's Source column says which one."""
+    """2-hour bars from TradingView only (needs TV_USERNAME / TV_PASSWORD). A stock TradingView does not
+    return gets empty 2-hour swing fields; without the credentials every stock does."""
     login = credentials()
     if login is None:
-        logger.warning("TV_USERNAME / TV_PASSWORD not set: 2-hour bars come from Yahoo")
-    primary = _no_bars if login is None else TradingViewFeed(*login, n_bars=settings.swing_bars)
-    return with_fallback(primary, _yahoo_two_hour_fetch(settings))
+        logger.warning("TV_USERNAME / TV_PASSWORD not set: no 2-hour swing data")
+        return _no_bars
+    return TradingViewFeed(*login, n_bars=settings.swing_bars)
 
 
 def build_services(settings: Settings, fetch: Fetch | None = None,
