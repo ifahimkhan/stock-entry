@@ -88,6 +88,22 @@ const beforeEntryView = ({ id, prefix, label, chip, timeType, barWord, barsTitle
     sort: { key: key("before_entry_at"), dir: "desc" },
   };
 };
+/** LH breakout on 2-hour bars (prefix "") or on daily bars (prefix DAILY): same rule, same window. */
+const lhBreakoutView = ({ id, prefix, label, chip, timeType, candle, barWord, barsTitle, note }) => {
+  const key = (name) => `${prefix}${name}`;
+  const format = timeType === "date" ? formatDate : formatBarTime;
+  return {
+    id, label, chip, mark: null, needsKey: key("swing_bars"), prefix,
+    note: (row) => `Closed above LH high ${formatPrice(row[key("lh_breakout_level")])} on ${format(row[key("lh_breakout_at")])}`,
+    hint: `3 or more LLs or LHs since the last HH, then a ${candle} closed above the high of the last LH, in the last ${LH_BREAKOUT_MAX_BARS} ${barWord} bars.${note}`,
+    filter: (row) => withinBars(row[key("lh_breakout_bars")], LH_BREAKOUT_MAX_BARS),
+    columns: [TICKER, { key: key("lh_breakout_at"), label: "Breakout bar", type: timeType },
+      { key: key("lh_breakout_bars"), label: "Bars ago", type: "int", title: barsTitle },
+      { key: key("lh_breakout_level"), label: "LH high", type: "price", title: "High of the last LH that the close broke" },
+      CLOSE, CHANGE, { ...ANG_LL_LL, key: key("ang_ll_ll") }],
+    sort: { key: key("lh_breakout_at"), dir: "desc" },
+  };
+};
 const SWING_VIEWS = [
   beforeEntryView({
     id: "before", prefix: "", label: "TBC Zone Entry (2h)", chip: "TBC Zone Entry", timeType: "bartime",
@@ -99,17 +115,14 @@ const SWING_VIEWS = [
   }),
   llThenHhView(3),
   llThenHhView(4),
-  {
-    id: "lhbreak", label: "LH breakout (2h)", mark: null, needsKey: "swing_bars",
-    chip: "LH breakout",
-    note: (row) => `Closed above LH high ${formatPrice(row.lh_breakout_level)} on ${formatBarTime(row.lh_breakout_at)}`,
-    hint: `3 or more LLs or LHs since the last HH, then a 2-hour candle closed above the high of the last LH, in the last ${LH_BREAKOUT_MAX_BARS} two-hour bars.${SWING_NOTE}`,
-    filter: (row) => withinBars(row.lh_breakout_bars, LH_BREAKOUT_MAX_BARS),
-    columns: [TICKER, { key: "lh_breakout_at", label: "Breakout bar", type: "bartime" }, barsAgo("lh_breakout_bars"),
-      { key: "lh_breakout_level", label: "LH high", type: "price", title: "High of the last LH that the close broke" },
-      CLOSE, CHANGE, ANG_LL_LL],
-    sort: { key: "lh_breakout_at", dir: "desc" },
-  },
+  lhBreakoutView({
+    id: "lhbreak", prefix: "", label: "LH breakout (2h)", chip: "LH breakout", timeType: "bartime",
+    candle: "2-hour candle", barWord: "two-hour", barsTitle: "2-hour bars since the record (about 4 per session)", note: SWING_NOTE,
+  }),
+  lhBreakoutView({
+    id: "lhbreak1d", prefix: DAILY, label: "LH breakout (1D)", chip: "LH breakout (1D)", timeType: "date",
+    candle: "daily candle", barWord: "daily", barsTitle: "Sessions since the record", note: DAILY_SWING_NOTE,
+  }),
 ];
 
 /** Each list: which rows it shows (given the latest market date), its columns and default sort. */
