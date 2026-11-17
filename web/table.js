@@ -21,7 +21,7 @@ function cell(column, row) {
     case "screens": return el("td", { text: row.screens || DASH, class: row.screens ? "" : "dim" });
     case "flag": return el("td", { text: value === true ? "Yes" : DASH, class: value === true ? "" : "dim" });
     case "date": return el("td", { text: formatDate(value) });
-    case "pattern": return el("td", { text: value || `${row.before_entry_ll ?? "?"} LL (other)`, class: value ? "" : "dim" });
+    case "pattern": return el("td", { text: value || `${row[column.llKey || "before_entry_ll"] ?? "?"} LL (other)`, class: value ? "" : "dim" });
     case "bartime": return el("td", { text: formatBarTime(value), class: value ? "" : "dim" });
     case "angle": return el("td", { class: `num ${signClass(value)}`, text: formatAngle(value) });
     case "status": return el("td", {}, [statusBadge(row.status ?? row.entry_status, row.valid)]);

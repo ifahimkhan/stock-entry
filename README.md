@@ -7,6 +7,8 @@ It also runs the swing rules of `TradingView.ipynb` on 2-hour candles (Yahoo hou
 the 09:15 open, latest 500 kept): HH / HL / LH / LL labels, LL→LL and LL→HL angles, **3 LL then HH**,
 **4 LL then HH** and **LH breakout** (`stock_entry/swings.py`, `stock_entry/intraday.py`). A swing label is
 confirmed 5 bars after its pivot, so these lists show signals from the last 20 two-hour bars.
+The same swing rules also run on the daily bars of the scan (latest 500, fields prefixed `d1_`): the
+**TBC Zone Entry (1D)** list and a "Swings (1-day bars)" table in the stock detail.
 
 ## Run on Streamlit Community Cloud
 

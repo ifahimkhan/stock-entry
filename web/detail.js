@@ -144,8 +144,14 @@ function indicators(summary) {
   ]);
 }
 
-const SWING_COLUMNS = [
-  { key: "time", label: "2h bar", type: "bartime" },
+// The swing table of the 2-hour bars and of the daily bars: same fields, daily ones prefixed d1_ in the summary.
+const SWING_FRAMES = {
+  twoHour: { prefix: "", title: "Swings (2-hour bars)", short: "2h", timeType: "bartime", format: formatBarTime, bar: "bar", swingsKey: "swings" },
+  daily: { prefix: "d1_", title: "Swings (1-day bars)", short: "daily", timeType: "date", format: formatDate, bar: "session", swingsKey: "swings_1d" },
+};
+
+const swingColumns = (frame) => [
+  { key: "time", label: frame.prefix ? "Day" : "2h bar", type: frame.timeType },
   { key: "label", label: "Swing", type: "text" },
   { key: "low", label: "Low", type: "price" },
   { key: "high", label: "High", type: "price" },
@@ -164,37 +170,40 @@ function swingSignal(point) {
   ].filter(Boolean).join(" · ");
 }
 
-function swingFacts(summary) {
-  const ago = (bars) => (isNumber(bars) ? ` (${plural(bars, "bar")} ago)` : "");
-  const signal = (at, bars, text) => (at ? `${text} on ${formatBarTime(at)}${ago(bars)}.` : null);
+function swingFacts(summary, frame) {
+  const get = (key) => summary[`${frame.prefix}${key}`];
+  const when = frame.format;
+  const ago = (bars) => (isNumber(bars) ? ` (${plural(bars, frame.bar)} ago)` : "");
+  const signal = (at, bars, text) => (at ? `${text} on ${when(at)}${ago(bars)}.` : null);
   return [
-    summary.swing_last_label
-      ? `Last swing: ${summary.swing_last_label} on ${formatBarTime(summary.swing_last_label_at)}. Latest 2h bar ${formatBarTime(summary.swing_last_bar)}.`
-      : "No swing label in the loaded 2h bars.",
-    summary.before_entry_at
-      ? `TBC Zone Entry on ${formatBarTime(summary.before_entry_at)}${ago(summary.before_entry_bars)}: HH after ${plural(summary.before_entry_ll, "lower low")} → ${summary.before_entry_pattern || "not a 3LL / 4LL pattern"}.`
-      : "No TBC Zone Entry (confirmed HH) in the loaded 2h bars.",
-    signal(summary.ll3_hh_at, summary.ll3_hh_bars, "3 LL then HH"),
-    signal(summary.ll4_hh_at, summary.ll4_hh_bars, "4 LL then HH"),
-    summary.lh_breakout_at
-      ? `LH breakout on ${formatBarTime(summary.lh_breakout_at)}${ago(summary.lh_breakout_bars)}: closed above the LH high of ${formatPrice(summary.lh_breakout_level)}.`
+    get("swing_last_label")
+      ? `Last swing: ${get("swing_last_label")} on ${when(get("swing_last_label_at"))}. Latest ${frame.short} bar ${when(get("swing_last_bar"))}.`
+      : `No swing label in the loaded ${frame.short} bars.`,
+    get("before_entry_at")
+      ? `TBC Zone Entry on ${when(get("before_entry_at"))}${ago(get("before_entry_bars"))}: HH after ${plural(get("before_entry_ll"), "lower low")} → ${get("before_entry_pattern") || "not a 3LL / 4LL pattern"}.`
+      : `No TBC Zone Entry (confirmed HH) in the loaded ${frame.short} bars.`,
+    signal(get("ll3_hh_at"), get("ll3_hh_bars"), "3 LL then HH"),
+    signal(get("ll4_hh_at"), get("ll4_hh_bars"), "4 LL then HH"),
+    get("lh_breakout_at")
+      ? `LH breakout on ${when(get("lh_breakout_at"))}${ago(get("lh_breakout_bars"))}: closed above the LH high of ${formatPrice(get("lh_breakout_level"))}.`
       : null,
-    isNumber(summary.ang_ll_ll) ? `Latest LL→LL angle ${formatAngle(summary.ang_ll_ll)} (from the LL on ${formatBarTime(summary.ang_ll_ll_at)}).` : null,
-    isNumber(summary.ang_ll_hl) ? `Latest LL→HL angle ${formatAngle(summary.ang_ll_hl)} (from the LL on ${formatBarTime(summary.ang_ll_hl_at)}).` : null,
+    isNumber(get("ang_ll_ll")) ? `Latest LL→LL angle ${formatAngle(get("ang_ll_ll"))} (from the LL on ${when(get("ang_ll_ll_at"))}).` : null,
+    isNumber(get("ang_ll_hl")) ? `Latest LL→HL angle ${formatAngle(get("ang_ll_hl"))} (from the LL on ${when(get("ang_ll_hl_at"))}).` : null,
   ].filter(Boolean);
 }
 
-/** TradingView.ipynb swings on 2-hour bars. Nothing for scans / servers without them. */
-function swingSection(summary, swings) {
-  if (summary.swing_bars === undefined) return null;
-  const title = el("h3", { class: "section-title", text: "Swings (2-hour bars)" });
-  if (!summary.swing_bars) return el("div", {}, [title, el("p", { class: "dim", text: "No 2-hour swing data for this stock (2-hour prices were not available)." })]);
+/** TradingView.ipynb swings on 2-hour or daily bars. Nothing for scans / servers without them. */
+function swingSection(summary, swings, frame) {
+  const bars = summary[`${frame.prefix}swing_bars`];
+  if (bars === undefined) return null;
+  const title = el("h3", { class: "section-title", text: frame.title });
+  if (!bars) return el("div", {}, [title, el("p", { class: "dim", text: `No ${frame.short} swing data for this stock (${frame.short} prices were not available).` })]);
   const table = el("table", { class: "compact" }, [el("thead"), el("tbody")]);
   const rows = [...(swings || [])].reverse().map((point) => ({ ...point, signal: swingSignal(point) }));
-  renderTable(table, { rows, columns: SWING_COLUMNS });
+  renderTable(table, { rows, columns: swingColumns(frame) });
   return el("div", {}, [
     title,
-    el("div", { class: "facts facts-none" }, swingFacts(summary).map((text) => el("p", { text }))),
+    el("div", { class: "facts facts-none" }, swingFacts(summary, frame).map((text) => el("p", { text }))),
     rows.length ? el("div", { class: "table-wrap" }, [table]) : null,
   ]);
 }
@@ -217,10 +226,11 @@ export function renderDetailMessage(panel, text) {
 
 /**
  * @param {HTMLElement} panel
- * @param {{summary: object, history: object[]}} detail
+ * @param {{summary: object, history: object[], swings?: object[], swings_1d?: object[]}} detail
  * @returns {() => void} cleanup that stops the chart's resize tracking
  */
-export function renderDetail(panel, { summary, history, swings }) {
+export function renderDetail(panel, detail) {
+  const { summary, history } = detail;
   const subtitle = [summary.name, summary.sector].filter(Boolean).join(" · ");
   const chart = el("div", { class: "chart" });
   const table = el("table", { class: "compact" }, [el("thead"), el("tbody")]);
@@ -251,7 +261,8 @@ export function renderDetail(panel, { summary, history, swings }) {
     el("div", { class: `facts facts-${statusKind(summary.status, summary.valid) || "none"}` },
       factLines(summary).map((text) => el("p", { text }))),
     indicators(summary),
-    swingSection(summary, swings),
+    swingSection(summary, detail[SWING_FRAMES.twoHour.swingsKey], SWING_FRAMES.twoHour),
+    swingSection(summary, detail[SWING_FRAMES.daily.swingsKey], SWING_FRAMES.daily),
     el("div", { class: "chart-controls" }, [legend, el("div", { class: "pickers" }, [
       picker(MODES, DEFAULT_MODE === "candles" ? "Candles" : "Line", "Chart type", (option) => {
         chartMode = option.mode;

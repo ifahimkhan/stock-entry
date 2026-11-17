@@ -34,6 +34,7 @@ const days = (count) => `${count} day${count === 1 ? "" : "s"}`;
 const STAGE_TEXT = { fundamentals: "Loading market cap and debt", prices: "Scanning prices" };
 const NO_FUNDAMENTALS = " Market cap and debt/equity are not loaded for this scan, so those filters were skipped: run the scan again.";
 const NO_SWINGS = " 2-hour prices did not load for this scan, so this list is empty: run the scan again.";
+const NO_DAILY_SWINGS = " No stock had enough daily prices for swing labels in this scan, so this list is empty.";
 const OLD_SCAN = " This scan was made before this screen was added: run the scan again.";
 
 // Swing lists (TradingView.ipynb on 2-hour bars). A swing label is only known 5 bars after its pivot,
@@ -61,21 +62,41 @@ const PATTERN_FILTERS = [
   { id: "all", label: "All" }, { id: "3LL-HH", label: "3LL-HH" },
   { id: "4LL-HH", label: "4LL-HH" },
 ];
-const patternText = (row) => row.before_entry_pattern || `${row.before_entry_ll ?? "?"} LL (other)`;
-const patternMatches = (row, id) => id === "all" || (id === "other" ? !row.before_entry_pattern : row.before_entry_pattern === id);
+// Swing fields of daily bars carry this prefix in a scan row (d1_before_entry_at, ...).
+const DAILY = "d1_";
+const DAILY_SWING_NOTE = " Labels are confirmed 5 sessions after the pivot, and an HH can still turn into LH if price later closes below the previous LL.";
+const patternText = (row, prefix = "") => row[`${prefix}before_entry_pattern`] || `${row[`${prefix}before_entry_ll`] ?? "?"} LL (other)`;
+const patternMatches = (row, id, prefix = "") => {
+  const pattern = row[`${prefix}before_entry_pattern`];
+  return id === "all" || (id === "other" ? !pattern : pattern === id);
+};
+/** TBC Zone Entry on 2-hour bars (prefix "") or on daily bars (prefix DAILY): same rules, same window. */
+const beforeEntryView = ({ id, prefix, label, chip, timeType, barWord, barsTitle, note }) => {
+  const key = (name) => `${prefix}${name}`;
+  const format = timeType === "date" ? formatDate : formatBarTime;
+  return {
+    id, label, chip, mark: null, needsKey: key("swing_bars"), patternFilter: true, prefix,
+    note: (row) => `TBC Zone Entry ${format(row[key("before_entry_at")])} · ${patternText(row, prefix)} · LL→HL ${formatAngle(row[key("ang_ll_hl")])}`,
+    hint: `TBC Zone Entry (the notebook's Final = "Before Entry"): a higher high (HH) that survived the clean-up (${barWord} bars). Only HHs that complete a 3LL-HH or 4LL-HH pattern (3 or 4 lower lows before it), from the last ${BEFORE_ENTRY_MAX_BARS} ${barWord} bars.${note}`,
+    filter: (row) => Boolean(row[key("before_entry_pattern")])   // 3LL-HH or 4LL-HH only
+      && withinBars(row[key("before_entry_bars")], BEFORE_ENTRY_MAX_BARS),
+    columns: [TICKER, { key: key("before_entry_at"), label: "Zone entry", type: timeType },
+      { key: key("before_entry_bars"), label: "Bars ago", type: "int", title: barsTitle },
+      { key: key("before_entry_pattern"), label: "Pattern", type: "pattern", llKey: key("before_entry_ll"), title: "Lower lows since the previous HH: 3LL-HH, 4LL-HH or other" },
+      { key: key("before_entry_close"), label: "HH close", type: "price" }, CLOSE, CHANGE,
+      { ...ANG_LL_LL, key: key("ang_ll_ll") }, { ...ANG_LL_HL, key: key("ang_ll_hl") }],
+    sort: { key: key("before_entry_at"), dir: "desc" },
+  };
+};
 const SWING_VIEWS = [
-  {
-    id: "before", label: "TBC Zone Entry (2h)", mark: null, needsKey: "swing_bars", patternFilter: true,
-    chip: "TBC Zone Entry",
-    note: (row) => `TBC Zone Entry ${formatBarTime(row.before_entry_at)} · ${patternText(row)} · LL→HL ${formatAngle(row.ang_ll_hl)}`,
-    hint: `TBC Zone Entry (the notebook's Final = "Before Entry"): a higher high (HH) that survived the clean-up (2-hour bars). Only HHs that complete a 3LL-HH or 4LL-HH pattern (3 or 4 lower lows before it), from the last ${BEFORE_ENTRY_MAX_BARS} two-hour bars.${SWING_NOTE}`,
-    filter: (row) => Boolean(row.before_entry_pattern)   // 3LL-HH or 4LL-HH only
-      && withinBars(row.before_entry_bars, BEFORE_ENTRY_MAX_BARS),
-    columns: [TICKER, { key: "before_entry_at", label: "Zone entry", type: "bartime" }, barsAgo("before_entry_bars"),
-      { key: "before_entry_pattern", label: "Pattern", type: "pattern", title: "Lower lows since the previous HH: 3LL-HH, 4LL-HH or other" },
-      { key: "before_entry_close", label: "HH close", type: "price" }, CLOSE, CHANGE, ANG_LL_LL, ANG_LL_HL],
-    sort: { key: "before_entry_at", dir: "desc" },
-  },
+  beforeEntryView({
+    id: "before", prefix: "", label: "TBC Zone Entry (2h)", chip: "TBC Zone Entry", timeType: "bartime",
+    barWord: "two-hour", barsTitle: "2-hour bars since the record (about 4 per session)", note: SWING_NOTE,
+  }),
+  beforeEntryView({
+    id: "before1d", prefix: DAILY, label: "TBC Zone Entry (1D)", chip: "TBC Zone Entry (1D)", timeType: "date",
+    barWord: "daily", barsTitle: "Sessions since the record", note: DAILY_SWING_NOTE,
+  }),
   llThenHhView(3),
   llThenHhView(4),
   {
@@ -227,7 +248,7 @@ const capMatches = (row, capId) => capId === "all" || row.cap_category === capId
 const capRows = (view) => viewRows(view).filter((row) => capMatches(row, state.capFilter));
 /** Rows of a list for the selected market-cap group and, on Before Entry, the selected pattern. */
 const rowsFor = (view) => viewRows(view).filter((row) => capMatches(row, state.capFilter)
-  && (!view.patternFilter || patternMatches(row, state.patternFilter)));
+  && (!view.patternFilter || patternMatches(row, state.patternFilter, view.prefix)));
 const errorText = (error) => (error instanceof Error ? error.message : "Something went wrong.");
 
 function showNotice(text) {
@@ -311,7 +332,7 @@ function renderPatternFilter(view) {
   const inList = viewRows(view).filter((row) => capMatches(row, state.capFilter));
   dom.patternFilter.replaceChildren(...PATTERN_FILTERS.map((option) => el("button", {
     type: "button", "aria-pressed": String(state.patternFilter === option.id),
-    text: `${option.label} ${inList.filter((row) => patternMatches(row, option.id)).length}`,
+    text: `${option.label} ${inList.filter((row) => patternMatches(row, option.id, view.prefix)).length}`,
     onclick: () => setState({ patternFilter: option.id }),
   })));
 }
@@ -327,7 +348,9 @@ function renderList() {
   const needsKey = view.needsKey || "screen_count";
   if (state.scan && rows().length && rows()[0][needsKey] === undefined) hint += OLD_SCAN;
   else if (view.usesFundamentals && state.scan && !rows().some((row) => row.fundamentals_known)) hint += NO_FUNDAMENTALS;
-  else if (view.needsKey === "swing_bars" && rows().length && !rows().some((row) => row.swing_bars > 0)) hint += NO_SWINGS;
+  else if (needsKey.endsWith("swing_bars") && rows().length && !rows().some((row) => row[needsKey] > 0)) {
+    hint += view.prefix === DAILY ? NO_DAILY_SWINGS : NO_SWINGS;
+  }
   dom.listHint.textContent = hint;
   const shown = state.query.trim() ? `${visible.length} of ${inView.length}` : String(inView.length);
   dom.listCount.textContent = state.scan ? `· ${shown} stock${inView.length === 1 ? "" : "s"}` : "";

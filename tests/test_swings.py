@@ -8,14 +8,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from stock_entry.analysis import analyze, build_row
+from stock_entry.analysis import DAILY_SWING_BARS, analyze, build_row
 from stock_entry.config import Settings
 from stock_entry.history import HistoryService
 from stock_entry.intraday import analyze_swings, fetch_two_hour, to_two_hour
 from stock_entry.market_data import MarketDataError, split_by_symbol
 from stock_entry.scanner import run_scan
 from stock_entry.services import build_services
-from stock_entry.swings import (HH, HL, LH, LL, clean_labels, empty_swing_summary, hh_pattern, lh_breakout,
+from stock_entry.swings import (HH, HL, LH, LL, clean_labels, daily_points, daily_summary, empty_swing_summary, hh_pattern, lh_breakout,
                                 ll_angles, ll_count_at_hh, ll_then_hh, percent_angle, swing_columns, swing_labels,
                                 swing_points, swing_summary)
 from stock_entry.tickers import Ticker
@@ -300,3 +300,57 @@ def test_services_never_reach_yahoo_for_swings_when_fetch_is_injected(tmp_path: 
     with_swings = build_services(Settings(scan_path=tmp_path / "scan.json"), fetch=daily_fetch,
                                  swing_fetch=lambda symbols: {symbols[0]: zigzag_bars()})
     assert with_swings.history.get(Ticker("A.NS"))["summary"]["swing_bars"] == len(zigzag_bars())
+
+
+# ---------------------------------------------------------------- daily bars (TBC Zone Entry 1D)
+
+def daily_zigzag() -> pd.DataFrame:
+    """The zigzag as daily bars (one per calendar day), with volume."""
+    bars = zigzag_bars()
+    dates = pd.date_range("2026-07-01", periods=len(bars), freq="D")
+    return bars.assign(Date=dates, Volume=1000.0)
+
+
+def test_daily_summary_prefixes_keys_and_keeps_dates_only() -> None:
+    summary = swing_summary(analyze_swings(daily_zigzag()))
+    daily = daily_summary(summary)
+    assert set(daily) == {f"d1_{key}" for key in summary}
+    assert daily["d1_swing_last_label"] == HH
+    assert daily["d1_before_entry_at"] == summary["before_entry_at"][:10] and len(daily["d1_before_entry_at"]) == 10
+    assert daily_points([{"time": "2026-11-16 00:00", "close": 1.0}]) == [{"time": "2026-11-16", "close": 1.0}]
+
+
+def test_build_row_has_daily_swings_next_to_two_hour_swings() -> None:
+    row = build_row(Ticker("A.NS"), analyze(daily_zigzag()), analyze_swings(zigzag_bars()))
+    assert row["swing_last_label"] == HH and row["swing_last_label_at"].endswith(":15")   # 2h untouched
+    assert row["d1_swing_last_label"] == HH and len(row["d1_swing_last_label_at"]) == 10
+    assert row["d1_swing_bars"] == len(daily_zigzag())
+
+
+def test_daily_swings_use_only_the_latest_bars() -> None:
+    long = pd.concat([daily_zigzag()] * 8, ignore_index=True)
+    long = long.assign(Date=pd.date_range("2024-01-01", periods=len(long), freq="D"))
+    assert build_row(Ticker("A.NS"), analyze(long))["d1_swing_bars"] == DAILY_SWING_BARS
+
+
+def test_daily_swing_failure_never_drops_a_stock(monkeypatch: pytest.MonkeyPatch) -> None:
+    def explode(frame: pd.DataFrame) -> pd.DataFrame:
+        raise IndexError("swing bug")
+
+    monkeypatch.setattr("stock_entry.analysis.analyze_swings", explode)
+    rows = run_scan([Ticker("A.NS")], lambda symbols: {"A.NS": daily_zigzag()}, batch_size=5)["rows"]
+    assert len(rows) == 1 and rows[0]["d1_swing_bars"] == 0 and rows[0]["d1_before_entry_at"] is None
+    detail = HistoryService(lambda symbols: {symbols[0]: daily_zigzag()}, cache_seconds=60, detail_rows=10).get(Ticker("A.NS"))
+    assert detail["swings_1d"] == [] and detail["summary"]["d1_swing_bars"] == 0
+
+
+def test_close_only_prices_give_empty_daily_swings() -> None:
+    assert build_row(Ticker("A.NS"), analyze(make_prices(SANSERA_CLOSES)))["d1_swing_bars"] == 0
+
+
+def test_history_includes_daily_swing_points() -> None:
+    service = HistoryService(lambda symbols: {symbols[0]: daily_zigzag()}, cache_seconds=60, detail_rows=10,
+                             swing_points=4)
+    points = service.get(Ticker("A.NS"))["swings_1d"]
+    assert len(points) == 4 and all(len(point["time"]) == 10 for point in points)
+    assert points[-1]["label"] == HH

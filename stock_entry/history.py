@@ -8,11 +8,11 @@ from typing import Any, Callable
 
 import pandas as pd
 
-from stock_entry.analysis import analyze, build_row
+from stock_entry.analysis import analyze, build_row, daily_swings
 from stock_entry.intraday import analyze_swings
 from stock_entry.market_data import MarketDataError
 from stock_entry.summary import history_records
-from stock_entry.swings import swing_points
+from stock_entry.swings import daily_points, swing_points
 from stock_entry.tickers import Ticker
 
 Fetch = Callable[[list[str]], dict[str, pd.DataFrame]]
@@ -53,7 +53,7 @@ class HistoryService:
             return None
 
     def get(self, ticker: Ticker) -> dict[str, Any]:
-        """Return {summary, history, swings} for one stock, downloading it when not cached."""
+        """Return {summary, history, swings, swings_1d} for one stock, downloading it when not cached."""
         symbol = ticker.symbol
         now = self._clock()
         with self._lock:
@@ -66,10 +66,12 @@ class HistoryService:
             raise StockNotFoundError(f"No price data found for {symbol}. Check the symbol (NSE stocks end in .NS).")
         analyzed = analyze(frame)
         swings = self._swings(symbol)
+        daily = daily_swings(analyzed)
         detail = {
-            "summary": build_row(ticker, analyzed, swings),
+            "summary": build_row(ticker, analyzed, swings, daily),
             "history": history_records(analyzed, self._detail_rows),
             "swings": [] if swings is None else swing_points(swings, self._swing_points),
+            "swings_1d": [] if daily is None else daily_points(swing_points(daily, self._swing_points)),
         }
         if swings is None and self._swing_fetch is not None:
             return detail  # 2-hour bars failed: do not cache, so the next click tries again

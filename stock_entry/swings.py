@@ -346,3 +346,25 @@ def swing_points(frame: pd.DataFrame, limit: int) -> list[dict[str, Any]]:
         "ll3_hh": bool(row["ll3_hh"]), "ll4_hh": bool(row["ll4_hh"]),
         "lh_breakout": bool(row["lh_breakout"]), "lh_breakout_level": _number(row["lh_breakout_level"]),
     } for _, row in marked.iterrows()]
+
+
+# ---------------------------------------------------------------- daily bars
+
+DAILY_PREFIX = "d1_"   # daily swing fields sit next to the 2-hour ones in a scan row: d1_before_entry_at, ...
+DAILY_TIME_KEYS = ("_at", "swing_last_bar", "time")
+
+
+def _as_day(key: str, value: Any) -> Any:
+    """Daily bars have no time of day: "2026-11-16 00:00" -> "2026-11-16"."""
+    is_time = isinstance(value, str) and key.endswith(DAILY_TIME_KEYS)
+    return value[:10] if is_time else value
+
+
+def daily_summary(summary: dict[str, Any]) -> dict[str, Any]:
+    """A swing summary of daily bars as scan-row fields: keys prefixed with d1_, times as dates."""
+    return {f"{DAILY_PREFIX}{key}": _as_day(key, value) for key, value in summary.items()}
+
+
+def daily_points(points: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Swing points of daily bars with the time as a date."""
+    return [{key: _as_day(key, value) for key, value in point.items()} for point in points]

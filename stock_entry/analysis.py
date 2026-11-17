@@ -7,14 +7,17 @@ from typing import Any
 import pandas as pd
 
 from stock_entry.indicators import indicator_columns
+from stock_entry.intraday import analyze_swings
 from stock_entry.signals import add_entry_signals, clean_bars
 from stock_entry.smc import smc_columns, smc_summary
 from stock_entry.strategy import evaluate_screens
 from stock_entry.summary import summarize_latest
-from stock_entry.swings import empty_swing_summary, swing_summary
+from stock_entry.swings import daily_summary, empty_swing_summary, swing_summary
 from stock_entry.tickers import Ticker
 
 logger = logging.getLogger(__name__)
+DAILY_SWING_BARS = 500   # same as the notebook's n_bars; the 2-year daily history has about this many
+PRICE_COLUMNS = ("Date", "Open", "High", "Low", "Close", "Volume")
 
 
 def analyze(prices: pd.DataFrame) -> pd.DataFrame:
@@ -23,14 +26,31 @@ def analyze(prices: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([add_entry_signals(bars), indicator_columns(bars), smc_columns(bars)], axis=1)
 
 
-def build_row(ticker: Ticker, analyzed: pd.DataFrame, swings: pd.DataFrame | None = None) -> dict[str, Any]:
-    """Latest-bar summary of one stock: entry status, indicator values, screen results and, from the
-    analysed 2-hour bars in `swings`, the TradingView.ipynb swing signals."""
+def daily_swings(analyzed: pd.DataFrame) -> pd.DataFrame | None:
+    """The TradingView.ipynb swing columns on the daily bars (latest DAILY_SWING_BARS), or None on any
+    failure: a daily swing problem never drops the stock from the scan."""
+    if not {"High", "Low"} <= set(analyzed.columns):
+        return None   # close-only prices: no swing pivots to find
+    try:
+        prices = analyzed[[column for column in PRICE_COLUMNS if column in analyzed.columns]]
+        return analyze_swings(prices.tail(DAILY_SWING_BARS))
+    except Exception:
+        logger.exception("Daily swing signals failed")
+        return None
+
+
+def build_row(ticker: Ticker, analyzed: pd.DataFrame, swings: pd.DataFrame | None = None,
+              daily: pd.DataFrame | None = None) -> dict[str, Any]:
+    """Latest-bar summary of one stock: entry status, indicator values, screen results and the
+    TradingView.ipynb swing signals of the analysed 2-hour bars in `swings` and of the daily bars
+    (`daily`, computed from `analyzed` when not given; fields prefixed d1_)."""
+    daily = daily_swings(analyzed) if daily is None else daily
     return {
         **summarize_latest(ticker.symbol, analyzed, ticker.name, ticker.sector),
         **evaluate_screens(analyzed, ticker.market_cap_cr, ticker.debt_to_equity),
         **smc_summary(analyzed),
         **_swing_fields(ticker.symbol, swings),
+        **daily_summary(_swing_fields(ticker.symbol, daily)),
     }
 
 
