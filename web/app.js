@@ -45,85 +45,124 @@ const withinBars = (bars, maxBars) => isNumber(bars) && bars <= maxBars;
 const BEFORE_ENTRY_MAX_BARS = 7;   // Before Entry list: only HHs at most this many 2-hour bars old
 const LL_HH_MAX_BARS = 12;         // 3 LL -> HH and 4 LL -> HH lists: same idea, a wider window
 const LH_BREAKOUT_MAX_BARS = 3;    // LH breakout list: only fresh breakouts
-const barsAgo = (key) => ({ key, label: "Bars ago", type: "int", title: "2-hour bars since the record (about 4 per session)" });
 const ANG_LL_LL = { key: "ang_ll_ll", label: "LL→LL", type: "angle", title: "Angle of the latest LL low to the next LL low (% change vs bars)" };
 const ANG_LL_HL = { key: "ang_ll_hl", label: "LL→HL", type: "angle", title: "Angle of the latest LL low to the HL low, when an HH followed" };
-const llThenHhView = (count) => ({
-  id: `ll${count}`, label: `${count} LL then HH (2h)`, mark: null, needsKey: "swing_bars",
-  chip: `${count} LL → HH`,
-  note: (row) => `HH ${formatBarTime(row[`ll${count}_hh_at`])} after ${count} lower lows · LL→LL ${formatAngle(row.ang_ll_ll)}`,
-  hint: `Exactly ${count} lower lows (LL) since the previous higher high, then a new HH (2-hour bars), in the last ${LL_HH_MAX_BARS} two-hour bars.${SWING_NOTE}`,
-  filter: (row) => withinBars(row[`ll${count}_hh_bars`], LL_HH_MAX_BARS),
-  columns: [TICKER, { key: `ll${count}_hh_at`, label: "HH bar", type: "bartime" }, barsAgo(`ll${count}_hh_bars`),
-    CLOSE, CHANGE, ANG_LL_LL, ANG_LL_HL],
-  sort: { key: `ll${count}_hh_at`, dir: "desc" },
-});
 const PATTERN_FILTERS = [
   { id: "all", label: "All" }, { id: "3LL-HH", label: "3LL-HH" },
   { id: "4LL-HH", label: "4LL-HH" },
 ];
+const LL_COUNTS = [3, 4];
 // Swing fields of daily bars carry this prefix in a scan row (d1_before_entry_at, ...).
 const DAILY = "d1_";
 const DAILY_SWING_NOTE = " Labels are confirmed 5 sessions after the pivot, and an HH can still turn into LH if price later closes below the previous LL.";
+
+// Each swing signal is one chip; a 2 hours / 1 day switch picks which bars it reads.
+const TIMEFRAMES = [
+  {
+    id: "2h", label: "2 hours", short: "2h", prefix: "", timeType: "bartime", format: formatBarTime,
+    barWord: "two-hour", candle: "2-hour candle", note: SWING_NOTE,
+    barsTitle: "2-hour bars since the record (about 4 per session)",
+  },
+  {
+    id: "1d", label: "1 day", short: "1D", prefix: DAILY, timeType: "date", format: formatDate,
+    barWord: "daily", candle: "daily candle", note: DAILY_SWING_NOTE,
+    barsTitle: "Sessions since the record",
+  },
+];
+const DEFAULT_TIMEFRAME = "2h";
+
 const patternText = (row, prefix = "") => row[`${prefix}before_entry_pattern`] || `${row[`${prefix}before_entry_ll`] ?? "?"} LL (other)`;
-const patternMatches = (row, id, prefix = "") => {
-  const pattern = row[`${prefix}before_entry_pattern`];
-  return id === "all" || (id === "other" ? !pattern : pattern === id);
-};
-/** TBC Zone Entry on 2-hour bars (prefix "") or on daily bars (prefix DAILY): same rules, same window. */
-const beforeEntryView = ({ id, prefix, label, chip, timeType, barWord, barsTitle, note }) => {
-  const key = (name) => `${prefix}${name}`;
-  const format = timeType === "date" ? formatDate : formatBarTime;
+
+/** Fields every swing view of one timeframe shares: id, chip, key helper, the timeframe switch. */
+const swingBase = (group, chip, tf) => ({
+  id: tf.id === DEFAULT_TIMEFRAME ? group : `${group}1d`, group, tf: tf.id, chip, mark: null,
+  needsKey: `${tf.prefix}swing_bars`, prefix: tf.prefix,
+});
+const barsColumn = (key, tf) => ({ key, label: "Bars ago", type: "int", title: tf.barsTitle });
+const angleColumns = (tf, both = true) => [{ ...ANG_LL_LL, key: `${tf.prefix}ang_ll_ll` },
+  ...(both ? [{ ...ANG_LL_HL, key: `${tf.prefix}ang_ll_hl` }] : [])];
+
+/** TBC Zone Entry: a clean HH that completes a 3LL-HH or 4LL-HH pattern. */
+const beforeEntryView = (tf) => {
+  const key = (name) => `${tf.prefix}${name}`;
   return {
-    id, label, chip, mark: null, needsKey: key("swing_bars"), patternFilter: true, prefix,
-    note: (row) => `TBC Zone Entry ${format(row[key("before_entry_at")])} · ${patternText(row, prefix)} · LL→HL ${formatAngle(row[key("ang_ll_hl")])}`,
-    hint: `TBC Zone Entry (the notebook's Final = "Before Entry"): a higher high (HH) that survived the clean-up (${barWord} bars). Only HHs that complete a 3LL-HH or 4LL-HH pattern (3 or 4 lower lows before it), from the last ${BEFORE_ENTRY_MAX_BARS} ${barWord} bars.${note}`,
+    ...swingBase("before", "TBC Zone Entry", tf), label: `TBC Zone Entry (${tf.short})`,
+    patternMatch: (row, id) => id === "all" || row[key("before_entry_pattern")] === id,
+    note: (row) => `TBC Zone Entry ${tf.format(row[key("before_entry_at")])} · ${patternText(row, tf.prefix)} · LL→HL ${formatAngle(row[key("ang_ll_hl")])}`,
+    hint: `TBC Zone Entry (the notebook's Final = "Before Entry"): a higher high (HH) that survived the clean-up (${tf.barWord} bars). Only HHs that complete a 3LL-HH or 4LL-HH pattern (3 or 4 lower lows before it), from the last ${BEFORE_ENTRY_MAX_BARS} ${tf.barWord} bars.${tf.note}`,
     filter: (row) => Boolean(row[key("before_entry_pattern")])   // 3LL-HH or 4LL-HH only
       && withinBars(row[key("before_entry_bars")], BEFORE_ENTRY_MAX_BARS),
-    columns: [TICKER, { key: key("before_entry_at"), label: "Zone entry", type: timeType },
-      { key: key("before_entry_bars"), label: "Bars ago", type: "int", title: barsTitle },
+    columns: [TICKER, { key: key("before_entry_at"), label: "Zone entry", type: tf.timeType },
+      barsColumn(key("before_entry_bars"), tf),
       { key: key("before_entry_pattern"), label: "Pattern", type: "pattern", llKey: key("before_entry_ll"), title: "Lower lows since the previous HH: 3LL-HH, 4LL-HH or other" },
-      { key: key("before_entry_close"), label: "HH close", type: "price" }, CLOSE, CHANGE,
-      { ...ANG_LL_LL, key: key("ang_ll_ll") }, { ...ANG_LL_HL, key: key("ang_ll_hl") }],
+      { key: key("before_entry_close"), label: "HH close", type: "price" }, CLOSE, CHANGE, ...angleColumns(tf)],
     sort: { key: key("before_entry_at"), dir: "desc" },
   };
 };
-/** LH breakout on 2-hour bars (prefix "") or on daily bars (prefix DAILY): same rule, same window. */
-const lhBreakoutView = ({ id, prefix, label, chip, timeType, candle, barWord, barsTitle, note }) => {
-  const key = (name) => `${prefix}${name}`;
-  const format = timeType === "date" ? formatDate : formatBarTime;
+
+/** 3 or 4 LL then HH in one list: the latest of the two (fields added by withLlHh). */
+const llThenHhView = (tf) => {
+  const key = (name) => `${tf.prefix}${name}`;
+  const inWindow = (row, count) => withinBars(row[key(`ll${count}_hh_bars`)], LL_HH_MAX_BARS);
   return {
-    id, label, chip, mark: null, needsKey: key("swing_bars"), prefix,
-    note: (row) => `Closed above LH high ${formatPrice(row[key("lh_breakout_level")])} on ${format(row[key("lh_breakout_at")])}`,
-    hint: `3 or more LLs or LHs since the last HH, then a ${candle} closed above the high of the last LH, in the last ${LH_BREAKOUT_MAX_BARS} ${barWord} bars.${note}`,
+    ...swingBase("llhh", "LL → HH", tf), label: `3 / 4 LL then HH (${tf.short})`,
+    patternMatch: (row, id) => id === "all" || LL_COUNTS.some((count) => id === `${count}LL-HH` && inWindow(row, count)),
+    note: (row) => `HH ${tf.format(row[key("llhh_at")])} after ${row[key("llhh_count")]} lower lows · LL→LL ${formatAngle(row[key("ang_ll_ll")])}`,
+    hint: `Exactly 3 or 4 lower lows (LL) since the previous higher high, then a new HH (${tf.barWord} bars), in the last ${LL_HH_MAX_BARS} ${tf.barWord} bars. Use 3LL-HH / 4LL-HH to see one count.${tf.note}`,
+    filter: (row) => LL_COUNTS.some((count) => inWindow(row, count)),
+    columns: [TICKER, { key: key("llhh_at"), label: "HH bar", type: tf.timeType }, barsColumn(key("llhh_bars"), tf),
+      { key: key("llhh_pattern"), label: "Pattern", type: "pattern", title: "Lower lows since the previous HH" },
+      CLOSE, CHANGE, ...angleColumns(tf)],
+    sort: { key: key("llhh_at"), dir: "desc" },
+  };
+};
+
+/** LH breakout: after 3+ LLs or LHs, the first close above the last LH high. */
+const lhBreakoutView = (tf) => {
+  const key = (name) => `${tf.prefix}${name}`;
+  return {
+    ...swingBase("lhbreak", "LH breakout", tf), label: `LH breakout (${tf.short})`,
+    note: (row) => `Closed above LH high ${formatPrice(row[key("lh_breakout_level")])} on ${tf.format(row[key("lh_breakout_at")])}`,
+    hint: `3 or more LLs or LHs since the last HH, then a ${tf.candle} closed above the high of the last LH, in the last ${LH_BREAKOUT_MAX_BARS} ${tf.barWord} bars.${tf.note}`,
     filter: (row) => withinBars(row[key("lh_breakout_bars")], LH_BREAKOUT_MAX_BARS),
-    columns: [TICKER, { key: key("lh_breakout_at"), label: "Breakout bar", type: timeType },
-      { key: key("lh_breakout_bars"), label: "Bars ago", type: "int", title: barsTitle },
+    columns: [TICKER, { key: key("lh_breakout_at"), label: "Breakout bar", type: tf.timeType },
+      barsColumn(key("lh_breakout_bars"), tf),
       { key: key("lh_breakout_level"), label: "LH high", type: "price", title: "High of the last LH that the close broke" },
-      CLOSE, CHANGE, { ...ANG_LL_LL, key: key("ang_ll_ll") }],
+      CLOSE, CHANGE, ...angleColumns(tf, false)],
     sort: { key: key("lh_breakout_at"), dir: "desc" },
   };
 };
-const SWING_VIEWS = [
-  beforeEntryView({
-    id: "before", prefix: "", label: "TBC Zone Entry (2h)", chip: "TBC Zone Entry", timeType: "bartime",
-    barWord: "two-hour", barsTitle: "2-hour bars since the record (about 4 per session)", note: SWING_NOTE,
-  }),
-  beforeEntryView({
-    id: "before1d", prefix: DAILY, label: "TBC Zone Entry (1D)", chip: "TBC Zone Entry (1D)", timeType: "date",
-    barWord: "daily", barsTitle: "Sessions since the record", note: DAILY_SWING_NOTE,
-  }),
-  llThenHhView(3),
-  llThenHhView(4),
-  lhBreakoutView({
-    id: "lhbreak", prefix: "", label: "LH breakout (2h)", chip: "LH breakout", timeType: "bartime",
-    candle: "2-hour candle", barWord: "two-hour", barsTitle: "2-hour bars since the record (about 4 per session)", note: SWING_NOTE,
-  }),
-  lhBreakoutView({
-    id: "lhbreak1d", prefix: DAILY, label: "LH breakout (1D)", chip: "LH breakout (1D)", timeType: "date",
-    candle: "daily candle", barWord: "daily", barsTitle: "Sessions since the record", note: DAILY_SWING_NOTE,
-  }),
-];
+
+const SWING_VIEWS = [beforeEntryView, llThenHhView, lhBreakoutView]
+  .flatMap((make) => TIMEFRAMES.map((tf) => make(tf)));
+
+/** The latest 3 LL or 4 LL then HH of one timeframe as llhh_* fields (null when there is none). */
+function llHhFields(row, prefix) {
+  const hits = LL_COUNTS
+    .map((count) => ({ count, at: row[`${prefix}ll${count}_hh_at`], bars: row[`${prefix}ll${count}_hh_bars`] }))
+    .filter((hit) => isNumber(hit.bars))
+    .sort((a, b) => a.bars - b.bars);
+  const latest = hits[0];
+  return {
+    [`${prefix}llhh_at`]: latest ? latest.at : null,
+    [`${prefix}llhh_bars`]: latest ? latest.bars : null,
+    [`${prefix}llhh_count`]: latest ? latest.count : null,
+    [`${prefix}llhh_pattern`]: latest ? `${latest.count}LL-HH` : null,
+  };
+}
+
+/** The scan with the combined LL → HH fields added to each row (a new object; the input is unchanged). */
+function withLlHh(scan) {
+  if (!scan) return scan;
+  return { ...scan, rows: scan.rows.map((row) => ({ ...row, ...llHhFields(row, ""), ...llHhFields(row, DAILY) })) };
+}
+
+// Old bookmark ids, from when each timeframe and LL count had its own chip.
+const LEGACY_LINKS = {
+  before1d: { list: "before1d" }, lhbreak1d: { list: "lhbreak1d" },
+  ll3: { list: "llhh", pattern: "3LL-HH" }, ll4: { list: "llhh", pattern: "4LL-HH" },
+  ll31d: { list: "llhh1d", pattern: "3LL-HH" }, ll41d: { list: "llhh1d", pattern: "4LL-HH" },
+};
 
 /** Each list: which rows it shows (given the latest market date), its columns and default sort. */
 // Lists kept in the code but not shown as chips (turn one back on by removing its id here).
@@ -236,13 +275,14 @@ const dom = {
   searchForm: $("search-form"), searchInput: $("search-input"), tickerList: $("ticker-list"),
   listTitle: $("list-title"), listCount: $("list-count"), listHint: $("list-hint"),
   table: $("stock-table"), listEmpty: $("list-empty"), detail: $("detail"), capFilter: $("cap-filter"),
-  patternFilter: $("pattern-filter"),
+  patternFilter: $("pattern-filter"), timeframeFilter: $("timeframe-filter"),
 };
 
 let state = {
   scan: undefined,  // undefined until the first load answers; null when there is no scan yet
   progress: { running: false }, tickers: [], viewId: "entry",
   sort: VIEWS[0].sort, query: "", selected: null, capFilter: "all", patternFilter: "all",
+  timeframe: DEFAULT_TIMEFRAME,
 };
 let pollTimer = null;
 let detailCleanup = null;
@@ -253,6 +293,10 @@ const setState = (changes) => {
   render();
 };
 const currentView = () => VIEWS.find((view) => view.id === state.viewId);
+/** Chips: every list, but swing lists only for the selected timeframe (one chip per signal). */
+const chipViews = () => VIEWS.filter((view) => !view.tf || view.tf === state.timeframe);
+/** The same signal on another timeframe, e.g. TBC Zone Entry 2h -> TBC Zone Entry 1D. */
+const sibling = (view, tf) => VIEWS.find((other) => other.group === view.group && other.tf === tf) || view;
 const rows = () => (state.scan ? state.scan.rows : []);
 /** Rows of a list before the market-cap filter. */
 const viewRows = (view) => rows().filter((row) => view.filter(row, state.scan.data_date));
@@ -261,7 +305,7 @@ const capMatches = (row, capId) => capId === "all" || row.cap_category === capId
 const capRows = (view) => viewRows(view).filter((row) => capMatches(row, state.capFilter));
 /** Rows of a list for the selected market-cap group and, on Before Entry, the selected pattern. */
 const rowsFor = (view) => viewRows(view).filter((row) => capMatches(row, state.capFilter)
-  && (!view.patternFilter || patternMatches(row, state.patternFilter, view.prefix)));
+  && (!view.patternMatch || view.patternMatch(row, state.patternFilter)));
 const errorText = (error) => (error instanceof Error ? error.message : "Something went wrong.");
 
 function showNotice(text) {
@@ -295,7 +339,7 @@ function renderMeta() {
 function renderTiles() {
   const { scan } = state;
   const failed = scan ? scan.failed.length : 0;
-  dom.tiles.replaceChildren(...VIEWS.map((view) => {
+  dom.tiles.replaceChildren(...chipViews().map((view) => {
     const selected = state.viewId === view.id;
     const title = view.id === "all" && failed ? `${view.hint} ${failed} returned no data.` : view.hint;
     return el("button", {
@@ -338,14 +382,25 @@ function renderCapFilter(view) {
   dom.capFilter.hidden = !state.scan;
 }
 
-/** All / 3LL-HH / 4LL-HH buttons, only on the Before Entry list. */
+/** 2 hours / 1 day switch on the swing lists, with the stock count of the same signal on each. */
+function renderTimeframeFilter(view) {
+  dom.timeframeFilter.hidden = !(view.tf && state.scan);
+  if (dom.timeframeFilter.hidden) return;
+  dom.timeframeFilter.replaceChildren(...TIMEFRAMES.map((tf) => el("button", {
+    type: "button", "aria-pressed": String(view.tf === tf.id),
+    text: `${tf.label} ${capRows(sibling(view, tf.id)).length}`,
+    onclick: () => selectTimeframe(tf.id),
+  })));
+}
+
+/** All / 3LL-HH / 4LL-HH buttons, on TBC Zone Entry and LL → HH. */
 function renderPatternFilter(view) {
-  dom.patternFilter.hidden = !(view.patternFilter && state.scan);
+  dom.patternFilter.hidden = !(view.patternMatch && state.scan);
   if (dom.patternFilter.hidden) return;
   const inList = viewRows(view).filter((row) => capMatches(row, state.capFilter));
   dom.patternFilter.replaceChildren(...PATTERN_FILTERS.map((option) => el("button", {
     type: "button", "aria-pressed": String(state.patternFilter === option.id),
-    text: `${option.label} ${inList.filter((row) => patternMatches(row, option.id, view.prefix)).length}`,
+    text: `${option.label} ${inList.filter((row) => view.patternMatch(row, option.id)).length}`,
     onclick: () => setState({ patternFilter: option.id }),
   })));
 }
@@ -353,6 +408,7 @@ function renderPatternFilter(view) {
 function renderList() {
   const view = currentView();
   renderCapFilter(view);
+  renderTimeframeFilter(view);
   renderPatternFilter(view);
   const inView = state.scan ? rowsFor(view) : [];
   const visible = sortRows(inView.filter((row) => matchesQuery(row, state.query)), state.sort);
@@ -418,6 +474,13 @@ function selectView(viewId) {
   setState({ viewId, sort: VIEWS.find((view) => view.id === viewId).sort });
 }
 
+/** Switch swing lists between 2-hour and daily bars; stays on the same signal. */
+function selectTimeframe(timeframe) {
+  const view = currentView();
+  const next = view.tf ? sibling(view, timeframe) : view;
+  setState({ timeframe, viewId: next.id, sort: next.id === view.id ? state.sort : next.sort });
+}
+
 async function openStock(symbol) {
   const request = ++detailRequest;
   if (detailCleanup) detailCleanup();
@@ -464,7 +527,7 @@ function onSearchSubmit(event) {
 
 async function refreshScan() {
   const data = await getScan();
-  setState({ scan: data.scan, progress: data.progress });
+  setState({ scan: withLlHh(data.scan), progress: data.progress });
   return data.progress;
 }
 
@@ -575,9 +638,13 @@ async function init() {
   watchScroll();
   // Bookmarkable lists, e.g. /?list=screen&cap=Large opens TBC 5-Day Breakout for large caps.
   const params = new URLSearchParams(location.search);
-  const linkedView = VIEWS.find((view) => view.id === params.get("list"));
+  const legacy = LEGACY_LINKS[params.get("list")] || {};
+  const listId = legacy.list || params.get("list");
+  const linkedView = VIEWS.find((view) => view.id === listId);
   const linkedCap = CAP_FILTERS.find((cap) => cap.id === params.get("cap"));
-  if (linkedView) state = { ...state, viewId: linkedView.id, sort: linkedView.sort };
+  const linkedPattern = PATTERN_FILTERS.find((option) => option.id === (legacy.pattern || params.get("pattern")));
+  if (linkedView) state = { ...state, viewId: linkedView.id, sort: linkedView.sort, timeframe: linkedView.tf || state.timeframe };
+  if (linkedPattern) state = { ...state, patternFilter: linkedPattern.id };
   if (linkedCap) state = { ...state, capFilter: linkedCap.id };
   render();
   try {
