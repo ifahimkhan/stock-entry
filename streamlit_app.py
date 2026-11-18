@@ -13,7 +13,7 @@ from typing import Any
 import streamlit as st
 import streamlit.components.v1 as components
 
-from stock_entry.bridge import build_component_dir, handle_request, is_new_request, page_fingerprint
+from stock_entry.bridge import build_component_dir, code_fingerprint, handle_request, is_new_request, page_fingerprint
 from stock_entry.config import Settings
 from stock_entry.services import Services, build_services
 
@@ -31,9 +31,11 @@ PAGE_CSS = """
 """
 
 
-@st.cache_resource
-def get_services() -> Services:
-    """One set of services for the whole server, so every visitor sees the same scan and progress."""
+@st.cache_resource(max_entries=1)
+def get_services(version: str) -> Services:
+    """One set of services for the whole server, so every visitor sees the same scan and progress.
+    `version` (code_fingerprint) changes when a push changes the Python code: the server is not restarted
+    on a redeploy, so without it the services built by the old code (e.g. without the 2-hour CSV) stay."""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     return build_services(Settings())
 
@@ -51,7 +53,8 @@ def main() -> None:
     st.set_page_config(page_title="Stock Entry", layout="wide")
     st.markdown(PAGE_CSS, unsafe_allow_html=True)
     try:
-        services, page = get_services(), get_component(page_fingerprint(Settings().web_dir))
+        services = get_services(code_fingerprint())
+        page = get_component(page_fingerprint(Settings().web_dir))
     except (OSError, ValueError) as exc:
         logging.getLogger(__name__).exception("Stock Entry could not start")
         st.error(f"Stock Entry could not start: {exc}")

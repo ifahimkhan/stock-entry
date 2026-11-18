@@ -163,6 +163,16 @@ def page_fingerprint(web_dir: Path) -> str:
     return digest.hexdigest()[:12]
 
 
+def code_fingerprint(package_dir: Path | None = None) -> str:
+    """Short hash of the app's Python code: it changes whenever a deploy changes stock_entry/*.py."""
+    package_dir = package_dir or Path(__file__).resolve().parent
+    digest = hashlib.sha256()
+    for path in sorted(package_dir.glob("*.py")):
+        digest.update(path.name.encode())
+        digest.update(path.read_bytes())
+    return digest.hexdigest()[:12]
+
+
 def build_component_dir(web_dir: Path, target: Path, version: str | None = None) -> Path:
     """Copy the page into `target` as a Streamlit component: relative asset links and the bridge api.js.
 

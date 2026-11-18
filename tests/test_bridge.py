@@ -208,3 +208,14 @@ def test_cooldown_uses_the_same_clock_as_the_scanner(services: Services, monkeyp
     monkeypatch.setattr(bridge_module, "now_ist", lambda: later)
     assert call(services, "start_scan")["success"] is True
     wait_for_scan(services)
+
+
+def test_code_fingerprint_changes_with_the_python_code(tmp_path) -> None:
+    from stock_entry.bridge import code_fingerprint
+
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    first = code_fingerprint(tmp_path)
+    assert first == code_fingerprint(tmp_path) and len(first) == 12
+    (tmp_path / "a.py").write_text("x = 2\n", encoding="utf-8")
+    assert code_fingerprint(tmp_path) != first
+    assert code_fingerprint() == code_fingerprint()   # the real package
