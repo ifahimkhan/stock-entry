@@ -26,6 +26,9 @@ class Settings:
     # Swing scan (TradingView.ipynb): TradingView 2-hour bars (TV_USERNAME / TV_PASSWORD), latest 500.
     swing_bars: int = 500            # same as the notebook's n_bars
     swing_detail_points: int = 30    # swing points listed in the single-stock view
+    # 2-hour bars written by the TradingView.ipynb loop. When present they are used first; stocks missing
+    # from it (the notebook skips financial stocks) still come from TradingView.
+    two_hour_csv_path: Path = PROJECT_ROOT / "TBC_all_stocks_bars.csv"
     batch_size: int = 40             # tickers per yfinance request
     max_failed_share: float = 0.25   # if more stocks than this return no data, keep the previous scan
     default_suffix: str = ".NS"      # appended to symbols typed without an exchange suffix

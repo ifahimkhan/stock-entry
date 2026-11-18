@@ -173,6 +173,7 @@ function swingSignal(point) {
 const SOURCE_TEXT = {
   tradingview: "2-hour prices from TradingView.",
   "tradingview-nologin": "2-hour prices from TradingView without login (the sign-in failed, so the latest bars may be missing).",
+  "tbc-csv": "2-hour prices from TBC_all_stocks_bars.csv (the TradingView notebook run).",
 };
 
 function swingFacts(summary, frame) {

@@ -1,0 +1,54 @@
+# When a new TBC_all_stocks_bars.csv (from the TradingView.ipynb loop) is pushed, recompute the 2-hour
+# swing fields of the saved scan from it and commit data/scan_latest.json, so the live site lists the
+# notebook's signals without waiting for the next daily scan. Takes under a minute: nothing is downloaded.
+name: Apply 2-hour CSV
+
+on:
+  push:
+    branches: [main]
+    paths: [TBC_all_stocks_bars.csv]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to commit data/
+
+concurrency:
+  group: daily-scan          # same group as the daily scan: never write the scan file at the same time
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install numpy pandas yfinance
+
+      - name: Apply the CSV to the saved scan
+        run: python -m stock_entry.apply_two_hour_csv
+
+      - name: Commit the scan
+        run: |
+          if git diff --quiet -- data/scan_latest.json; then
+            echo "2-hour fields unchanged. Nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/scan_latest.json
+          git commit -m "chore: 2-hour fields from TBC_all_stocks_bars.csv"
+          for attempt in 1 2 3; do   # the daily scan may push at the same moment: rebase and try again
+            if git pull --rebase && git push; then
+              exit 0
+            fi
+            echo "Push attempt $attempt failed; retrying."
+            sleep $((attempt * 10))
+          done
+          exit 1

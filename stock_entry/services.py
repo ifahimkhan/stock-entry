@@ -17,6 +17,7 @@ from stock_entry.store import ScanStore
 from stock_entry.tickers import Ticker
 from stock_entry.tickers import load_universe as read_universe
 from stock_entry.tv_login import TradingViewLogin
+from stock_entry.two_hour_csv import CsvFirstTwoHourBars, CsvTwoHourBars
 
 Fetch = Callable[[list[str]], dict[str, pd.DataFrame]]
 logger = logging.getLogger(__name__)
@@ -57,6 +58,9 @@ def build_services(settings: Settings, fetch: Fetch | None = None,
     if tv_login is None and swing_fetch is None and fetch is None:
         tv_login = _two_hour_fetch(settings)
     swing_fetch = tv_login if tv_login is not None else swing_fetch
+    if fetch is None and settings.two_hour_csv_path.is_file():
+        # The notebook's bars first; TradingView only for the stocks the file does not list.
+        swing_fetch = CsvFirstTwoHourBars(CsvTwoHourBars(settings.two_hour_csv_path), swing_fetch)
     # The re-ask for stocks a batch dropped makes one attempt only: those are often delisted symbols.
     refetch = fetch or partial(download_history, period=settings.history_period, interval=settings.interval,
                                attempts=1)

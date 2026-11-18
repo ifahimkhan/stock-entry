@@ -411,7 +411,9 @@ function renderPatternFilter(view) {
   })));
 }
 
-const SOURCE_NAMES = { tradingview: "TradingView", "tradingview-nologin": "TradingView (no login)" };
+const SOURCE_NAMES = {
+  tradingview: "TradingView", "tradingview-nologin": "TradingView (no login)", "tbc-csv": "TBC_all_stocks_bars.csv",
+};
 
 /** " 2-hour prices: TradingView 826." for the scan rows that carry a source. */
 function sourceNote(scanRows) {

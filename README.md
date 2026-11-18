@@ -11,6 +11,14 @@ There is no Yahoo fallback: without them, or for a stock TradingView misses, the
 stay empty. Signals: HH / HL / LH / LL labels, LL→LL and LL→HL angles, **3 LL then HH**,
 **4 LL then HH** and **LH breakout** (`stock_entry/swings.py`, `stock_entry/intraday.py`). A swing label is
 confirmed 5 bars after its pivot, so these lists show signals from the last 20 two-hour bars.
+
+**2-hour bars from the notebook:** when `TBC_all_stocks_bars.csv` (written by the loop cell at the end of
+`TradingView.ipynb`) is in the project folder, the scan and the stock detail take their 2-hour bars from it
+first (`stock_entry/two_hour_csv.py`); stocks it does not list (the notebook skips financial stocks) still come
+from TradingView. To update the live site, re-run the notebook loop and push the CSV: the **Apply 2-hour CSV**
+workflow then recomputes the 2-hour fields of the saved scan (`python -m stock_entry.apply_two_hour_csv`, no
+downloads) and commits it. `TBC_all_stocks_summary.csv` is the notebook's one-row-per-stock view of the same data.
+
 The same swing rules also run on the daily bars of the scan (latest 500, fields prefixed `d1_`): the
 **TBC Zone Entry (1D)** list and a "Swings (1-day bars)" table in the stock detail.
 
