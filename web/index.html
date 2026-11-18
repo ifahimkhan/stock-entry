@@ -1,9 +1,14 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Stock Entry</title>
+  <script>
+    // Theme before first paint (light by default); web/theme.js wires the switch.
+    try { var t = localStorage.getItem("stock-entry-theme"); document.documentElement.dataset.theme = t === "dark" ? "dark" : "light"; }
+    catch (e) { document.documentElement.dataset.theme = "light"; }
+  </script>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -15,6 +20,7 @@
       </div>
       <div class="topbar-actions">
         <button type="button" id="tv-button" hidden aria-haspopup="dialog" aria-label="TradingView login"><span class="tv-long">TradingView</span><span class="tv-short">TV</span><span id="tv-check" hidden> ✓</span></button>
+        <button type="button" class="theme-button" id="theme-button" aria-label="Switch to dark mode" title="Switch to dark mode">☾</button>
         <button type="button" class="primary" id="scan-button">Run scan</button>
       </div>
     </div>

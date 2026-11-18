@@ -9,6 +9,7 @@ import { renderCards } from "./cards.js";
 import { MARKET_HOURS_TEXT, isMarketHours } from "./market.js";
 import { DASH, el, formatAngle, formatBarTime, formatDate, formatDateTime, formatPercent, formatPrice, isNumber } from "./format.js";
 import { renderTable, sortRows } from "./table.js";
+import { initThemeToggle } from "./theme.js";
 
 const RECENT_SESSIONS = 5;
 const MRI_SESSIONS = 10;  // how far back a confirmed SPV / PV still counts as fresh
@@ -806,4 +807,5 @@ async function init() {
   if (SYMBOL_LIKE.test(linked)) openStock(linked.toUpperCase());  // page opened from a bookmark like /#TCS.NS
 }
 
+initThemeToggle(document.getElementById("theme-button"));
 init();
