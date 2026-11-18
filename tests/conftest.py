@@ -24,3 +24,15 @@ def make_prices(rows: list[tuple[str, float]]) -> pd.DataFrame:
 @pytest.fixture
 def sansera() -> pd.DataFrame:
     return make_prices(SANSERA_CLOSES)
+
+
+@pytest.fixture(autouse=True)
+def _no_project_env_file(monkeypatch, tmp_path_factory):
+    """Tests never read the developer's real .env (TradingView credentials)."""
+    from stock_entry import env_file
+
+    monkeypatch.setattr(env_file, "PROJECT_ENV", tmp_path_factory.mktemp("noenv") / ".env")
+    for name in ("TV_USERNAME", "TV_PASSWORD", "TV_SESSIONID", "TV_SESSIONID_SIGN"):
+        # set then delete, so monkeypatch restores the original state even when a test (or .env) sets it
+        monkeypatch.setenv(name, "")
+        monkeypatch.delenv(name)

@@ -19,6 +19,18 @@ from TradingView. To update the live site, re-run the notebook loop and push the
 workflow then recomputes the 2-hour fields of the saved scan (`python -m stock_entry.apply_two_hour_csv`, no
 downloads) and commits it. `TBC_all_stocks_summary.csv` is the notebook's one-row-per-stock view of the same data.
 
+**TradingView sign-in and the captcha:** TradingView often answers a script's password sign-in with
+"Please confirm that you are not a robot" (`recaptcha_required`), and the data then comes without login
+(the latest bar of some stocks is missing). Use your browser session instead: sign in on tradingview.com
+in the browser, open DevTools -> Application -> Cookies -> `https://www.tradingview.com`, and copy the
+values of `sessionid` and `sessionid_sign` into `.env` (gitignored):
+
+    TV_SESSIONID = "..."
+    TV_SESSIONID_SIGN = "..."
+
+(also as GitHub Actions secrets / Streamlit secrets for the daily scan and the live site). The session is
+used first; `TV_USERNAME` / `TV_PASSWORD` only when it is missing or expired. Never commit these values.
+
 **Day-wise update** (no full 500-bar download): after market close run
 
     python -m stock_entry.update_two_hour_csv --bars 4     # today's 4 bars; default 12 also fills a missed day

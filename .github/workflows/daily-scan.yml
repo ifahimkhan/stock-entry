@@ -46,6 +46,8 @@ jobs:
         env:   # 2-hour bars: TBC_all_stocks_bars.csv first, TradingView for stocks not in it
           TV_USERNAME: ${{ secrets.TV_USERNAME }}
           TV_PASSWORD: ${{ secrets.TV_PASSWORD }}
+          TV_SESSIONID: ${{ secrets.TV_SESSIONID }}             # browser session: avoids the captcha on password sign-in
+          TV_SESSIONID_SIGN: ${{ secrets.TV_SESSIONID_SIGN }}
         run: python -m stock_entry.scan_job
 
       - name: Commit scan results

@@ -13,7 +13,7 @@ from typing import Any
 
 import pandas as pd
 
-from stock_entry.tradingview import TRADINGVIEW, TradingViewFeed, credentials
+from stock_entry.tradingview import TRADINGVIEW, TradingViewFeed, credentials, session_cookies
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,8 @@ class TradingViewLogin:
         self._n_bars, self._make_feed = n_bars, make_feed
         self._lock = threading.Lock()
         login = env()
+        if login is None and env is credentials and session_cookies():
+            login = (None, None)   # browser session only (TV_SESSIONID): no password needed
         self._feed: TradingViewFeed | None = make_feed(*login, n_bars=n_bars) if login else None
         self._username: str | None = login[0] if login else None
         self._origin: str | None = ENV if login else None
