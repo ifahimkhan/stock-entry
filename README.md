@@ -19,6 +19,18 @@ from TradingView. To update the live site, re-run the notebook loop and push the
 workflow then recomputes the 2-hour fields of the saved scan (`python -m stock_entry.apply_two_hour_csv`, no
 downloads) and commits it. `TBC_all_stocks_summary.csv` is the notebook's one-row-per-stock view of the same data.
 
+**Day-wise update** (no full 500-bar download): after market close run
+
+    python -m stock_entry.update_two_hour_csv --bars 4     # today's 4 bars; default 12 also fills a missed day
+
+(or the last cell of `TradingView.ipynb`). It fetches the latest bars of every stock in the CSV, replaces
+bars with the same time, appends new ones, keeps the latest 500 per stock, recomputes the notebook's signal
+columns, rebuilds `TBC_all_stocks_summary.csv` and updates the saved scan. Signs in with `TV_USERNAME` /
+`TV_PASSWORD` when set. If fewer than half the stocks come back, the files are left unchanged. Then:
+
+    git add TBC_all_stocks_bars.csv TBC_all_stocks_summary.csv data/scan_latest.json
+    git commit -m "chore: 2-hour bars for <date>" && git push
+
 The same swing rules also run on the daily bars of the scan (latest 500, fields prefixed `d1_`): the
 **TBC Zone Entry (1D)** list and a "Swings (1-day bars)" table in the stock detail.
 
