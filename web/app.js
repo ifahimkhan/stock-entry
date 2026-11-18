@@ -46,6 +46,7 @@ const SWING_NOTE = " Labels are confirmed 5 bars (about 1 session) after the piv
 /** True when a record `bars` 2-hour bars old is at most `maxBars` old. */
 const withinBars = (bars, maxBars) => isNumber(bars) && bars <= maxBars;
 const BEFORE_ENTRY_MAX_BARS = 7;   // Before Entry list: only HHs at most this many 2-hour bars old
+const BEFORE_ENTRY_MAX_SESSIONS = 15;   // TBC Zone Entry (1D): HHs at most this many daily bars (sessions) old
 const LL_HH_MAX_BARS = 12;         // 3 LL -> HH and 4 LL -> HH lists: same idea, a wider window
 const LH_BREAKOUT_MAX_BARS = 3;    // LH breakout list: only fresh breakouts
 const ANG_LL_LL = { key: "ang_ll_ll", label: "LL→LL", type: "angle", title: "Angle of the latest LL low to the next LL low (% change vs bars)" };
@@ -88,13 +89,14 @@ const angleColumns = (tf, both = true) => [{ ...ANG_LL_LL, key: `${tf.prefix}ang
 /** TBC Zone Entry: a clean HH that completes a 3LL-HH or 4LL-HH pattern. */
 const beforeEntryView = (tf) => {
   const key = (name) => `${tf.prefix}${name}`;
+  const maxBars = tf.prefix === DAILY ? BEFORE_ENTRY_MAX_SESSIONS : BEFORE_ENTRY_MAX_BARS;
   return {
     ...swingBase("before", "TBC Zone Entry", tf), label: `TBC Zone Entry (${tf.short})`,
     patternMatch: (row, id) => id === "all" || row[key("before_entry_pattern")] === id,
     note: (row) => `TBC Zone Entry ${tf.format(row[key("before_entry_at")])} · ${patternText(row, tf.prefix)} · LL→HL ${formatAngle(row[key("ang_ll_hl")])}`,
-    hint: `TBC Zone Entry (the notebook's Final = "Before Entry"): a higher high (HH) that survived the clean-up (${tf.barWord} bars). Only HHs that complete a 3LL-HH or 4LL-HH pattern (3 or 4 lower lows before it), from the last ${BEFORE_ENTRY_MAX_BARS} ${tf.barWord} bars.${tf.note}`,
+    hint: `TBC Zone Entry (the notebook's Final = "Before Entry"): a higher high (HH) that survived the clean-up (${tf.barWord} bars). Only HHs that complete a 3LL-HH or 4LL-HH pattern (3 or 4 lower lows before it), from the last ${maxBars} ${tf.barWord} bars.${tf.note}`,
     filter: (row) => Boolean(row[key("before_entry_pattern")])   // 3LL-HH or 4LL-HH only
-      && withinBars(row[key("before_entry_bars")], BEFORE_ENTRY_MAX_BARS),
+      && withinBars(row[key("before_entry_bars")], maxBars),
     columns: [TICKER, { key: key("before_entry_at"), label: "Zone entry", type: tf.timeType },
       barsColumn(key("before_entry_bars"), tf),
       { key: key("before_entry_pattern"), label: "Pattern", type: "pattern", llKey: key("before_entry_ll"), title: "Lower lows since the previous HH: 3LL-HH, 4LL-HH or other" },
