@@ -357,7 +357,7 @@ function renderTiles() {
     }, [
       view.mark ? el("span", { class: `mark ${view.mark}`, "aria-hidden": "true" }) : null,
       el("span", { text: view.chip }),
-      el("span", { class: "chip-count", text: scan ? String(capRows(view).length) : DASH }),
+      el("span", { class: "chip-count", text: `(${scan ? capRows(view).length : DASH})` }),
     ]);
   }));
   // Keep the selected chip visible by scrolling the chip row only (scrollIntoView would also move the page).
@@ -385,7 +385,7 @@ function renderCapFilter(view) {
   const all = state.scan ? viewRows(view) : [];
   dom.capFilter.replaceChildren(...CAP_FILTERS.map((cap) => el("button", {
     type: "button", "aria-pressed": String(state.capFilter === cap.id),
-    text: `${cap.label} ${all.filter((row) => capMatches(row, cap.id)).length}`,
+    text: `${cap.label} (${all.filter((row) => capMatches(row, cap.id)).length})`,
     onclick: () => setState({ capFilter: cap.id }),
   })));
   dom.capFilter.hidden = !state.scan;
@@ -397,7 +397,7 @@ function renderTimeframeFilter(view) {
   if (dom.timeframeFilter.hidden) return;
   dom.timeframeFilter.replaceChildren(...TIMEFRAMES.map((tf) => el("button", {
     type: "button", "aria-pressed": String(view.tf === tf.id),
-    text: `${tf.label} ${capRows(sibling(view, tf.id)).length}`,
+    text: `${tf.label} (${capRows(sibling(view, tf.id)).length})`,
     onclick: () => selectTimeframe(tf.id),
   })));
 }
@@ -409,7 +409,7 @@ function renderPatternFilter(view) {
   const inList = viewRows(view).filter((row) => capMatches(row, state.capFilter));
   dom.patternFilter.replaceChildren(...PATTERN_FILTERS.map((option) => el("button", {
     type: "button", "aria-pressed": String(state.patternFilter === option.id),
-    text: `${option.label} ${inList.filter((row) => view.patternMatch(row, option.id)).length}`,
+    text: `${option.label} (${inList.filter((row) => view.patternMatch(row, option.id)).length})`,
     onclick: () => setState({ patternFilter: option.id }),
   })));
 }
