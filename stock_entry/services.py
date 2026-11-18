@@ -14,9 +14,9 @@ from stock_entry.history import HistoryService
 from stock_entry.market_data import download_history
 from stock_entry.scanner import Scanner
 from stock_entry.store import ScanStore
-from stock_entry.tradingview import TradingViewFeed, credentials
 from stock_entry.tickers import Ticker
 from stock_entry.tickers import load_universe as read_universe
+from stock_entry.tv_login import TradingViewLogin
 
 Fetch = Callable[[list[str]], dict[str, pd.DataFrame]]
 logger = logging.getLogger(__name__)
@@ -30,6 +30,7 @@ class Services:
     fundamentals: FundamentalsService
     scanner: Scanner
     history: HistoryService
+    tv_login: TradingViewLogin | None = None   # None when tests pass their own bars
 
     def known_ticker(self, symbol: str) -> Ticker:
         """The ticker with its name / sector when listed; a bare one otherwise."""
@@ -39,27 +40,23 @@ class Services:
             return Ticker(symbol)  # the single-stock view still works without a ticker list
 
 
-def _no_bars(symbols: list[str]) -> dict[str, pd.DataFrame]:
-    return {}
-
-
-def _two_hour_fetch(settings: Settings) -> Fetch:
-    """2-hour bars from TradingView only (needs TV_USERNAME / TV_PASSWORD). A stock TradingView does not
-    return gets empty 2-hour swing fields; without the credentials every stock does."""
-    login = credentials()
-    if login is None:
-        logger.warning("TV_USERNAME / TV_PASSWORD not set: no 2-hour swing data")
-        return _no_bars
-    return TradingViewFeed(*login, n_bars=settings.swing_bars)
+def _two_hour_fetch(settings: Settings) -> TradingViewLogin:
+    """2-hour bars from TradingView only: TV_USERNAME / TV_PASSWORD at start, or a login typed into the
+    page later. A stock TradingView does not return gets empty 2-hour swing fields; without a login every
+    stock does."""
+    return TradingViewLogin(n_bars=settings.swing_bars)
 
 
 def build_services(settings: Settings, fetch: Fetch | None = None,
-                   fetch_fundamentals: FetchOne | None = None, swing_fetch: Fetch | None = None) -> Services:
+                   fetch_fundamentals: FetchOne | None = None, swing_fetch: Fetch | None = None,
+                   tv_login: TradingViewLogin | None = None) -> Services:
     """`fetch` (symbols -> {symbol: daily bars}), `swing_fetch` (symbols -> {symbol: 2-hour bars}) and
     `fetch_fundamentals` can be replaced in tests. Passing `fetch` without `swing_fetch` turns the
-    2-hour swing scan off, so tests never reach Yahoo by accident."""
-    if swing_fetch is None and fetch is None:
-        swing_fetch = _two_hour_fetch(settings)
+    2-hour swing scan off, so tests never reach TradingView by accident. `tv_login` (tests) replaces the
+    TradingView login built from the environment."""
+    if tv_login is None and swing_fetch is None and fetch is None:
+        tv_login = _two_hour_fetch(settings)
+    swing_fetch = tv_login if tv_login is not None else swing_fetch
     # The re-ask for stocks a batch dropped makes one attempt only: those are often delisted symbols.
     refetch = fetch or partial(download_history, period=settings.history_period, interval=settings.interval,
                                attempts=1)
@@ -74,4 +71,4 @@ def build_services(settings: Settings, fetch: Fetch | None = None,
     history = HistoryService(fetch, settings.history_cache_seconds, settings.detail_rows,
                              swing_fetch=swing_fetch, swing_points=settings.swing_detail_points)
     return Services(settings=settings, load_universe=load_universe, store=store, fundamentals=fundamentals,
-                    scanner=scanner, history=history)
+                    scanner=scanner, history=history, tv_login=tv_login)

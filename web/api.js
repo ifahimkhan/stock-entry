@@ -27,3 +27,12 @@ export const getScanStatus = () => request("/api/scan/status");
 export const startScan = () => request("/api/scan", { method: "POST", headers: CLIENT_HEADER });
 export const getTickers = () => request("/api/tickers");
 export const getStock = (symbol) => request(`/api/stocks/${encodeURIComponent(symbol)}`);
+
+// TradingView login (local app only): the password goes in the POST body, never in the URL.
+export const TV_LOGIN_AVAILABLE = true;
+export const getTradingView = () => request("/api/tradingview");
+export const signInTradingView = (username, password) => request("/api/tradingview/login", {
+  method: "POST", headers: { ...CLIENT_HEADER, "Content-Type": "application/json" },
+  body: JSON.stringify({ username, password }),
+});
+export const signOutTradingView = () => request("/api/tradingview/logout", { method: "POST", headers: CLIENT_HEADER });

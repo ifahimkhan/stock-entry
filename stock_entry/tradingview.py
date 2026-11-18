@@ -109,6 +109,12 @@ class TradingViewFeed:
             return self._token
 
     @property
+    def signed_in(self) -> bool | None:
+        """None until the sign-in has been tried; then whether TradingView accepted it."""
+        with self._lock:
+            return None if self._token is None else self._token != NOLOGIN_TOKEN
+
+    @property
     def source(self) -> str:
         return TRADINGVIEW if self._sign_in() != NOLOGIN_TOKEN else TRADINGVIEW_NOLOGIN
 

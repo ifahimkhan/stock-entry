@@ -103,9 +103,16 @@ def _stock(services: Services, request: dict[str, Any]) -> Any:
         raise BridgeError("Could not reach Yahoo Finance. Try again in a minute.") from exc
 
 
+def _tradingview(services: Services, request: dict[str, Any]) -> Any:
+    """The public site is shared by every visitor, so a login typed there would be used for everyone."""
+    raise BridgeError("Signing in to TradingView from the page only works in the local app. "
+                      "On the live site set TV_USERNAME / TV_PASSWORD in the Streamlit secrets.")
+
+
 Handler = Callable[[Services, dict[str, Any]], Any]
 HANDLERS: dict[str, Handler] = {
     "scan": _scan, "scan_status": _scan_status, "start_scan": _start_scan, "tickers": _tickers, "stock": _stock,
+    "tradingview": _tradingview, "tradingview_login": _tradingview, "tradingview_logout": _tradingview,
 }
 
 

@@ -16,6 +16,7 @@ from stock_entry.history import StockNotFoundError
 from stock_entry.market_data import MarketDataError
 from stock_entry.services import Fetch, build_services
 from stock_entry.tickers import InvalidSymbolError, normalize_symbol
+from stock_entry.tv_login import TradingViewLogin, TradingViewLoginError
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +33,9 @@ def _fail(message: str, status: int) -> tuple[Response, int]:
 
 
 def create_app(settings: Settings, fetch: Fetch | None = None,
-               fetch_fundamentals: FetchOne | None = None) -> Flask:
+               fetch_fundamentals: FetchOne | None = None, tv_login: TradingViewLogin | None = None) -> Flask:
     """Build the app. `fetch` (symbols -> {symbol: bars}) and `fetch_fundamentals` can be replaced in tests."""
-    services = build_services(settings, fetch, fetch_fundamentals)
+    services = build_services(settings, fetch, fetch_fundamentals, tv_login=tv_login)
     store, scanner, history, fundamentals = services.store, services.scanner, services.history, services.fundamentals
     load_universe, known_ticker = services.load_universe, services.known_ticker
 
@@ -73,6 +74,46 @@ def create_app(settings: Settings, fetch: Fetch | None = None,
     @app.get("/api/scan/status")
     def scan_status() -> tuple[Response, int]:
         return _ok({"progress": scanner.progress()})
+
+    tv_login = services.tv_login
+
+    def _from_page() -> bool:
+        return request.headers.get(CLIENT_HEADER) == CLIENT_HEADER_VALUE
+
+    @app.get("/api/tradingview")
+    def tradingview_status() -> tuple[Response, int]:
+        if tv_login is None:
+            return _fail("TradingView login is not used by this server.", 404)
+        return _ok(tv_login.status())
+
+    @app.post("/api/tradingview/login")
+    def tradingview_sign_in() -> tuple[Response, int]:
+        """Body {"username", "password"}. Kept in memory only, so it is gone when the server restarts."""
+        if not _from_page():
+            return _fail("This request must come from the Stock Entry page.", 403)
+        if tv_login is None:
+            return _fail("TradingView login is not used by this server.", 404)
+        if scanner.progress().get("running"):
+            return _fail("Wait for the running scan to finish, then sign in.", 409)
+        body = request.get_json(silent=True)
+        body = body if isinstance(body, dict) else {}
+        try:
+            status = tv_login.sign_in(body.get("username"), body.get("password"))
+        except TradingViewLoginError as exc:
+            return _fail(str(exc), 400)
+        history.clear()   # stock details opened before now have no (or old) 2-hour bars
+        return _ok(status)
+
+    @app.post("/api/tradingview/logout")
+    def tradingview_sign_out() -> tuple[Response, int]:
+        if not _from_page():
+            return _fail("This request must come from the Stock Entry page.", 403)
+        if tv_login is None:
+            return _fail("TradingView login is not used by this server.", 404)
+        if scanner.progress().get("running"):
+            return _fail("Wait for the running scan to finish, then sign out.", 409)
+        history.clear()
+        return _ok(tv_login.sign_out())
 
     @app.get("/api/tickers")
     def list_tickers() -> tuple[Response, int]:

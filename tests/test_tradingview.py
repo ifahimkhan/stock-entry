@@ -1,4 +1,4 @@
-"""TradingView 2-hour feed: symbols, IST times, one sign-in, sockets closed, retries, Yahoo fallback."""
+"""TradingView 2-hour feed: symbols, IST times, one sign-in, sockets closed, retries, TradingView only."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -13,6 +13,7 @@ from stock_entry.services import _two_hour_fetch
 from stock_entry.tickers import Ticker
 from stock_entry.tradingview import (NOLOGIN_TOKEN, SOURCE_COLUMN, TRADINGVIEW, TRADINGVIEW_NOLOGIN,
                                      TradingViewFeed, credentials, to_bars, tv_symbol)
+from stock_entry.tv_login import TradingViewLogin
 from tests.conftest import SANSERA_CLOSES, make_prices
 
 pytestmark = pytest.mark.unit
@@ -110,7 +111,8 @@ def test_with_credentials_two_hour_bars_come_from_tradingview_only(monkeypatch: 
     monkeypatch.setenv("TV_PASSWORD", "pw")
     monkeypatch.setattr("stock_entry.services.download_history",
                         lambda *args, **kwargs: pytest.fail("Yahoo must not be asked for 2-hour bars"))
-    assert isinstance(_two_hour_fetch(Settings()), TradingViewFeed)
+    login = _two_hour_fetch(Settings())
+    assert isinstance(login, TradingViewLogin) and login.status()["origin"] == "env"
 
 
 def test_credentials_need_both_values(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -1,6 +1,9 @@
 // Page controller: loads the scan, renders tiles / tabs / table, opens the single-stock panel.
 
-import { POLL_MS, getScan, getScanStatus, getStock, getTickers, startScan } from "./api.js";
+import {
+  POLL_MS, TV_LOGIN_AVAILABLE, getScan, getScanStatus, getStock, getTickers, getTradingView, signInTradingView,
+  signOutTradingView, startScan,
+} from "./api.js";
 import { renderDetail, renderDetailMessage } from "./detail.js";
 import { renderCards } from "./cards.js";
 import { MARKET_HOURS_TEXT, isMarketHours } from "./market.js";
@@ -275,7 +278,10 @@ const dom = {
   searchForm: $("search-form"), searchInput: $("search-input"), tickerList: $("ticker-list"),
   listTitle: $("list-title"), listCount: $("list-count"), listHint: $("list-hint"),
   table: $("stock-table"), listEmpty: $("list-empty"), detail: $("detail"), capFilter: $("cap-filter"),
-  patternFilter: $("pattern-filter"), timeframeFilter: $("timeframe-filter"),
+  patternFilter: $("pattern-filter"), timeframeFilter: $("timeframe-filter"), topbar: document.querySelector(".topbar"),
+  tvButton: $("tv-button"), tvDialog: $("tv-dialog"), tvForm: $("tv-form"), tvStatus: $("tv-status"),
+  tvUsername: $("tv-username"), tvPassword: $("tv-password"), tvError: $("tv-error"), tvCancel: $("tv-cancel"),
+  tvSubmit: $("tv-submit"), tvSignout: $("tv-signout"), tvCheck: $("tv-check"),
 };
 
 let state = {
@@ -468,8 +474,21 @@ function setSheetOpen(open) {
   if (open && isSheet) dom.detailPane.scrollTop = 0;
 }
 
+/** Wide screens: the list uses the full width until a stock is opened, then splits with the detail. */
+function setDetailShown(shown) {
+  document.body.classList.toggle("has-detail", shown);
+}
+
 function closeSheet() {
   setSheetOpen(false);
+  setDetailShown(false);  // in every layout, so widening the window later does not bring back a stale detail
+  if (window.matchMedia(WIDE_LAYOUT).matches) {
+    detailRequest += 1;  // a detail still loading must not reopen the pane
+    if (detailCleanup) detailCleanup();
+    detailCleanup = null;
+    history.replaceState(null, "", location.pathname + location.search);
+    setState({ selected: null });
+  }
   const card = dom.cards.querySelector('[aria-pressed="true"]');
   if (card) card.focus({ preventScroll: true });
 }
@@ -498,6 +517,7 @@ async function openStock(symbol) {
   detailCleanup = null;
   setState({ selected: symbol });
   renderDetailMessage(dom.detail, `Loading ${symbol}…`);
+  setDetailShown(true);
   setSheetOpen(true);
   try {
     const detail = await getStock(symbol);
@@ -615,6 +635,108 @@ async function resumeIfScanning() {
   }
 }
 
+/* ---------- TradingView login (local app only) ---------- */
+function tvStatusText(status) {
+  if (!status.configured) return "Not signed in: 2-hour lists stay empty until you sign in and run a scan.";
+  const who = status.username ? ` as ${status.username}` : "";
+  const from = status.origin === "env" ? " (from TV_USERNAME / TV_PASSWORD)" : "";
+  if (status.signed_in === false) return `TradingView did not accept the login${who}${from}. Sign in again.`;
+  if (status.signed_in === null) return `Login set${who}${from}; it is checked on the next scan.`;
+  return `Signed in${who}${from}.`;
+}
+
+function renderTvButton(status) {
+  dom.tvCheck.hidden = !(status.configured && status.signed_in !== false);
+  dom.tvButton.title = tvStatusText(status);
+}
+
+function showTvError(text) {
+  dom.tvError.textContent = text || "";
+  dom.tvError.hidden = !text;
+}
+
+async function openTvDialog() {
+  showTvError("");
+  dom.tvPassword.value = "";
+  dom.tvDialog.hidden = false;
+  document.body.classList.add("modal-open");
+  dom.tvStatus.textContent = "Checking…";
+  try {
+    const status = await getTradingView();
+    dom.tvStatus.textContent = tvStatusText(status);
+    dom.tvSignout.hidden = !status.configured;
+    if (status.username && !dom.tvUsername.value) dom.tvUsername.value = status.username;
+  } catch (error) {
+    dom.tvStatus.textContent = errorText(error);
+  }
+  (dom.tvUsername.value ? dom.tvPassword : dom.tvUsername).focus();
+}
+
+function closeTvDialog() {
+  dom.tvPassword.value = "";  // never keep the password in the page longer than the request
+  dom.tvDialog.hidden = true;
+  document.body.classList.remove("modal-open");
+  dom.tvButton.focus();
+}
+
+async function onTvSubmit(event) {
+  event.preventDefault();
+  const username = dom.tvUsername.value.trim();
+  const password = dom.tvPassword.value;
+  if (!username || !password) {
+    showTvError("Type your TradingView username and password.");
+    return;
+  }
+  showTvError("");
+  dom.tvSubmit.disabled = true;
+  dom.tvSubmit.textContent = "Signing in…";
+  try {
+    const status = await signInTradingView(username, password);
+    renderTvButton(status);
+    closeTvDialog();
+    showNotice(`${tvStatusText(status)} Run a new scan to load 2-hour data from TradingView.`);
+  } catch (error) {
+    showTvError(errorText(error));
+  } finally {
+    dom.tvPassword.value = "";
+    dom.tvSubmit.disabled = false;
+    dom.tvSubmit.textContent = "Sign in";
+  }
+}
+
+async function onTvSignOut() {
+  try {
+    const status = await signOutTradingView();
+    renderTvButton(status);
+    closeTvDialog();
+    showNotice("Signed out of TradingView. New scans will have no 2-hour data until you sign in again.");
+  } catch (error) {
+    showTvError(errorText(error));
+  }
+}
+
+async function setUpTradingView() {
+  if (!TV_LOGIN_AVAILABLE) return;  // the live site takes its login from the Streamlit secrets
+  dom.tvButton.hidden = false;
+  dom.tvButton.addEventListener("click", openTvDialog);
+  dom.tvForm.addEventListener("submit", onTvSubmit);
+  dom.tvCancel.addEventListener("click", closeTvDialog);
+  dom.tvSignout.addEventListener("click", onTvSignOut);
+  dom.tvDialog.addEventListener("click", (event) => { if (event.target === dom.tvDialog) closeTvDialog(); });
+  try {
+    renderTvButton(await getTradingView());
+  } catch (error) {
+    // The button still opens the dialog, which shows the error.
+  }
+}
+
+/** The sticky header's height, so the detail pane and table sit right under it. */
+function trackHeaderHeight() {
+  const update = () => document.documentElement.style.setProperty("--header-h", `${dom.topbar.offsetHeight}px`);
+  if ("ResizeObserver" in window) new ResizeObserver(update).observe(dom.topbar);
+  update();
+}
+
 async function loadTickers() {
   try {
     const tickers = await getTickers();
@@ -640,13 +762,17 @@ async function init() {
   dom.scrim.addEventListener("click", closeSheet);
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
-    if (!dom.confirm.hidden) closeScanConfirm();
-    else if (document.body.classList.contains("sheet-open")) closeSheet();
+    if (!dom.tvDialog.hidden) closeTvDialog();
+    else if (!dom.confirm.hidden) closeScanConfirm();
+    else if (document.body.classList.contains("sheet-open") || document.body.classList.contains("has-detail")) closeSheet();
   });
   window.matchMedia(WIDE_LAYOUT).addEventListener("change", (event) => {
     if (event.matches) setSheetOpen(false);  // rotated / resized to the side-by-side layout
   });
   watchScroll();
+  trackHeaderHeight();
+  dom.listHint.addEventListener("click", () => dom.listHint.classList.toggle("expanded"));
+  setUpTradingView();
   // Bookmarkable lists, e.g. /?list=screen&cap=Large opens TBC 5-Day Breakout for large caps.
   const params = new URLSearchParams(location.search);
   const legacy = LEGACY_LINKS[params.get("list")] || {};

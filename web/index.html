@@ -13,7 +13,10 @@
         <h1><span class="live-dot" aria-hidden="true"></span>Stock Entry</h1>
         <p class="subtitle" id="scan-meta">Loading…</p>
       </div>
-      <button type="button" class="primary" id="scan-button">Run scan</button>
+      <div class="topbar-actions">
+        <button type="button" id="tv-button" hidden aria-haspopup="dialog" aria-label="TradingView login"><span class="tv-long">TradingView</span><span class="tv-short">TV</span><span id="tv-check" hidden> ✓</span></button>
+        <button type="button" class="primary" id="scan-button">Run scan</button>
+      </div>
     </div>
     <form class="search" id="search-form" role="search">
       <label for="search-input" class="visually-hidden">Find a stock</label>
@@ -29,9 +32,11 @@
       <span id="progress-text"></span>
     </div>
     <nav class="chips" id="tiles" aria-label="Lists"></nav>
-    <div class="segmented cap-filter" id="cap-filter" role="group" aria-label="Market cap"></div>
-    <div class="segmented cap-filter" id="timeframe-filter" role="group" aria-label="Swing timeframe" hidden></div>
-    <div class="segmented cap-filter" id="pattern-filter" role="group" aria-label="Lower lows before the HH" hidden></div>
+    <div class="filters">
+      <div class="segmented cap-filter" id="cap-filter" role="group" aria-label="Market cap"></div>
+      <div class="segmented cap-filter" id="timeframe-filter" role="group" aria-label="Swing timeframe" hidden></div>
+      <div class="segmented cap-filter" id="pattern-filter" role="group" aria-label="Lower lows before the HH" hidden></div>
+    </div>
   </header>
 
   <p class="notice" id="notice" role="status" hidden></p>
@@ -83,6 +88,28 @@
         <button type="button" class="primary" id="confirm-run">Run scan</button>
       </div>
     </div>
+  </div>
+
+  <div class="modal" id="tv-dialog" role="dialog" aria-modal="true" aria-labelledby="tv-title" hidden>
+    <form class="modal-card" id="tv-form" autocomplete="on">
+      <h2 id="tv-title">TradingView login</h2>
+      <p id="tv-status">2-hour prices come from TradingView.</p>
+      <label class="field">
+        <span>Username or email</span>
+        <input id="tv-username" name="username" autocomplete="username" maxlength="128" required>
+      </label>
+      <label class="field">
+        <span>Password</span>
+        <input id="tv-password" name="password" type="password" autocomplete="current-password" maxlength="128" required>
+      </label>
+      <p class="field-note">Kept in this app's memory only: not saved to disk, so sign in again after restarting the app. Run a new scan afterwards to load 2-hour data.</p>
+      <p class="field-error" id="tv-error" role="alert" hidden></p>
+      <div class="modal-actions">
+        <button type="button" id="tv-signout" hidden>Sign out</button>
+        <button type="button" id="tv-cancel">Close</button>
+        <button type="submit" class="primary" id="tv-submit">Sign in</button>
+      </div>
+    </form>
   </div>
 
   <script type="module" src="/static/app.js"></script>
