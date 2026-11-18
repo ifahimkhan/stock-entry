@@ -45,7 +45,7 @@ const OLD_SCAN = " This scan was made before this screen was added: run the scan
 const SWING_NOTE = " Labels are confirmed 5 bars (about 1 session) after the pivot, and an HH can still turn into LH if price later closes below the previous LL.";
 /** True when a record `bars` 2-hour bars old is at most `maxBars` old. */
 const withinBars = (bars, maxBars) => isNumber(bars) && bars <= maxBars;
-const BEFORE_ENTRY_MAX_BARS = 7;   // Before Entry list: only HHs at most this many 2-hour bars old
+const BEFORE_ENTRY_MAX_BARS = 12;  // TBC Zone Entry (2h): only HHs at most this many 2-hour bars old
 const BEFORE_ENTRY_MAX_SESSIONS = 15;   // TBC Zone Entry (1D): HHs at most this many daily bars (sessions) old
 const LL_HH_MAX_BARS = 12;         // 3 LL -> HH and 4 LL -> HH lists: same idea, a wider window
 const LH_BREAKOUT_MAX_BARS = 3;    // LH breakout list: only fresh breakouts
