@@ -146,7 +146,7 @@ function indicators(summary) {
 
 // The swing table of the 2-hour bars and of the daily bars: same fields, daily ones prefixed d1_ in the summary.
 const SWING_FRAMES = {
-  twoHour: { prefix: "", title: "Swings (2-hour bars)", short: "2h", timeType: "bartime", format: formatBarTime, bar: "bar", swingsKey: "swings" },
+  twoHour: { prefix: "", title: "Swings (2-hour bars)", short: "2h", timeType: "bartime", format: formatBarTime, bar: "bar", swingsKey: "swings", barsKey: "bars_2h" },
   daily: { prefix: "d1_", title: "Swings (1-day bars)", short: "daily", timeType: "date", format: formatDate, bar: "session", swingsKey: "swings_1d" },
 };
 
@@ -160,6 +160,31 @@ const swingColumns = (frame) => [
   { key: "ang_ll_hl", label: "LL→HL", type: "angle", title: "LL low to HL low, when an HH followed" },
   { key: "signal", label: "Signal", type: "text" },
 ];
+
+// Every 2-hour bar, with the columns of TBC_all_stocks_bars.csv (status, status_clean, angles, Final, flags).
+const BEFORE_ENTRY = "Before Entry";
+const barColumns = () => [
+  { key: "time", label: "2h bar", type: "bartime" },
+  { key: "open", label: "Open", type: "price" },
+  { key: "high", label: "High", type: "price" },
+  { key: "low", label: "Low", type: "price" },
+  { key: "close", label: "Close", type: "price" },
+  { key: "volume", label: "Volume", type: "crore", title: "Shares traded in the bar" },
+  { key: "raw_label", label: "Status", type: "text", title: "status: the raw HH / HL / LH / LL label" },
+  { key: "label", label: "Clean", type: "text", title: "status_clean: the label after the clean-up" },
+  { key: "ang_ll_ll", label: "LL→LL", type: "angle", title: "ang_LL_LL" },
+  { key: "ang_ll_hl", label: "LL→HL", type: "angle", title: "ang_LL_HL" },
+  { key: "final", label: "Final", type: "text", title: "Final: Before Entry on a confirmed HH (TBC Zone Entry)" },
+  { key: "ll3_hh", label: "3LL_HH", type: "flag" },
+  { key: "ll4_hh", label: "4LL_HH", type: "flag" },
+  { key: "breakout", label: "LH_breakout", type: "text", title: "LH_breakout and LH_breakout_level" },
+];
+
+const barRow = (bar) => ({
+  ...bar,
+  final: bar.before_entry ? BEFORE_ENTRY : null,
+  breakout: bar.lh_breakout ? `Yes > ${formatPrice(bar.lh_breakout_level)}` : null,
+});
 
 function swingSignal(point) {
   const before = point.before_entry && `TBC Zone Entry (${point.pattern || `${point.ll_count} LL, other`})`;
@@ -201,14 +226,17 @@ function swingFacts(summary, frame) {
 }
 
 /** TradingView.ipynb swings on 2-hour or daily bars. Nothing for scans / servers without them. */
-function swingSection(summary, swings, frame) {
+function swingSection(summary, swings, frame, everyBar = null) {
   const bars = summary[`${frame.prefix}swing_bars`];
   if (bars === undefined) return null;
   const title = el("h3", { class: "section-title", text: frame.title });
   if (!bars) return el("div", {}, [title, el("p", { class: "dim", text: `No ${frame.short} swing data for this stock (${frame.short} prices were not available).` })]);
   const table = el("table", { class: "compact" }, [el("thead"), el("tbody")]);
-  const rows = [...(swings || [])].reverse().map((point) => ({ ...point, signal: swingSignal(point) }));
-  renderTable(table, { rows, columns: swingColumns(frame) });
+  const allBars = Array.isArray(everyBar) && everyBar.length > 0;
+  const rows = allBars
+    ? [...everyBar].reverse().map(barRow)   // newest first, every bar as in the CSV
+    : [...(swings || [])].reverse().map((point) => ({ ...point, signal: swingSignal(point) }));
+  renderTable(table, { rows, columns: allBars ? barColumns() : swingColumns(frame) });
   return el("div", {}, [
     title,
     el("div", { class: "facts facts-none" }, swingFacts(summary, frame).map((text) => el("p", { text }))),
@@ -269,7 +297,7 @@ export function renderDetail(panel, detail) {
     el("div", { class: `facts facts-${statusKind(summary.status, summary.valid) || "none"}` },
       factLines(summary).map((text) => el("p", { text }))),
     indicators(summary),
-    swingSection(summary, detail[SWING_FRAMES.twoHour.swingsKey], SWING_FRAMES.twoHour),
+    swingSection(summary, detail[SWING_FRAMES.twoHour.swingsKey], SWING_FRAMES.twoHour, detail[SWING_FRAMES.twoHour.barsKey]),
     swingSection(summary, detail[SWING_FRAMES.daily.swingsKey], SWING_FRAMES.daily),
     el("div", { class: "chart-controls" }, [legend, el("div", { class: "pickers" }, [
       picker(MODES, DEFAULT_MODE === "candles" ? "Candles" : "Line", "Chart type", (option) => {

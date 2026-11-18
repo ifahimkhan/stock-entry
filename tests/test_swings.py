@@ -210,12 +210,16 @@ def test_history_includes_swing_points_and_tolerates_failures() -> None:
                              swing_fetch=lambda symbols: {symbols[0]: zigzag_bars()}, swing_points=4)
     detail = service.get(Ticker("A.NS"))
     assert len(detail["swings"]) == 4 and detail["summary"]["swing_last_label"] == HH
+    bars = detail["bars_2h"]   # every bar, not only the labelled ones
+    assert len(bars) == min(120, len(zigzag_bars())) and any(bar["label"] is None for bar in bars)
+    assert {"open", "high", "low", "close", "volume", "raw_label", "label", "before_entry", "ll3_hh"} <= set(bars[0])
+    assert bars[-1]["time"] == detail["summary"]["swing_last_bar"]
 
     def broken(symbols: list[str]) -> dict[str, pd.DataFrame]:
         raise MarketDataError("down")
 
     failing = HistoryService(daily_fetch, cache_seconds=60, detail_rows=10, swing_fetch=broken)
-    assert failing.get(Ticker("A.NS"))["swings"] == []
+    assert failing.get(Ticker("A.NS"))["swings"] == [] and failing.get(Ticker("A.NS"))["bars_2h"] == []
     assert HistoryService(daily_fetch, cache_seconds=60, detail_rows=10).get(Ticker("A.NS"))["swings"] == []
 
 

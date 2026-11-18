@@ -333,11 +333,14 @@ def swing_summary(frame: pd.DataFrame) -> dict[str, Any]:
     }
 
 
-def swing_points(frame: pd.DataFrame, limit: int) -> list[dict[str, Any]]:
-    """The latest `limit` labelled or breakout bars (oldest first) for the single-stock view."""
-    marked = frame[(frame["swing_clean"] != NONE) | frame["lh_breakout"].astype(bool)].tail(limit)
+def swing_points(frame: pd.DataFrame, limit: int, every_bar: bool = False) -> list[dict[str, Any]]:
+    """The latest `limit` labelled or breakout bars (oldest first) for the single-stock view; with
+    `every_bar`, the latest `limit` bars whether labelled or not (the rows of TBC_all_stocks_bars.csv)."""
+    marked = frame if every_bar else frame[(frame["swing_clean"] != NONE) | frame["lh_breakout"].astype(bool)]
+    marked = marked.tail(limit)
     return [{
-        "time": bar_time(row["Date"]), "high": _number(row["High"]), "low": _number(row["Low"]),
+        "time": bar_time(row["Date"]), "open": _number(row.get("Open")), "high": _number(row["High"]),
+        "low": _number(row["Low"]), "volume": _number(row.get("Volume")),
         "close": _number(row["Close"]), "label": row["swing_clean"] or None,
         "raw_label": row["swing_label"] or None,
         "ang_ll_ll": _number(row["ang_ll_ll"]), "ang_ll_hl": _number(row["ang_ll_hl"]),

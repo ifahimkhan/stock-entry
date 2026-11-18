@@ -73,6 +73,7 @@ def build_services(settings: Settings, fetch: Fetch | None = None,
     scanner = Scanner(load_universe, fetch, store, settings.batch_size, settings.max_failed_share,
                       enrich=fundamentals.enrich, refetch=refetch, swing_fetch=swing_fetch)
     history = HistoryService(fetch, settings.history_cache_seconds, settings.detail_rows,
-                             swing_fetch=swing_fetch, swing_points=settings.swing_detail_points)
+                             swing_fetch=swing_fetch, swing_points=settings.swing_detail_points,
+                             two_hour_rows=settings.two_hour_detail_rows)
     return Services(settings=settings, load_universe=load_universe, store=store, fundamentals=fundamentals,
                     scanner=scanner, history=history, tv_login=tv_login)
