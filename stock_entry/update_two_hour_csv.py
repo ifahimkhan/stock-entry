@@ -18,6 +18,7 @@ import argparse
 import logging
 import os
 import sys
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -148,10 +149,25 @@ def build_summary(bars: pd.DataFrame, previous: pd.DataFrame | None) -> pd.DataF
     return summary[order]
 
 
-def _write_atomic(frame: pd.DataFrame, path: Path) -> None:
+REPLACE_ATTEMPTS = 20
+REPLACE_WAIT_SECONDS = 0.5
+
+
+def _write_atomic(frame: pd.DataFrame, path: Path, wait: Callable[[float], None] = time.sleep) -> None:
+    """Write next to the file, then swap. On Windows the swap fails while another program has the file open
+    (Excel, an editor, the app reading it), so retry for a few seconds, then explain."""
     temp = path.with_suffix(".tmp")
     frame.to_csv(temp, index=False)
-    os.replace(temp, path)
+    for attempt in range(REPLACE_ATTEMPTS):
+        try:
+            os.replace(temp, path)
+            return
+        except PermissionError:
+            if attempt == REPLACE_ATTEMPTS - 1:
+                temp.unlink(missing_ok=True)
+                raise RuntimeError(f"{path.name} is open in another program (Excel, PyCharm, ...). "
+                                   "Close it and run the update again; the file was not changed.") from None
+            wait(REPLACE_WAIT_SECONDS)
 
 
 def update(bars_path: Path, summary_path: Path, fetch: Fetch, fetch_bars: int, keep: int) -> UpdateResult:

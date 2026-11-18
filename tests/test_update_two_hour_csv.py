@@ -88,3 +88,20 @@ def test_update_leaves_the_files_alone_when_too_few_stocks_came_back(tmp_path: P
 def test_main_rejects_bad_bar_counts() -> None:
     with pytest.raises(SystemExit):
         main(["--bars", "0"])
+
+
+def test_a_locked_file_is_left_unchanged_with_a_clear_message(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from stock_entry import update_two_hour_csv as module
+
+    path = tmp_path / "bars.csv"
+    path.write_text("old", encoding="utf-8")
+
+    def locked(src, dst):
+        raise PermissionError("in use")
+
+    monkeypatch.setattr(module.os, "replace", locked)
+    waits: list[float] = []
+    with pytest.raises(RuntimeError, match="open in another program"):
+        module._write_atomic(pd.DataFrame({"a": [1]}), path, wait=waits.append)
+    assert path.read_text(encoding="utf-8") == "old" and not path.with_suffix(".tmp").exists()
+    assert len(waits) == module.REPLACE_ATTEMPTS - 1
