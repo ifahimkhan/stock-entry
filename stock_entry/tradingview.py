@@ -50,8 +50,8 @@ def credentials() -> tuple[str, str] | None:
 
 
 SESSION_KEYS = ("TV_SESSIONID", "TV_SESSIONID_SIGN")
-HOME_URL = "https://www.tradingview.com/"
-AUTH_TOKEN = re.compile(r'"auth_token":"([^"]+)"')
+HOME_URL = "https://www.tradingview.com/chart/"   # the home page no longer embeds the token
+AUTH_TOKEN = re.compile(r'"auth_token"\s*:\s*"([^"]+)"')
 BROWSER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 
 
