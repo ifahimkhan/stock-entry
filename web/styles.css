@@ -344,3 +344,16 @@ body.modal-open { overflow: hidden; }
 
 /* Theme switch (header) */
 .theme-button { font-size: 16px; line-height: 1; padding: 8px 11px; flex: none; }
+
+/* Stock detail tabs: one section at a time */
+.detail-tabs {
+  position: sticky; top: -1px; z-index: 2; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+  margin: 12px 0; padding: 4px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border);
+}
+.detail-tabs::-webkit-scrollbar { display: none; }
+.detail-tabs button {
+  flex: 1 0 auto; border: 0; background: transparent; color: var(--ink-2); padding: 7px 12px;
+  font-size: 13px; border-radius: 8px; white-space: nowrap;
+}
+.detail-tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px var(--shadow); }
+.detail-tabpanel > div > .section-title:first-child { margin-top: 0; }

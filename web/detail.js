@@ -256,6 +256,42 @@ function picker(options, selectedLabel, groupLabel, onChange) {
   return el("div", { class: "ranges", role: "group", "aria-label": groupLabel }, buttons);
 }
 
+// The detail is split into tabs so each section shows on its own instead of one long scroll.
+// The chosen tab is kept while moving between stocks.
+let currentTab = "overview";
+
+/** Tab bar + panels. `tabs`: [{id, label, body, onShow?}]; tabs without a body are left out. */
+function tabbed(tabs) {
+  const shown = tabs.filter((tab) => tab.body);
+  const active = shown.some((tab) => tab.id === currentTab) ? currentTab : shown[0].id;
+  const buttons = shown.map((tab) => el("button", {
+    type: "button", role: "tab", id: `detail-tab-${tab.id}`, "aria-controls": `detail-panel-${tab.id}`,
+    "aria-selected": String(tab.id === active), text: tab.label,
+  }));
+  const panels = shown.map((tab) => el("div", {
+    role: "tabpanel", id: `detail-panel-${tab.id}`, "aria-labelledby": `detail-tab-${tab.id}`,
+    class: "detail-tabpanel", hidden: tab.id !== active,
+  }, [tab.body]));
+  const select = (index) => {
+    currentTab = shown[index].id;
+    buttons.forEach((button, i) => button.setAttribute("aria-selected", String(i === index)));
+    panels.forEach((panel, i) => { panel.hidden = i !== index; });
+    shown[index].onShow?.();
+  };
+  buttons.forEach((button, index) => {
+    button.addEventListener("click", () => select(index));
+    button.addEventListener("keydown", (event) => {
+      const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+      if (!step) return;
+      event.preventDefault();
+      const next = (index + step + buttons.length) % buttons.length;
+      select(next);
+      buttons[next].focus();
+    });
+  });
+  return { bar: el("div", { class: "detail-tabs", role: "tablist", "aria-label": "Stock detail sections" }, buttons), panels };
+}
+
 export function renderDetailMessage(panel, text) {
   panel.replaceChildren(el("p", { class: "empty", text }));
 }
@@ -275,9 +311,35 @@ export function renderDetail(panel, detail) {
   let visibleBars = RANGES.find((range) => range.label === DEFAULT_RANGE).bars;
   let chartMode = DEFAULT_MODE;
   const drawChart = () => {
+    if (!chart.clientWidth) return;   // chart tab hidden: drawn when it is shown
     const drawn = renderChart(chart, visibleBars ? history.slice(-visibleBars) : history, chartMode);
     legend.replaceChildren(...legendItems(drawn));  // matches what was drawn, e.g. line when OHLC is missing
   };
+
+  const tabs = tabbed([
+    { id: "overview", label: "Overview", body: el("div", {}, [
+      el("div", { class: `facts facts-${statusKind(summary.status, summary.valid) || "none"}` },
+        factLines(summary).map((text) => el("p", { text }))),
+      indicators(summary),
+    ]) },
+    { id: "chart", label: "Chart", onShow: () => drawChart(), body: el("div", {}, [
+      el("div", { class: "chart-controls" }, [legend, el("div", { class: "pickers" }, [
+        picker(MODES, DEFAULT_MODE === "candles" ? "Candles" : "Line", "Chart type", (option) => {
+          chartMode = option.mode;
+          drawChart();
+        }),
+        picker(RANGES, DEFAULT_RANGE, "Chart period", (option) => {
+          visibleBars = option.bars;
+          drawChart();
+        }),
+      ])]),
+      el("div", { class: "chart-card" }, [chart]),
+    ]) },
+    { id: "swings2h", label: "Swings 2h",
+      body: swingSection(summary, detail[SWING_FRAMES.twoHour.swingsKey], SWING_FRAMES.twoHour, detail[SWING_FRAMES.twoHour.barsKey]) },
+    { id: "swings1d", label: "Swings 1D", body: swingSection(summary, detail[SWING_FRAMES.daily.swingsKey], SWING_FRAMES.daily) },
+    { id: "sessions", label: `Last ${recent.length} sessions`, body: el("div", { class: "table-wrap" }, [table]) },
+  ]);
 
   panel.replaceChildren(
     el("div", { class: "detail-head" }, [
@@ -294,24 +356,8 @@ export function renderDetail(panel, detail) {
         el("div", { class: "dim", text: `Close on ${formatDate(summary.date, true)}` }),
       ]),
     ]),
-    el("div", { class: `facts facts-${statusKind(summary.status, summary.valid) || "none"}` },
-      factLines(summary).map((text) => el("p", { text }))),
-    indicators(summary),
-    swingSection(summary, detail[SWING_FRAMES.twoHour.swingsKey], SWING_FRAMES.twoHour, detail[SWING_FRAMES.twoHour.barsKey]),
-    swingSection(summary, detail[SWING_FRAMES.daily.swingsKey], SWING_FRAMES.daily),
-    el("div", { class: "chart-controls" }, [legend, el("div", { class: "pickers" }, [
-      picker(MODES, DEFAULT_MODE === "candles" ? "Candles" : "Line", "Chart type", (option) => {
-        chartMode = option.mode;
-        drawChart();
-      }),
-      picker(RANGES, DEFAULT_RANGE, "Chart period", (option) => {
-        visibleBars = option.bars;
-        drawChart();
-      }),
-    ])]),
-    el("div", { class: "chart-card" }, [chart]),
-    el("h3", { class: "section-title", text: `Last ${recent.length} sessions` }),
-    el("div", { class: "table-wrap" }, [table]),
+    tabs.bar,
+    ...tabs.panels,
   );
   renderTable(table, { rows: recent, columns: HISTORY_COLUMNS });
   drawChart();
