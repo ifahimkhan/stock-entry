@@ -294,18 +294,22 @@ def _before_entry(frame: pd.DataFrame) -> dict[str, Any]:
     """Latest "Before Entry" (clean HH): when, how long ago, LLs before it and the 3LL / 4LL pattern."""
     found = _last_flag(frame, "before_entry")
     if found["before_entry_at"] is None:
-        return {**found, "before_entry_ll": None, "before_entry_pattern": None, "before_entry_close": None}
-    row = frame.iloc[len(frame) - 1 - found["before_entry_bars"]]
+        return {**found, "before_entry_ll": None, "before_entry_pattern": None, "before_entry_close": None,
+                "before_entry_change_pct": None}
+    pos = len(frame) - 1 - found["before_entry_bars"]
+    row = frame.iloc[pos]
     count = int(row["hh_ll_count"])
     return {**found, "before_entry_ll": count, "before_entry_pattern": hh_pattern(count) or None,
-            "before_entry_close": _number(row["Close"])}
+            "before_entry_close": _number(row["Close"]),
+            # the Change % of Swings 1D: this HH's close vs the close of the last LH before it
+            "before_entry_change_pct": _number(hh_change_from_lh(frame).iloc[pos])}
 
 
 def empty_swing_summary() -> dict[str, Any]:
     """Row fields when no 2-hour bars came back for a stock."""
     return {"swing_bars": 0, "swing_source": None, "swing_last_bar": None, "swing_last_label": None, "swing_last_label_at": None,
             "before_entry_at": None, "before_entry_bars": None, "before_entry_ll": None,
-            "before_entry_pattern": None, "before_entry_close": None,
+            "before_entry_pattern": None, "before_entry_close": None, "before_entry_change_pct": None,
             "ll3_hh_at": None, "ll3_hh_bars": None, "ll4_hh_at": None, "ll4_hh_bars": None,
             "lh_breakout_at": None, "lh_breakout_bars": None, "lh_breakout_level": None,
             "ang_ll_ll": None, "ang_ll_ll_at": None, "ang_ll_hl": None, "ang_ll_hl_at": None}

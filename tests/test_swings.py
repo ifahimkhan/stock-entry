@@ -353,3 +353,17 @@ def test_detail_bars_carry_hh_change() -> None:
     days = service.get(Ticker("A.NS"))["bars_1d"]
     with_value = [day for day in days if day["hh_change_pct"] is not None]
     assert with_value and all(day["label"] == HH for day in with_value)
+
+
+def test_zone_entry_summary_carries_the_swings_1d_change() -> None:
+    from stock_entry.swings import hh_change_from_lh, swing_columns, swing_summary
+
+    bars = daily_zigzag()
+    frame = pd.concat([bars, swing_columns(bars)], axis=1)
+    summary = swing_summary(frame)
+    if summary["before_entry_at"] is None:
+        assert summary["before_entry_change_pct"] is None
+        return
+    pos = len(frame) - 1 - summary["before_entry_bars"]
+    expected = hh_change_from_lh(frame).iloc[pos]
+    assert summary["before_entry_change_pct"] == (None if pd.isna(expected) else pytest.approx(expected, abs=0.01))
