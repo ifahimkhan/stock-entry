@@ -303,6 +303,25 @@ function tabbed(tabs) {
   return { bar: el("div", { class: "detail-tabs", role: "tablist", "aria-label": "Stock detail sections" }, buttons), panels };
 }
 
+// TradingView chart page for a Yahoo ticker, same rules as stock_entry/tradingview.py tv_symbol:
+// "BAJAJ-AUTO.NS" -> NSE:BAJAJ_AUTO, "M&M.NS" -> NSE:M_M, ".BO" -> BSE.
+const TV_EXCHANGES = { NS: "NSE", BO: "BSE" };
+const TV_CHART_URL = "https://www.tradingview.com/chart/?symbol=";
+
+export function tradingViewUrl(ticker) {
+  const [base, suffix = ""] = String(ticker || "").toUpperCase().split(".");
+  if (!base) return null;
+  const symbol = `${TV_EXCHANGES[suffix] || "NSE"}:${base.replace(/[-&]/g, "_")}`;
+  return TV_CHART_URL + encodeURIComponent(symbol);
+}
+
+function tradingViewButton(ticker) {
+  const href = tradingViewUrl(ticker);
+  if (!href) return null;
+  return el("a", { class: "button-link", href, target: "_blank", rel: "noopener noreferrer",
+    title: `Open ${ticker} on TradingView (new tab)`, text: "TradingView chart ↗" });
+}
+
 export function renderDetailMessage(panel, text) {
   panel.replaceChildren(el("p", { class: "empty", text }));
 }
@@ -343,6 +362,7 @@ export function renderDetail(panel, detail) {
           visibleBars = option.bars;
           drawChart();
         }),
+        tradingViewButton(summary.ticker),
       ])]),
       el("div", { class: "chart-card" }, [chart]),
     ]) },
