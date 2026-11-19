@@ -450,7 +450,8 @@ function renderZoneWinRate(view) {
     dom.winRate.textContent = `Win rate not available: ${zoneResultsError}`;
     return;
   }
-  renderWinRate(dom.winRate, zoneResults, view.tf, (ticker) => openStock(ticker));
+  const caps = new Map(rows().map((row) => [row.ticker, row.cap_category || ""]));
+  renderWinRate(dom.winRate, zoneResults, view.tf, (ticker) => openStock(ticker), (ticker) => caps.get(ticker) || "");
 }
 
 function renderList() {
