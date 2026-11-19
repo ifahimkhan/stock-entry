@@ -28,11 +28,12 @@ logger = logging.getLogger(__name__)
 class HistoryService:
     def __init__(self, fetch: Fetch, cache_seconds: int, detail_rows: int,
                  clock: Callable[[], float] = time.monotonic, swing_fetch: Fetch | None = None,
-                 swing_points: int = 30, two_hour_rows: int = 120) -> None:
+                 swing_points: int = 30, two_hour_rows: int = 120, daily_rows: int = 500) -> None:
         self._fetch = fetch
         self._swing_fetch = swing_fetch
         self._swing_points = swing_points
         self._two_hour_rows = two_hour_rows   # every 2-hour bar of the latest ~30 sessions, as in the CSV
+        self._daily_rows = daily_rows         # every daily bar the daily swings use (none hidden)
         self._cache_seconds = cache_seconds
         self._detail_rows = detail_rows
         self._clock = clock
@@ -74,6 +75,7 @@ class HistoryService:
             "swings": [] if swings is None else swing_points(swings, self._swing_points),
             "bars_2h": [] if swings is None else swing_points(swings, self._two_hour_rows, every_bar=True),
             "swings_1d": [] if daily is None else daily_points(swing_points(daily, self._swing_points)),
+            "bars_1d": [] if daily is None else daily_points(swing_points(daily, self._daily_rows, every_bar=True)),
         }
         if swings is None and self._swing_fetch is not None:
             return detail  # 2-hour bars failed: do not cache, so the next click tries again

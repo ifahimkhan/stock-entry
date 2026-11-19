@@ -147,7 +147,7 @@ function indicators(summary) {
 // The swing table of the 2-hour bars and of the daily bars: same fields, daily ones prefixed d1_ in the summary.
 const SWING_FRAMES = {
   twoHour: { prefix: "", title: "Swings (2-hour bars)", short: "2h", timeType: "bartime", format: formatBarTime, bar: "bar", swingsKey: "swings", barsKey: "bars_2h" },
-  daily: { prefix: "d1_", title: "Swings (1-day bars)", short: "daily", timeType: "date", format: formatDate, bar: "session", swingsKey: "swings_1d" },
+  daily: { prefix: "d1_", title: "Swings (1-day bars)", short: "daily", timeType: "date", format: formatDate, bar: "session", swingsKey: "swings_1d", barsKey: "bars_1d" },
 };
 
 const swingColumns = (frame) => [
@@ -163,8 +163,8 @@ const swingColumns = (frame) => [
 
 // Every 2-hour bar, with the columns of TBC_all_stocks_bars.csv (status, status_clean, angles, Final, flags).
 const BEFORE_ENTRY = "Before Entry";
-const barColumns = () => [
-  { key: "time", label: "2h bar", type: "bartime" },
+const barColumns = (frame) => [
+  { key: "time", label: frame.prefix ? "Day" : "2h bar", type: frame.timeType },
   { key: "open", label: "Open", type: "price" },
   { key: "high", label: "High", type: "price" },
   { key: "low", label: "Low", type: "price" },
@@ -236,7 +236,7 @@ function swingSection(summary, swings, frame, everyBar = null) {
   const rows = allBars
     ? [...everyBar].reverse().map(barRow)   // newest first, every bar as in the CSV
     : [...(swings || [])].reverse().map((point) => ({ ...point, signal: swingSignal(point) }));
-  renderTable(table, { rows, columns: allBars ? barColumns() : swingColumns(frame) });
+  renderTable(table, { rows, columns: allBars ? barColumns(frame) : swingColumns(frame) });
   return el("div", {}, [
     title,
     el("div", { class: "facts facts-none" }, swingFacts(summary, frame).map((text) => el("p", { text }))),
@@ -337,7 +337,7 @@ export function renderDetail(panel, detail) {
     ]) },
     { id: "swings2h", label: "Swings 2h",
       body: swingSection(summary, detail[SWING_FRAMES.twoHour.swingsKey], SWING_FRAMES.twoHour, detail[SWING_FRAMES.twoHour.barsKey]) },
-    { id: "swings1d", label: "Swings 1D", body: swingSection(summary, detail[SWING_FRAMES.daily.swingsKey], SWING_FRAMES.daily) },
+    { id: "swings1d", label: "Swings 1D", body: swingSection(summary, detail[SWING_FRAMES.daily.swingsKey], SWING_FRAMES.daily, detail[SWING_FRAMES.daily.barsKey]) },
     { id: "sessions", label: `Last ${recent.length} sessions`, body: el("div", { class: "table-wrap" }, [table]) },
   ]);
 

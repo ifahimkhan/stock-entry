@@ -31,6 +31,7 @@ class Settings:
     swing_bars: int = 500            # same as the notebook's n_bars
     swing_detail_points: int = 30    # swing points listed in the single-stock view
     two_hour_detail_rows: int = 120  # every 2-hour bar (about 30 sessions) in the single-stock table
+    daily_detail_rows: int = 500     # every daily bar (all the daily swings use) in the single-stock table
     # 2-hour bars written by the TradingView.ipynb loop. When present they are used first; stocks missing
     # from it (the notebook skips financial stocks) still come from TradingView.
     two_hour_csv_path: Path = PROJECT_ROOT / "TBC_all_stocks_bars.csv"

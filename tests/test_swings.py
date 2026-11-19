@@ -331,3 +331,6 @@ def test_history_includes_daily_swing_points() -> None:
     points = service.get(Ticker("A.NS"))["swings_1d"]
     assert len(points) == 4 and all(len(point["time"]) == 10 for point in points)
     assert points[-1]["label"] == HH
+    days = service.get(Ticker("A.NS"))["bars_1d"]   # every day, not only the labelled ones
+    assert len(days) == min(500, len(daily_zigzag())) and any(day["label"] is None for day in days)
+    assert all(len(day["time"]) == 10 for day in days) and {"open", "volume", "raw_label"} <= set(days[0])
