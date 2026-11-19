@@ -106,7 +106,7 @@ const beforeEntryView = (tf) => {
       { key: key("before_entry_change_pct"), label: "Change %", type: "pct",
         title: `Change % of the Zone entry HH (${tf.short} swings): (HH close - last LH close) / last LH close` },
       ...angleColumns(tf)],
-    sort: { key: key("before_entry_at"), dir: "desc" },
+    sort: { key: key("before_entry_change_pct"), dir: "desc" },   // biggest HH-over-LH move first
   };
 };
 
