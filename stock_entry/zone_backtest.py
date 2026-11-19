@@ -35,6 +35,7 @@ WINDOW_BARS = 500              # bars a live scan sees (daily store keeps 500; t
 MAX_BARS_AGO = {"1d": 15, "2h": 12}   # the app's list windows (BEFORE_ENTRY_MAX_SESSIONS / _BARS)
 PATTERNS = ("3LL-HH", "4LL-HH")
 
+REPLAY_OVERLAP_DAYS = 7      # a daily update replays this many calendar days before the latest signal
 TRADE_COLUMNS = ["timeframe", "ticker", "hh_at", "signal_at", "pattern", "hh_close", "change_pct",
                  "entry_at", "entry", "outcome", "exit_at", "exit", "return_pct", "sessions"]
 FINISHED = ("win", "loss", "timeout")
@@ -86,13 +87,13 @@ def confirm_signals(timeframe: str, ticker: str, bars: pd.DataFrame,
         for end in range(max(pivot + PIVOT_RIGHT, WARMUP_BARS), min(pivot + limit, len(bars) - 1) + 1):
             if since is not None and dates.iloc[end] <= since:
                 continue
+            if skip(dates.iloc[end]):   # closing high that day: no swing analysis, nothing listed today
+                continue
             asof = analyze_swings(bars.iloc[max(0, end + 1 - WINDOW_BARS):end + 1])
             found = _zone_entry(asof, limit)
             if found is None or asof["Date"].iloc[found[0]] != dates.iloc[pivot]:
                 continue
-            signal = _signal(timeframe, ticker, asof, *found)
-            if not skip(signal.signal_at):
-                signals.append(signal)
+            signals.append(_signal(timeframe, ticker, asof, *found))
             break   # one trade per HH: the first bar it shows in the list
     return signals
 
@@ -103,6 +104,8 @@ def brute_force_signals(timeframe: str, ticker: str, bars: pd.DataFrame,
     bars = bars.dropna(subset=["High", "Low", "Close"]).sort_values("Date").reset_index(drop=True)
     seen, signals = set(), []
     for end in range(WARMUP_BARS, len(bars)):
+        if skip(bars["Date"].iloc[end]):   # closing high: nothing listed that day
+            continue
         asof = analyze_swings(bars.iloc[max(0, end + 1 - WINDOW_BARS):end + 1])
         found = _zone_entry(asof, MAX_BARS_AGO[timeframe])
         if found is None:
@@ -111,9 +114,7 @@ def brute_force_signals(timeframe: str, ticker: str, bars: pd.DataFrame,
         if hh_at in seen:
             continue
         seen.add(hh_at)
-        signal = _signal(timeframe, ticker, asof, *found)
-        if not skip(signal.signal_at):
-            signals.append(signal)
+        signals.append(_signal(timeframe, ticker, asof, *found))
     return signals
 
 
@@ -246,6 +247,9 @@ def rescore(trades: pd.DataFrame, daily: dict[str, pd.DataFrame]) -> pd.DataFram
 def _replay_one(args: tuple) -> list[dict]:
     ticker, daily_bars, two_hour_bars, since = args
     highs = closing_high_days(daily_bars)
+    if two_hour_bars is not None:   # a 2-hour bar of a day not in the daily bars yet: replayed next run
+        last_day = pd.to_datetime(daily_bars["Date"]).max().normalize()
+        two_hour_bars = two_hour_bars[pd.to_datetime(two_hour_bars["Date"]).dt.normalize() <= last_day]
     skip = lambda when: pd.Timestamp(when).normalize() in highs  # noqa: E731
     try:
         signals = confirm_signals("1d", ticker, daily_bars, skip, since.get("1d"))
@@ -260,8 +264,11 @@ def _replay_one(args: tuple) -> list[dict]:
 def update(daily: dict[str, pd.DataFrame], two_hour: dict[str, pd.DataFrame], saved: pd.DataFrame,
            full: bool, workers: int = 1) -> pd.DataFrame:
     """Saved trades + the signals of the bars not replayed yet (all bars when `full`), open ones rescored."""
+    # Replay from a few days before the latest saved signal: covers a stock whose download failed for a
+    # day. Safe, because the merge only adds HHs that are not saved yet.
     since = {} if full or saved.empty else {
-        timeframe: part["signal_at"].max() for timeframe, part in saved.groupby("timeframe")}
+        timeframe: part["signal_at"].max() - pd.Timedelta(days=REPLAY_OVERLAP_DAYS)
+        for timeframe, part in saved.groupby("timeframe")}
     jobs = [(ticker, bars, two_hour.get(ticker), since) for ticker, bars in sorted(daily.items())
             if len(bars) >= WARMUP_BARS]
     if workers > 1:
@@ -308,7 +315,9 @@ def main(argv: list[str] | None = None) -> int:
     from stock_entry.two_hour_csv import read_bars
 
     parser = argparse.ArgumentParser(description="Replay and score TBC Zone Entry signals (win rate).")
-    parser.add_argument("--full", action="store_true", help="replay every bar (first run), not only new ones")
+    parser.add_argument("--full", action="store_true", help="replay every bar, not only new ones (saved trades kept)")
+    parser.add_argument("--rebuild", action="store_true",
+                        help="start from no saved trades (after a rule change): replays every bar")
     parser.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -318,8 +327,8 @@ def main(argv: list[str] | None = None) -> int:
         logger.error("No daily bars in %s: run the scan first", settings.daily_bars_path)
         return 1
     two_hour = read_bars(settings.two_hour_csv_path) if settings.two_hour_csv_path.is_file() else {}
-    saved = read_trades(settings.zone_trades_path)
-    trades = update(daily, two_hour, saved, full=args.full or saved.empty, workers=args.workers)
+    saved = pd.DataFrame(columns=TRADE_COLUMNS) if args.rebuild else read_trades(settings.zone_trades_path)
+    trades = update(daily, two_hour, saved, full=args.full or args.rebuild or saved.empty, workers=args.workers)
     write_trades(trades, settings.zone_trades_path)
     for row in summarize(trades):
         if row["pattern"] == "all":

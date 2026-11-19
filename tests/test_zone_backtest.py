@@ -86,3 +86,29 @@ def test_rescore_updates_open_trades_and_leaves_finished_ones() -> None:
     saved["signal_at"] = pd.Timestamp("2026-01-02")
     out = rescore(saved, {"A.NS": bars, "B.NS": bars}).set_index("ticker")
     assert out.loc["A.NS", "outcome"] == "win" and out.loc["B.NS", "outcome"] == "loss"
+
+
+
+def four_ll_then_hh() -> pd.DataFrame:
+    """Daily bars with four lower lows and then a higher high (a 4LL-HH Zone Entry)."""
+    import numpy as np
+
+    points = [100, 130, 110, 140, 105, 125, 100, 120, 95, 115, 90, 150, 120, 125, 118, 124]
+    closes = [value for a, b in zip(points, points[1:]) for value in np.linspace(a, b, 8, endpoint=False)]
+    closes.append(points[-1])
+    return pd.DataFrame({"Date": pd.bdate_range("2025-01-01", periods=len(closes)), "Open": closes,
+                         "High": [c + 1 for c in closes], "Low": [c - 1 for c in closes], "Close": closes, "Volume": 1.0})
+
+
+def test_a_closing_high_day_delays_the_signal_to_the_next_listed_bar(monkeypatch: pytest.MonkeyPatch) -> None:
+    from stock_entry import zone_backtest
+    from stock_entry.zone_backtest import brute_force_signals, confirm_signals
+
+    monkeypatch.setattr(zone_backtest, "WARMUP_BARS", 20)   # the fixture is shorter than the real warm-up
+    bars = four_ll_then_hh()
+    [signal] = confirm_signals("1d", "A.NS", bars)
+    assert signal.pattern == "4LL-HH"
+    skip_day = lambda when: pd.Timestamp(when) == signal.signal_at  # noqa: E731
+    for replay in (confirm_signals, brute_force_signals):
+        [later] = replay("1d", "A.NS", bars, skip=skip_day)
+        assert later.hh_at == signal.hh_at and later.signal_at > signal.signal_at   # listed the next day
