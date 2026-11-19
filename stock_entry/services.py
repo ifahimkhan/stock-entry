@@ -9,6 +9,7 @@ from typing import Callable
 import pandas as pd
 
 from stock_entry.config import Settings
+from stock_entry.daily_store import DailyBarStore
 from stock_entry.fundamentals import FetchOne, FundamentalsService, fetch_from_yahoo
 from stock_entry.history import HistoryService
 from stock_entry.market_data import download_history
@@ -64,14 +65,21 @@ def build_services(settings: Settings, fetch: Fetch | None = None,
     # The re-ask for stocks a batch dropped makes one attempt only: those are often delisted symbols.
     refetch = fetch or partial(download_history, period=settings.history_period, interval=settings.interval,
                                attempts=1)
-    fetch = fetch or partial(download_history, period=settings.history_period, interval=settings.interval)
+    daily_store = None
+    if fetch is None:
+        daily_store = DailyBarStore(
+            settings.daily_bars_path,
+            lambda symbols, period: download_history(symbols, period=period, interval=settings.interval),
+            settings.history_period, settings.daily_keep_bars)
+    fetch = fetch or daily_store
     load_universe = partial(read_universe, (settings.universe_path, settings.tickers_path),
                             settings.default_suffix, settings.excluded_sectors)
     store = ScanStore(settings.scan_path)
     fundamentals = FundamentalsService(settings.fundamentals_path, fetch_fundamentals or fetch_from_yahoo,
                                        settings.fundamentals_max_age_days, settings.fundamentals_workers)
     scanner = Scanner(load_universe, fetch, store, settings.batch_size, settings.max_failed_share,
-                      enrich=fundamentals.enrich, refetch=refetch, swing_fetch=swing_fetch)
+                      enrich=fundamentals.enrich, refetch=refetch, swing_fetch=swing_fetch,
+                      after_scan=daily_store.save if daily_store is not None else None)
     history = HistoryService(fetch, settings.history_cache_seconds, settings.detail_rows,
                              swing_fetch=swing_fetch, swing_points=settings.swing_detail_points,
                              two_hour_rows=settings.two_hour_detail_rows)

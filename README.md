@@ -19,6 +19,13 @@ from TradingView. To update the live site, re-run the notebook loop and push the
 workflow then recomputes the 2-hour fields of the saved scan (`python -m stock_entry.apply_two_hour_csv`, no
 downloads) and commits it. `TBC_all_stocks_summary.csv` is the notebook's one-row-per-stock view of the same data.
 
+**Daily bars on disk:** `data/daily_bars.csv` keeps the latest 500 daily bars (about 2 years) of every
+stock (`stock_entry/daily_store.py`). The first scan downloads the full history from Yahoo; after that a scan
+asks only for the days it is missing (5 days to a few months, grouped by how far behind each stock is),
+replaces days it already had (a bar fetched during market hours is completed later), appends the new ones
+and drops the same number of oldest days. When a past close no longer matches (split / bonus issue) that
+stock is downloaded again in full. The Daily scan workflow commits the file with the scan.
+
 **TradingView sign-in and the captcha:** TradingView often answers a script's password sign-in with
 "Please confirm that you are not a robot" (`recaptcha_required`), and the data then comes without login
 (the latest bar of some stocks is missing). Use your browser session instead: sign in on tradingview.com

@@ -23,6 +23,10 @@ class Settings:
     fundamentals_workers: int = 6        # parallel Yahoo requests while fetching them
     history_period: str = "2y"       # price history per stock; swing structure (50) and EMA 200 need long history
     interval: str = "1d"
+    # Daily bars kept on disk: the first run downloads `history_period`, later runs only the missing days,
+    # adding them and dropping the same number of oldest days (latest `daily_keep_bars` per stock).
+    daily_bars_path: Path = PROJECT_ROOT / "data" / "daily_bars.csv"
+    daily_keep_bars: int = 500
     # Swing scan (TradingView.ipynb): TradingView 2-hour bars (TV_USERNAME / TV_PASSWORD), latest 500.
     swing_bars: int = 500            # same as the notebook's n_bars
     swing_detail_points: int = 30    # swing points listed in the single-stock view

@@ -65,13 +65,13 @@ jobs:
             fi
             message="chore: rescan $new_date"
           fi
-          if git diff --quiet -- data/; then
+          if git diff --quiet -- data/ && [ -z "$(git ls-files --others --exclude-standard data/)" ]; then
             echo "Scan results unchanged. Nothing to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/scan_latest.json data/fundamentals.json
+          git add data/scan_latest.json data/fundamentals.json data/daily_bars.csv
           git commit -m "$message"
           for attempt in 1 2 3; do   # someone may push at the same moment: rebase onto it and try again
             if git pull --rebase && git push; then

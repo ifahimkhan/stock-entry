@@ -138,8 +138,9 @@ class Scanner:
     def __init__(self, load_universe: Callable[[], list[Ticker]], fetch: Fetch,
                  store: ScanStore, batch_size: int, max_failed_share: float = DEFAULT_MAX_FAILED_SHARE,
                  enrich: Enrich | None = None, refetch: Fetch | None = None,
-                 swing_fetch: Fetch | None = None) -> None:
+                 swing_fetch: Fetch | None = None, after_scan: Callable[[], None] | None = None) -> None:
         self._enrich = enrich
+        self._after_scan = after_scan   # e.g. write the daily bars the scan downloaded
         self._swing_fetch = swing_fetch
         self._load_universe = load_universe
         self._fetch = fetch
@@ -200,6 +201,11 @@ class Scanner:
                             max_failed_share=self._max_failed_share, refetch=self._refetch,
                             swing_fetch=self._swing_fetch)
             self._store.save(scan)
+            if self._after_scan is not None:
+                try:
+                    self._after_scan()
+                except OSError as exc:   # the scan itself is saved; only the bar cache was not written
+                    logger.error("Could not save daily bars: %s", exc)
             self._update(running=False, finished_at=_now())
             logger.info("Scan finished: %d stocks, %d without data", len(scan["rows"]), len(scan["failed"]))
             sources = Counter(row.get("swing_source") or "none" for row in scan["rows"])

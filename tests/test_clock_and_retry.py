@@ -110,6 +110,9 @@ def test_default_services_refetch_makes_a_single_attempt(tmp_path: Path) -> None
     from stock_entry.config import Settings
     from stock_entry.services import build_services
 
-    scanner = build_services(replace(Settings(), scan_path=tmp_path / "s.json")).scanner
+    from stock_entry.daily_store import DailyBarStore
+
+    scanner = build_services(replace(Settings(), scan_path=tmp_path / "s.json",
+                                     daily_bars_path=tmp_path / "daily.csv")).scanner
     assert scanner._refetch.keywords["attempts"] == 1
-    assert "attempts" not in scanner._fetch.keywords
+    assert isinstance(scanner._fetch, DailyBarStore)   # daily bars: stored, only missing days downloaded
