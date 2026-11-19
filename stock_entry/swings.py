@@ -334,12 +334,12 @@ def swing_summary(frame: pd.DataFrame) -> dict[str, Any]:
 
 
 def hh_change_from_lh(frame: pd.DataFrame) -> pd.Series:
-    """On each clean HH bar: % from the high of the latest LH before it to the HH's high (else NaN)."""
+    """On each clean HH bar: % from the close of the latest LH before it to the HH's close (else NaN)."""
     values, last_lh = [], None
-    for label, high in zip(frame["swing_clean"], frame["High"].astype(float)):
-        values.append((high / last_lh - 1) * 100 if label == HH and last_lh else np.nan)
+    for label, close in zip(frame["swing_clean"], frame["Close"].astype(float)):
+        values.append((close / last_lh - 1) * 100 if label == HH and last_lh else np.nan)
         if label == LH:
-            last_lh = high
+            last_lh = close
     return pd.Series(values, index=frame.index)
 
 

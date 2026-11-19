@@ -340,7 +340,7 @@ def test_hh_change_from_lh_is_set_on_hh_bars_only() -> None:
     from stock_entry.swings import LH, hh_change_from_lh
 
     frame = pd.DataFrame({"swing_clean": ["", HH, LH, "", HH, LH, LH, HH],
-                          "High": [90.0, 100.0, 120.0, 110.0, 132.0, 150.0, 140.0, 147.0]})
+                          "Close": [90.0, 100.0, 120.0, 110.0, 132.0, 150.0, 140.0, 147.0]})
     change = hh_change_from_lh(frame)
     assert pd.isna(change[0]) and pd.isna(change[1])          # first HH: no LH before it
     assert change[4] == pytest.approx(10.0)                     # 132 vs LH 120
