@@ -362,7 +362,6 @@ export function renderDetail(panel, detail) {
           visibleBars = option.bars;
           drawChart();
         }),
-        tradingViewButton(summary.ticker),
       ])]),
       el("div", { class: "chart-card" }, [chart]),
     ]) },
@@ -378,6 +377,7 @@ export function renderDetail(panel, detail) {
         el("div", { class: "detail-title" }, [
           el("h2", { text: summary.ticker }),
           statusKind(summary.status, summary.valid) ? statusBadge(summary.status, summary.valid) : null,
+          tradingViewButton(summary.ticker),
         ]),
         subtitle ? el("p", { class: "detail-name", text: subtitle }) : null,
       ]),

@@ -98,6 +98,7 @@ a.button-link {
   border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px;
 }
 a.button-link:hover { background: var(--wash); }
+.detail-title a.button-link { padding: 4px 10px; font-size: 0.85em; }   /* beside the ticker */
 
 /* ---------- Sticky header: brand, search, list chips, cap filter ---------- */
 .topbar {
