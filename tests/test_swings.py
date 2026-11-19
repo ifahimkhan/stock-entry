@@ -334,3 +334,22 @@ def test_history_includes_daily_swing_points() -> None:
     days = service.get(Ticker("A.NS"))["bars_1d"]   # every day, not only the labelled ones
     assert len(days) == min(500, len(daily_zigzag())) and any(day["label"] is None for day in days)
     assert all(len(day["time"]) == 10 for day in days) and {"open", "volume", "raw_label"} <= set(days[0])
+
+
+def test_hh_change_from_lh_is_set_on_hh_bars_only() -> None:
+    from stock_entry.swings import LH, hh_change_from_lh
+
+    frame = pd.DataFrame({"swing_clean": ["", HH, LH, "", HH, LH, LH, HH],
+                          "High": [90.0, 100.0, 120.0, 110.0, 132.0, 150.0, 140.0, 147.0]})
+    change = hh_change_from_lh(frame)
+    assert pd.isna(change[0]) and pd.isna(change[1])          # first HH: no LH before it
+    assert change[4] == pytest.approx(10.0)                     # 132 vs LH 120
+    assert change[7] == pytest.approx(5.0)                      # 147 vs the latest LH (140)
+    assert change[[0, 2, 3, 5, 6]].isna().all()
+
+
+def test_detail_bars_carry_hh_change() -> None:
+    service = HistoryService(lambda symbols: {symbols[0]: daily_zigzag()}, cache_seconds=60, detail_rows=10)
+    days = service.get(Ticker("A.NS"))["bars_1d"]
+    with_value = [day for day in days if day["hh_change_pct"] is not None]
+    assert with_value and all(day["label"] == HH for day in with_value)

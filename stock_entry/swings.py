@@ -333,12 +333,24 @@ def swing_summary(frame: pd.DataFrame) -> dict[str, Any]:
     }
 
 
+def hh_change_from_lh(frame: pd.DataFrame) -> pd.Series:
+    """On each clean HH bar: % from the high of the latest LH before it to the HH's high (else NaN)."""
+    values, last_lh = [], None
+    for label, high in zip(frame["swing_clean"], frame["High"].astype(float)):
+        values.append((high / last_lh - 1) * 100 if label == HH and last_lh else np.nan)
+        if label == LH:
+            last_lh = high
+    return pd.Series(values, index=frame.index)
+
+
 def swing_points(frame: pd.DataFrame, limit: int, every_bar: bool = False) -> list[dict[str, Any]]:
     """The latest `limit` labelled or breakout bars (oldest first) for the single-stock view; with
     `every_bar`, the latest `limit` bars whether labelled or not (the rows of TBC_all_stocks_bars.csv)."""
     marked = frame if every_bar else frame[(frame["swing_clean"] != NONE) | frame["lh_breakout"].astype(bool)]
+    change = hh_change_from_lh(frame)
     marked = marked.tail(limit)
     return [{
+        "hh_change_pct": _number(change.loc[index]),
         "time": bar_time(row["Date"]), "open": _number(row.get("Open")), "high": _number(row["High"]),
         "low": _number(row["Low"]), "volume": _number(row.get("Volume")),
         "close": _number(row["Close"]), "label": row["swing_clean"] or None,
@@ -349,7 +361,7 @@ def swing_points(frame: pd.DataFrame, limit: int, every_bar: bool = False) -> li
         "pattern": hh_pattern(int(row["hh_ll_count"])) or None if row["before_entry"] else None,
         "ll3_hh": bool(row["ll3_hh"]), "ll4_hh": bool(row["ll4_hh"]),
         "lh_breakout": bool(row["lh_breakout"]), "lh_breakout_level": _number(row["lh_breakout_level"]),
-    } for _, row in marked.iterrows()]
+    } for index, row in marked.iterrows()]
 
 
 # ---------------------------------------------------------------- daily bars
