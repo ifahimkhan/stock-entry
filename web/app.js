@@ -101,7 +101,9 @@ const beforeEntryView = (tf) => {
     columns: [TICKER, { key: key("before_entry_at"), label: "Zone entry", type: tf.timeType },
       barsColumn(key("before_entry_bars"), tf),
       { key: key("before_entry_pattern"), label: "Pattern", type: "pattern", llKey: key("before_entry_ll"), title: "Lower lows since the previous HH: 3LL-HH, 4LL-HH or other" },
-      { key: key("before_entry_close"), label: "HH close", type: "price" }, CLOSE, CHANGE, ...angleColumns(tf)],
+      { key: key("before_entry_close"), label: "HH close", type: "price" }, CLOSE,
+      { key: key("from_hh_pct"), label: "% from HH", type: "pct", title: "(Close - HH close) / HH close: how far the latest close is from the Zone entry HH's close" },
+      CHANGE, ...angleColumns(tf)],
     sort: { key: key("before_entry_at"), dir: "desc" },
   };
 };
@@ -157,10 +159,18 @@ function llHhFields(row, prefix) {
   };
 }
 
-/** The scan with the combined LL → HH fields added to each row (a new object; the input is unchanged). */
+/** % from the TBC Zone Entry HH close to the latest close (null without both prices). */
+function fromHhField(row, prefix) {
+  const hh = row[`${prefix}before_entry_close`];
+  const value = isNumber(hh) && hh > 0 && isNumber(row.close) ? (row.close / hh - 1) * 100 : null;
+  return { [`${prefix}from_hh_pct`]: value };
+}
+
+/** The scan with the combined LL → HH and % from HH fields added to each row (a new object; the input is unchanged). */
 function withLlHh(scan) {
   if (!scan) return scan;
-  return { ...scan, rows: scan.rows.map((row) => ({ ...row, ...llHhFields(row, ""), ...llHhFields(row, DAILY) })) };
+  return { ...scan, rows: scan.rows.map((row) => ({ ...row, ...llHhFields(row, ""), ...llHhFields(row, DAILY),
+    ...fromHhField(row, ""), ...fromHhField(row, DAILY) })) };
 }
 
 // Old bookmark ids, from when each timeframe and LL count had its own chip.
