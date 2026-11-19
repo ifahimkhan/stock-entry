@@ -103,7 +103,7 @@ const beforeEntryView = (tf) => {
       { key: key("before_entry_pattern"), label: "Pattern", type: "pattern", llKey: key("before_entry_ll"), title: "Lower lows since the previous HH: 3LL-HH, 4LL-HH or other" },
       { key: key("before_entry_close"), label: "HH close", type: "price" }, CLOSE,
       { key: key("from_hh_pct"), label: "% from HH", type: "pct", title: "(Close - HH close) / HH close: how far the latest close is from the Zone entry HH's close" },
-      CHANGE, ...angleColumns(tf)],
+      ...angleColumns(tf)],
     sort: { key: key("before_entry_at"), dir: "desc" },
   };
 };
