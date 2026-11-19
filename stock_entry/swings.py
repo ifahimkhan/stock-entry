@@ -310,6 +310,7 @@ def empty_swing_summary() -> dict[str, Any]:
     return {"swing_bars": 0, "swing_source": None, "swing_last_bar": None, "swing_last_label": None, "swing_last_label_at": None,
             "before_entry_at": None, "before_entry_bars": None, "before_entry_ll": None,
             "before_entry_pattern": None, "before_entry_close": None, "before_entry_change_pct": None,
+            "close_above_all": None,
             "ll3_hh_at": None, "ll3_hh_bars": None, "ll4_hh_at": None, "ll4_hh_bars": None,
             "lh_breakout_at": None, "lh_breakout_bars": None, "lh_breakout_level": None,
             "ang_ll_ll": None, "ang_ll_ll_at": None, "ang_ll_hl": None, "ang_ll_hl_at": None}
@@ -331,10 +332,19 @@ def swing_summary(frame: pd.DataFrame) -> dict[str, Any]:
         "swing_last_label": labelled["swing_clean"].iloc[-1] if len(labelled) else None,
         "swing_last_label_at": bar_time(labelled["Date"].iloc[-1]) if len(labelled) else None,
         **_before_entry(frame),
+        "close_above_all": close_above_all(frame),
         **_last_flag(frame, "ll3_hh"), **_last_flag(frame, "ll4_hh"), **breakout,
         "lh_breakout_level": _number(hits.iloc[-1]) if len(hits) else None,
         "ang_ll_ll": ang_ll, "ang_ll_ll_at": ang_ll_at, "ang_ll_hl": ang_hl, "ang_ll_hl_at": ang_hl_at,
     }
+
+
+def close_above_all(frame: pd.DataFrame) -> bool | None:
+    """True when the latest close is above the close of every earlier bar in `frame` (a new closing high)."""
+    closes = frame["Close"].astype(float).dropna()
+    if len(closes) < 2:
+        return None
+    return bool(closes.iloc[-1] > closes.iloc[:-1].max())
 
 
 def hh_change_from_lh(frame: pd.DataFrame) -> pd.Series:

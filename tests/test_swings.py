@@ -367,3 +367,12 @@ def test_zone_entry_summary_carries_the_swings_1d_change() -> None:
     pos = len(frame) - 1 - summary["before_entry_bars"]
     expected = hh_change_from_lh(frame).iloc[pos]
     assert summary["before_entry_change_pct"] == (None if pd.isna(expected) else pytest.approx(expected, abs=0.01))
+
+
+def test_close_above_all_flags_a_new_closing_high_only() -> None:
+    from stock_entry.swings import close_above_all
+
+    assert close_above_all(pd.DataFrame({"Close": [10.0, 12.0, 11.0, 12.5]})) is True
+    assert close_above_all(pd.DataFrame({"Close": [10.0, 12.0, 11.0, 12.0]})) is False   # equal is not above
+    assert close_above_all(pd.DataFrame({"Close": [10.0, 12.0, 11.0]})) is False
+    assert close_above_all(pd.DataFrame({"Close": [10.0]})) is None
