@@ -102,9 +102,9 @@ const beforeEntryView = (tf) => {
       barsColumn(key("before_entry_bars"), tf),
       { key: key("before_entry_pattern"), label: "Pattern", type: "pattern", llKey: key("before_entry_ll"), title: "Lower lows since the previous HH: 3LL-HH, 4LL-HH or other" },
       { key: key("before_entry_close"), label: "HH close", type: "price" }, CLOSE,
-      // 1-day list only: the Change % of Swings 1D on the Zone entry HH (HH close vs the last LH close)
-      ...(tf.prefix === DAILY ? [{ key: key("before_entry_change_pct"), label: "Change %", type: "pct",
-        title: "Swings 1D Change % of the Zone entry HH: (HH close - last LH close) / last LH close" }] : []),
+      // Change % of the Zone entry HH on this timeframe's swings (HH close vs the close of the last LH before it)
+      { key: key("before_entry_change_pct"), label: "Change %", type: "pct",
+        title: `Change % of the Zone entry HH (${tf.short} swings): (HH close - last LH close) / last LH close` },
       ...angleColumns(tf)],
     sort: { key: key("before_entry_at"), dir: "desc" },
   };
