@@ -82,6 +82,15 @@ button:disabled { opacity: 0.55; cursor: default; }
 .win-rate-rules { font-size: 0.85em; margin: 8px 0; }
 .win-rate-trades { margin-top: 10px; max-height: 420px; overflow: auto; }
 
+/* Tick boxes and the export bar of the TBC Zone Entry lists. */
+.pick-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 10px; }
+.pick-bar .pick-count { color: var(--ink-2, inherit); font-size: 0.9em; }
+td.pick, th.pick { width: 32px; text-align: center; }
+td.pick input, .card-pick input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--action); }
+.card-pickable { display: flex; align-items: stretch; gap: 8px; }
+.card-pickable .card { flex: 1; min-width: 0; }
+.card-pick { display: flex; align-items: center; padding: 0 4px; cursor: pointer; }
+
 /* A link that looks like a button (opens another site, e.g. the TradingView chart). */
 a.button-link {
   display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; text-decoration: none;

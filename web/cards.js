@@ -6,7 +6,7 @@ import { el, formatPercent, formatPrice, signClass, statusBadge, statusKind } fr
  * @param {HTMLElement} list  the <ul> to fill
  * @param {{rows: object[], selected?: string, note: (row: object) => string, onSelect: (row: object) => void}} options
  */
-export function renderCards(list, { rows, selected, note, onSelect }) {
+export function renderCards(list, { rows, selected, note, onSelect, pick = null }) {
   const cards = rows.map((row) => {
     const button = el("button", {
       type: "button", class: "card", "aria-pressed": String(row.ticker === selected),
@@ -25,7 +25,10 @@ export function renderCards(list, { rows, selected, note, onSelect }) {
       ]),
       el("span", { class: "card-note", text: note(row) }),
     ]);
-    return el("li", {}, [button]);
+    if (!pick) return el("li", {}, [button]);
+    const box = el("input", { type: "checkbox", "aria-label": `Select ${row.ticker}`, checked: pick.isPicked(row) });
+    box.addEventListener("change", () => pick.onToggle(row, box.checked));
+    return el("li", { class: "card-pickable" }, [el("label", { class: "card-pick" }, [box]), button]);
   });
   list.replaceChildren(...cards);
 }

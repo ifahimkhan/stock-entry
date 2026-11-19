@@ -108,11 +108,11 @@ export function renderWinRate(container, results, timeframe, onOpen, capOf) {
     draw();
   }
   const capNote = " Large and Mid caps only, by today's market cap (small caps and stocks without a market cap are left out).";
-  container.replaceChildren(
+  container.replaceChildren(...[
     el("p", { class: "win-rate-head", text: headline(summary[0], results) }),
     el("div", { class: "table-wrap" }, [table]),
     el("p", { class: "dim win-rate-rules", text: results.rules + capNote }),
     toggle,
     tradeTable ? el("div", { class: "table-wrap win-rate-trades" }, [tradeTable]) : null,
-  );
+  ].filter(Boolean));   // replaceChildren would print a null as the text "null"
 }

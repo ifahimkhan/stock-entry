@@ -10,6 +10,7 @@ import { MARKET_HOURS_TEXT, isMarketHours } from "./market.js";
 import { DASH, el, formatAngle, formatBarTime, formatDate, formatDateTime, formatPercent, formatPrice, isNumber } from "./format.js";
 import { renderTable, sortRows } from "./table.js";
 import { renderWinRate } from "./winrate.js";
+import { downloadCsv, exportDate, toCsv } from "./export.js";
 import { initThemeToggle } from "./theme.js";
 
 const RECENT_SESSIONS = 5;
@@ -285,6 +286,7 @@ const dom = {
   confirmCancel: $("confirm-cancel"), marketWarning: $("market-warning"), marketWarningText: $("market-warning-text"),
   searchForm: $("search-form"), searchInput: $("search-input"), tickerList: $("ticker-list"),
   listTitle: $("list-title"), listCount: $("list-count"), listHint: $("list-hint"), winRate: $("win-rate"),
+  pickBar: $("pick-bar"),
   table: $("stock-table"), listEmpty: $("list-empty"), detail: $("detail"), capFilter: $("cap-filter"),
   patternFilter: $("pattern-filter"), timeframeFilter: $("timeframe-filter"), topbar: document.querySelector(".topbar"),
   tvButton: $("tv-button"), tvDialog: $("tv-dialog"), tvForm: $("tv-form"), tvStatus: $("tv-status"),
@@ -454,6 +456,64 @@ function renderZoneWinRate(view) {
   renderWinRate(dom.winRate, zoneResults, view.tf, (ticker) => openStock(ticker), (ticker) => caps.get(ticker) || "");
 }
 
+/** Stocks ticked in each TBC Zone Entry list (view id -> tickers); kept while the page is open. */
+const picked = new Map();
+const pickedIn = (view) => picked.get(view.id) || new Set();
+const canPick = (view) => view.group === "before";
+
+function setPicked(view, tickers) {
+  picked.set(view.id, new Set(tickers));
+  renderList();
+}
+
+function pickColumn(view) {
+  return {
+    key: "_pick", label: "✓", type: "pick", title: "Tick stocks to export them to CSV",
+    isPicked: (row) => pickedIn(view).has(row.ticker),
+    onToggle: (row, on) => {
+      const next = new Set(pickedIn(view));
+      if (on) next.add(row.ticker); else next.delete(row.ticker);
+      setPicked(view, next);
+    },
+  };
+}
+
+/** CSV fields of a list: its columns as shown (stock split into ticker and name), plus cap and timeframe. */
+function exportFields(view) {
+  const plain = (column) => (row) => {
+    const value = row[column.key];
+    if (column.type === "pattern") return value || `${row[column.llKey || "before_entry_ll"] ?? "?"} LL (other)`;
+    return value;
+  };
+  return [
+    { label: "Ticker", value: (row) => row.ticker },
+    { label: "Name", value: (row) => row.name || "" },
+    { label: "Cap", value: (row) => row.cap_category || "" },
+    { label: "Timeframe", value: () => (view.tf === "1d" ? "1D" : "2h") },
+    ...view.columns.filter((column) => column.type !== "ticker").map((column) => ({ label: column.label, value: plain(column) })),
+  ];
+}
+
+function renderPickBar(view, visible) {
+  dom.pickBar.hidden = !canPick(view);
+  if (!canPick(view)) return;
+  const inList = new Set(visible.map((row) => row.ticker));
+  const chosen = visible.filter((row) => pickedIn(view).has(row.ticker));
+  const exportRows = () => {
+    const text = toCsv(chosen, exportFields(view));
+    downloadCsv(`${exportDate()}.csv`, text);
+  };
+  dom.pickBar.replaceChildren(
+    el("button", { type: "button", text: `Select all (${visible.length})`, disabled: !visible.length,
+      onclick: () => setPicked(view, [...pickedIn(view), ...inList]) }),
+    el("button", { type: "button", text: "Clear", disabled: !chosen.length,
+      onclick: () => setPicked(view, [...pickedIn(view)].filter((ticker) => !inList.has(ticker))) }),
+    el("button", { type: "button", class: "primary", text: `Export CSV (${chosen.length})`, disabled: !chosen.length,
+      title: `Save the ticked stocks as ${exportDate()}.csv`, onclick: exportRows }),
+    el("span", { class: "pick-count dim", text: chosen.length ? `${chosen.length} selected` : "Tick stocks to export them" }),
+  );
+}
+
 function renderList() {
   const view = currentView();
   renderCapFilter(view);
@@ -475,9 +535,11 @@ function renderList() {
   const shown = state.query.trim() ? `${visible.length} of ${inView.length}` : String(inView.length);
   dom.listCount.textContent = state.scan ? `· ${shown} stock${inView.length === 1 ? "" : "s"}` : "";
   renderSortSelect(view);
-  renderCards(dom.cards, { rows: visible, selected: state.selected, note: view.note, onSelect: (row) => openStock(row.ticker) });
+  const pick = canPick(view) ? pickColumn(view) : null;
+  renderPickBar(view, visible);
+  renderCards(dom.cards, { rows: visible, selected: state.selected, note: view.note, onSelect: (row) => openStock(row.ticker), pick });
   renderTable(dom.table, {
-    rows: visible, columns: view.columns, sort: state.sort, selected: state.selected,
+    rows: visible, columns: pick ? [pick, ...view.columns] : view.columns, sort: state.sort, selected: state.selected,
     onSort: (key) => setState({ sort: { key, dir: state.sort.key === key && state.sort.dir === "desc" ? "asc" : "desc" } }),
     onSelect: (row) => openStock(row.ticker),
   });

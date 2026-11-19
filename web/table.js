@@ -7,8 +7,18 @@ const OUTCOME_LABEL = { win: "Win", loss: "Loss", timeout: "Timeout", open: "Ope
 const OUTCOME_CLASS = { win: "up", loss: "down", timeout: "", open: "dim" };
 const CRORE = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
 
+function pickCell(column, row) {
+  const box = el("input", { type: "checkbox", "aria-label": `Select ${row.ticker}`, checked: column.isPicked(row) });
+  const stop = (event) => event.stopPropagation();   // ticking never opens the stock
+  box.addEventListener("click", stop);
+  box.addEventListener("keydown", stop);
+  box.addEventListener("change", () => column.onToggle(row, box.checked));
+  return el("td", { class: "pick", onclick: stop }, [box]);
+}
+
 function cell(column, row) {
   const value = row[column.key];
+  if (column.type === "pick") return pickCell(column, row);
   switch (column.type) {
     case "ticker":
       return el("td", {}, [
@@ -62,7 +72,7 @@ export function renderTable(table, { rows, columns, sort, selected, onSort, onSe
       class: numeric ? "num" : "", scope: "col", title: column.title || null,
       "aria-sort": active ? (sort.dir === "asc" ? "ascending" : "descending") : null,
     });
-    if (!onSort) {
+    if (!onSort || column.type === "pick") {
       th.textContent = column.label;
       return th;
     }
