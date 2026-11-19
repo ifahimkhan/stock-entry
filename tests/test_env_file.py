@@ -84,3 +84,26 @@ def test_session_cookies_from_env_file(tmp_path: Path, monkeypatch: pytest.Monke
     env.write_text('TV_SESSIONID = "sid"\nTV_SESSIONID_SIGN = "sign"\n', encoding="utf-8")
     monkeypatch.setattr(env_file, "PROJECT_ENV", env)
     assert session_cookies() == {"sessionid": "sid", "sessionid_sign": "sign"}
+
+
+def test_session_values_are_unquoted_and_failures_are_explained(monkeypatch: pytest.MonkeyPatch, caplog) -> None:
+    from stock_entry.tradingview import session_cookies, token_from_session
+
+    monkeypatch.setenv("TV_SESSIONID", ' "abc" ')
+    monkeypatch.setenv("TV_SESSIONID_SIGN", "'sig'")
+    assert session_cookies() == {"sessionid": "abc", "sessionid_sign": "sig"}
+    monkeypatch.setenv("TV_SESSIONID", "  ")
+    assert session_cookies() is None and "set but empty" in caplog.text
+
+    class Blocked:
+        status_code, text = 403, "<html>Just a moment... challenge</html>"
+
+    class SignedOut:
+        status_code, text = 200, "<html>guest</html>"
+
+    caplog.clear()
+    assert token_from_session({"sessionid": "abc"}, lambda *a, **k: Blocked()) is None
+    assert "blocked" in caplog.text and "abc" not in caplog.text
+    caplog.clear()
+    assert token_from_session({"sessionid": "abc"}, lambda *a, **k: SignedOut()) is None
+    assert "signed out" in caplog.text

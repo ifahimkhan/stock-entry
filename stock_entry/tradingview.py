@@ -58,12 +58,22 @@ BROWSER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (K
 def session_cookies() -> dict[str, str] | None:
     """{sessionid, sessionid_sign} of a browser sign-in (TV_SESSIONID / TV_SESSIONID_SIGN, environment or .env)."""
     load_env_file(SESSION_KEYS)
-    sessionid = os.environ.get("TV_SESSIONID", "").strip()
+    sessionid = _cookie_value(os.environ.get("TV_SESSIONID", ""))
     if not sessionid:
+        if "TV_SESSIONID" in os.environ:
+            logger.warning("TV_SESSIONID is set but empty: check the secret")
         return None
     cookies = {"sessionid": sessionid}
-    sign = os.environ.get("TV_SESSIONID_SIGN", "").strip()
+    sign = _cookie_value(os.environ.get("TV_SESSIONID_SIGN", ""))
     return {**cookies, "sessionid_sign": sign} if sign else cookies
+
+
+def _cookie_value(raw: str) -> str:
+    """A pasted cookie value without spaces or surrounding quotes (secrets are often pasted as "...")."""
+    value = raw.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        value = value[1:-1].strip()
+    return value
 
 
 def token_from_session(cookies: dict[str, str], get: Callable[..., Any] | None = None) -> str | None:
@@ -77,11 +87,20 @@ def token_from_session(cookies: dict[str, str], get: Callable[..., Any] | None =
         get = requests.get
     try:
         page = get(HOME_URL, cookies=cookies, headers={"User-Agent": BROWSER_AGENT}, timeout=20)
-        match = AUTH_TOKEN.search(page.text)
+        text = page.text
+        match = AUTH_TOKEN.search(text)
     except Exception as exc:  # network: fall back to the password sign-in
         logger.warning("TradingView session check failed (%s)", type(exc).__name__)
         return None
-    return match.group(1) if match else None
+    if match:
+        return match.group(1)
+    # Why it failed, without the cookies or the page: blocked (status / challenge page) or signed out (expired).
+    status = getattr(page, "status_code", None)
+    blocked = status in (403, 429, 503) or "challenge" in text[:5000].lower()
+    logger.warning("TradingView session not accepted (HTTP %s, %s): %s", status, f"{len(text)} bytes",
+                   "TradingView blocked the request from this server" if blocked
+                   else "the page is signed out - the session expired or the TV_SESSIONID value is wrong")
+    return None
 
 
 def session_token() -> str | None:
