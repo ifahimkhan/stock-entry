@@ -1,10 +1,13 @@
-// CSV export of the stocks ticked in a list. The file is named after the export date (India time),
-// e.g. 2026-11-19.csv; the browser adds " (1)" when a file of that name already exists.
+// CSV export of the stocks ticked in a list. The file is named after the export date (India time, DD-MM-YYYY),
+// e.g. 19-11-2026.csv; the browser adds " (1)" when a file of that name already exists.
 
 const IST_DATE = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" });
 
-/** Today's date in India as YYYY-MM-DD. */
-export const exportDate = (now = new Date()) => IST_DATE.format(now);
+/** Today's date in India as DD-MM-YYYY (the export file name, e.g. 19-11-2026.csv). */
+export const exportDate = (now = new Date()) => {
+  const [year, month, day] = IST_DATE.format(now).split("-");   // en-CA formats as YYYY-MM-DD
+  return `${day}-${month}-${year}`;
+};
 
 const csvValue = (value) => {
   if (value === null || value === undefined) return "";
