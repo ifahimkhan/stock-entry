@@ -1,6 +1,9 @@
-# When a new TBC_all_stocks_bars.csv (from the TradingView.ipynb loop) is pushed, recompute the 2-hour
-# swing fields of the saved scan from it and commit data/scan_latest.json, so the live site lists the
-# notebook's signals without waiting for the next daily scan. Takes under a minute: nothing is downloaded.
+# 2-hour bars of TBC_all_stocks_bars.csv (the TradingView.ipynb loop output) on the live site.
+#
+# - Run manually ("Run workflow") or on the weekday schedule: fetch the latest 2-hour bars of every stock in
+#   the CSV from TradingView (TV_SESSIONID / TV_SESSIONID_SIGN, else TV_USERNAME / TV_PASSWORD), merge them
+#   into the CSV, rebuild TBC_all_stocks_summary.csv and the saved scan, and commit all three.
+# - A pushed CSV (e.g. after running the notebook): only recompute the saved scan from it (no download).
 name: Apply 2-hour CSV
 
 on:
@@ -8,9 +11,17 @@ on:
     branches: [main]
     paths: [TBC_all_stocks_bars.csv]
   workflow_dispatch:
+    inputs:
+      bars:
+        description: "2-hour bars to fetch per stock (4 = one session, 12 = about three)"
+        required: false
+        default: "8"
+  schedule:
+    # 16:05 IST Mon-Fri (10:35 UTC), after the 15:30 close; GitHub may start scheduled runs late.
+    - cron: "35 10 * * 1-5"
 
 permissions:
-  contents: write   # needed to commit data/
+  contents: write   # needed to commit the CSVs and data/
 
 concurrency:
   group: daily-scan          # same group as the daily scan: never write the scan file at the same time
@@ -19,7 +30,7 @@ concurrency:
 jobs:
   apply:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -29,21 +40,34 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install numpy pandas yfinance
+        run: pip install numpy pandas yfinance requests "tvdatafeed @ git+https://github.com/rongardF/tvdatafeed.git@e6f6aaa7de439ac6e454d9b26d2760ded8dc4923"
 
-      - name: Apply the CSV to the saved scan
+      - name: Fetch the latest 2-hour bars into the CSV
+        if: github.event_name != 'push'
+        env:
+          TV_SESSIONID: ${{ secrets.TV_SESSIONID }}
+          TV_SESSIONID_SIGN: ${{ secrets.TV_SESSIONID_SIGN }}
+          TV_USERNAME: ${{ secrets.TV_USERNAME }}
+          TV_PASSWORD: ${{ secrets.TV_PASSWORD }}
+          BARS: ${{ inputs.bars || '8' }}
+        run: python -m stock_entry.update_two_hour_csv --bars "$BARS"   # also updates data/scan_latest.json
+
+      - name: Apply the pushed CSV to the saved scan
+        if: github.event_name == 'push'
         run: python -m stock_entry.apply_two_hour_csv
 
-      - name: Commit the scan
+      - name: Commit
         run: |
-          if git diff --quiet -- data/scan_latest.json; then
-            echo "2-hour fields unchanged. Nothing to commit."
+          files="TBC_all_stocks_bars.csv TBC_all_stocks_summary.csv data/scan_latest.json"
+          if git diff --quiet -- $files; then
+            echo "Nothing changed. Nothing to commit."
             exit 0
           fi
+          latest=$(python -c "import pandas as pd; print(pd.read_csv('TBC_all_stocks_bars.csv', usecols=['datetime'])['datetime'].max())")
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/scan_latest.json
-          git commit -m "chore: 2-hour fields from TBC_all_stocks_bars.csv"
+          git add $files
+          git commit -m "chore: 2-hour bars up to $latest"
           for attempt in 1 2 3; do   # the daily scan may push at the same moment: rebase and try again
             if git pull --rebase && git push; then
               exit 0
