@@ -170,6 +170,8 @@ const barColumns = (frame) => [
   { key: "low", label: "Low", type: "price" },
   { key: "close", label: "Close", type: "price" },
   { key: "volume", label: "Volume", type: "crore", title: "Shares traded in the bar" },
+  // Daily table only: on an HH, % from the close of the latest LH before it to the HH's close.
+  ...(frame.prefix ? [{ key: "hh_change_pct", label: "Change %", type: "pct", title: "On an HH: (HH close - last LH close) / last LH close" }] : []),
   { key: "raw_label", label: "Status", type: "text", title: "status: the raw HH / HL / LH / LL label" },
   { key: "label", label: "Clean", type: "text", title: "status_clean: the label after the clean-up" },
   { key: "ang_ll_ll", label: "LL→LL", type: "angle", title: "ang_LL_LL" },
@@ -178,8 +180,6 @@ const barColumns = (frame) => [
   { key: "ll3_hh", label: "3LL_HH", type: "flag" },
   { key: "ll4_hh", label: "4LL_HH", type: "flag" },
   { key: "breakout", label: "LH_breakout", type: "text", title: "LH_breakout and LH_breakout_level" },
-  // Daily table only: on an HH, % from the close of the latest LH before it to the HH's close.
-  ...(frame.prefix ? [{ key: "hh_change_pct", label: "Change %", type: "pct", title: "On an HH: (HH close - last LH close) / last LH close" }] : []),
 ];
 
 const barRow = (bar) => ({
