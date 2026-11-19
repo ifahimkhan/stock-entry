@@ -169,7 +169,6 @@ const barColumns = (frame) => [
   { key: "high", label: "High", type: "price" },
   { key: "low", label: "Low", type: "price" },
   { key: "close", label: "Close", type: "price" },
-  { key: "volume", label: "Volume", type: "crore", title: "Shares traded in the bar" },
   // Daily table only: on an HH, % from the close of the latest LH before it to the HH's close.
   ...(frame.prefix ? [{ key: "hh_change_pct", label: "Change %", type: "pct", title: "On an HH: (HH close - last LH close) / last LH close" }] : []),
   { key: "raw_label", label: "Status", type: "text", title: "status: the raw HH / HL / LH / LL label" },
@@ -180,6 +179,7 @@ const barColumns = (frame) => [
   { key: "ll3_hh", label: "3LL_HH", type: "flag" },
   { key: "ll4_hh", label: "4LL_HH", type: "flag" },
   { key: "breakout", label: "LH_breakout", type: "text", title: "LH_breakout and LH_breakout_level" },
+  { key: "volume", label: "Volume", type: "crore", title: "Shares traded in the bar" },
 ];
 
 const barRow = (bar) => ({
@@ -228,6 +228,14 @@ function swingFacts(summary, frame) {
 }
 
 /** TradingView.ipynb swings on 2-hour or daily bars. Nothing for scans / servers without them. */
+/** Daily table only: what the Change % column means, with the latest HH's value. */
+function changeFact(frame, everyBar) {
+  if (!frame.prefix || !Array.isArray(everyBar)) return null;
+  const latest = [...everyBar].reverse().find((bar) => isNumber(bar.hh_change_pct));
+  const value = latest ? ` Latest: ${formatPercent(latest.hh_change_pct)} on the HH of ${frame.format(latest.time)}.` : "";
+  return `Change % (HH days only): how far the HH's close is above the close of the last LH before it, (HH close − LH close) ÷ LH close.${value}`;
+}
+
 function swingSection(summary, swings, frame, everyBar = null) {
   const bars = summary[`${frame.prefix}swing_bars`];
   if (bars === undefined) return null;
@@ -241,7 +249,8 @@ function swingSection(summary, swings, frame, everyBar = null) {
   renderTable(table, { rows, columns: allBars ? barColumns(frame) : swingColumns(frame) });
   return el("div", {}, [
     title,
-    el("div", { class: "facts facts-none" }, swingFacts(summary, frame).map((text) => el("p", { text }))),
+    el("div", { class: "facts facts-none" },
+      [...swingFacts(summary, frame), changeFact(frame, everyBar)].filter(Boolean).map((text) => el("p", { text }))),
     rows.length ? el("div", { class: "table-wrap" }, [table]) : null,
   ]);
 }
