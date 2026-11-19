@@ -101,6 +101,16 @@ def test_apply_bars_updates_listed_stocks_only_and_keeps_the_input(tmp_path: Pat
     assert scan["rows"][0]["swing_source"] == "tradingview"   # the input scan is not changed
 
 
+
+def test_apply_bars_leaves_a_closing_high_without_two_hour_fields(tmp_path: Path) -> None:
+    frames = read_bars(notebook_csv(tmp_path / "bars.csv", {"KRN": 120}))
+    scan = {"data_date": "2026-11-19", "rows": [{"ticker": "KRN.NS", "close": 1.0, "at_closing_high": True,
+                                                  "swing_source": "tradingview", "swing_bars": 3}]}
+    updated, counts = apply_bars(scan, frames)
+    assert counts == {"closing high, skipped": 1}
+    row = updated["rows"][0]
+    assert row["swing_bars"] == 0 and row["swing_source"] is None and row["close"] == 1.0
+
 def test_run_saves_the_scan_and_reports_missing_files(tmp_path: Path) -> None:
     settings = replace(Settings(), scan_path=tmp_path / "scan.json", two_hour_csv_path=tmp_path / "bars.csv")
     assert run(settings) == 1   # no scan yet

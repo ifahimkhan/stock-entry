@@ -133,7 +133,7 @@ def test_without_credentials_there_are_no_two_hour_bars(monkeypatch: pytest.Monk
 
 def test_scan_row_reports_the_two_hour_source() -> None:
     swings = analyze_swings(to_bars(raw_frame(), TRADINGVIEW))
-    row = build_row(Ticker("A.NS"), analyze(make_prices(SANSERA_CLOSES)), swings)
+    row = build_row(Ticker("A.NS"), analyze(make_prices(SANSERA_CLOSES[:-1])), swings)   # not at a closing high
     assert row["swing_source"] == TRADINGVIEW and row["d1_swing_source"] is None
     assert build_row(Ticker("A.NS"), analyze(make_prices(SANSERA_CLOSES)))["swing_source"] is None
 

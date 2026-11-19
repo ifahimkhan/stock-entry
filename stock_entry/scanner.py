@@ -9,7 +9,7 @@ from typing import Any, Callable, TypeVar
 
 import pandas as pd
 
-from stock_entry.analysis import analyze, build_row
+from stock_entry.analysis import analyze, at_closing_high, build_row
 from stock_entry.clock import now_ist
 from stock_entry.intraday import analyze_swings
 from stock_entry.market_data import MarketDataError
@@ -80,7 +80,13 @@ def _scan_batch(batch: list[Ticker], fetch: Fetch, refetch: Fetch,
     """Rows for the stocks that produced signals, and the symbols that did not."""
     symbols = [ticker.symbol for ticker in batch]
     frames = _fetch_batch(symbols, fetch, refetch)
-    swing_frames = _fetch_safely(symbols, swing_fetch) if swing_fetch is not None else {}
+    # A stock at a new closing high gets no swing analysis, so its 2-hour bars are not even downloaded.
+    highs = {symbol for symbol, frame in frames.items() if frame is not None and not frame.empty
+             and "Close" in frame.columns and at_closing_high(frame)}
+    wanted = [symbol for symbol in symbols if symbol not in highs]
+    swing_frames = _fetch_safely(wanted, swing_fetch) if swing_fetch is not None and wanted else {}
+    if highs:
+        logger.info("New closing high (no swing analysis): %s", ", ".join(sorted(highs)))
     rows, failed = [], []
     for ticker in batch:
         frame = frames.get(ticker.symbol)

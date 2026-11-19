@@ -35,6 +35,10 @@ def apply_bars(scan: dict[str, Any], frames: dict[str, pd.DataFrame]) -> tuple[d
     rows = []
     for row in scan["rows"]:
         frame = frames.get(row["ticker"])
+        if row.get("at_closing_high"):   # new closing high: no swing analysis (see analysis.at_closing_high)
+            counts["closing high, skipped"] += 1
+            rows.append({**row, **empty_swing_summary()})
+            continue
         if frame is None:
             counts["not in csv"] += 1
             rows.append(row)

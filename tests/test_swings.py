@@ -21,6 +21,9 @@ from stock_entry.swings import (HH, HL, LH, LL, clean_labels, daily_points, dail
 from stock_entry.tickers import Ticker
 from tests.conftest import SANSERA_CLOSES, make_prices
 
+# Daily closes whose latest close is below an earlier one: at a new closing high the scan skips swings.
+BELOW_HIGH = SANSERA_CLOSES[:-1]
+
 pytestmark = pytest.mark.unit
 
 # Turning points of a zigzag: two falling legs, then a reversal into rising legs.
@@ -177,7 +180,7 @@ def test_split_by_symbol_keeps_intraday_time_when_asked() -> None:
 # ---------------------------------------------------------------- wiring
 
 def daily_fetch(symbols: list[str]) -> dict[str, pd.DataFrame]:
-    return {symbol: make_prices(SANSERA_CLOSES) for symbol in symbols}
+    return {symbol: make_prices(BELOW_HIGH) for symbol in symbols}
 
 
 def test_build_row_without_swings_has_empty_swing_fields() -> None:
@@ -369,10 +372,33 @@ def test_zone_entry_summary_carries_the_swings_1d_change() -> None:
     assert summary["before_entry_change_pct"] == (None if pd.isna(expected) else pytest.approx(expected, abs=0.01))
 
 
-def test_close_above_all_flags_a_new_closing_high_only() -> None:
-    from stock_entry.swings import close_above_all
 
-    assert close_above_all(pd.DataFrame({"Close": [10.0, 12.0, 11.0, 12.5]})) is True
-    assert close_above_all(pd.DataFrame({"Close": [10.0, 12.0, 11.0, 12.0]})) is False   # equal is not above
-    assert close_above_all(pd.DataFrame({"Close": [10.0, 12.0, 11.0]})) is False
-    assert close_above_all(pd.DataFrame({"Close": [10.0]})) is None
+def test_at_closing_high_uses_greater_or_equal_over_the_last_500_closes() -> None:
+    from stock_entry.analysis import at_closing_high
+
+    def frame(closes: list[float]) -> pd.DataFrame:
+        return pd.DataFrame({"Close": closes})
+
+    assert at_closing_high(frame([10.0, 12.0, 11.0, 12.5])) is True
+    assert at_closing_high(frame([10.0, 12.0, 11.0, 12.0])) is True    # equal to the best close counts
+    assert at_closing_high(frame([10.0, 12.0, 11.0])) is False
+    assert at_closing_high(frame([10.0])) is False
+    assert at_closing_high(frame([99.0] + [10.0] * 500 + [11.0])) is True   # the 99 is older than 500 candles
+
+
+def test_a_closing_high_gets_no_swing_fields_and_no_two_hour_download() -> None:
+    from stock_entry.scanner import _scan_batch
+
+    asked: list[list[str]] = []
+
+    def swing_fetch(symbols: list[str]) -> dict[str, pd.DataFrame]:
+        asked.append(sorted(symbols))
+        return {symbol: zigzag_bars() for symbol in symbols}
+
+    daily = {"UP.NS": make_prices(SANSERA_CLOSES), "DIP.NS": make_prices(BELOW_HIGH)}
+    rows, failed = _scan_batch([Ticker("UP.NS"), Ticker("DIP.NS")], lambda symbols: daily, lambda symbols: {}, swing_fetch)
+    by = {row["ticker"]: row for row in rows}
+    assert not failed and asked == [["DIP.NS"]]          # no 2-hour download for the closing high
+    assert by["UP.NS"]["at_closing_high"] is True
+    assert by["UP.NS"]["swing_bars"] == 0 and by["UP.NS"]["d1_swing_bars"] == 0
+    assert by["DIP.NS"]["at_closing_high"] is False and by["DIP.NS"]["swing_bars"] > 0
