@@ -76,6 +76,12 @@ button:hover { background: var(--wash); }
 button.primary { background: var(--action); border-color: var(--action); color: #fff; font-weight: 600; white-space: nowrap; }
 button.primary:hover { filter: brightness(1.1); }
 button:disabled { opacity: 0.55; cursor: default; }
+/* TBC Zone Entry win rate panel above the list. */
+.win-rate { margin: 0 0 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); }
+.win-rate-head { font-weight: 600; margin: 0 0 8px; }
+.win-rate-rules { font-size: 0.85em; margin: 8px 0; }
+.win-rate-trades { margin-top: 10px; max-height: 420px; overflow: auto; }
+
 /* A link that looks like a button (opens another site, e.g. the TradingView chart). */
 a.button-link {
   display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; text-decoration: none;

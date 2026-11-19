@@ -55,9 +55,12 @@ jobs:
         if: github.event_name == 'push'
         run: python -m stock_entry.apply_two_hour_csv
 
+      - name: Zone Entry win rate (new 2-hour signals)
+        run: python -m stock_entry.zone_backtest --workers 2 || echo "Zone Entry replay failed; the CSV is still applied."
+
       - name: Commit
         run: |
-          files="TBC_all_stocks_bars.csv TBC_all_stocks_summary.csv data/scan_latest.json"
+          files="TBC_all_stocks_bars.csv TBC_all_stocks_summary.csv data/scan_latest.json data/zone_entry_trades.csv"
           if git diff --quiet -- $files; then
             echo "Nothing changed. Nothing to commit."
             exit 0

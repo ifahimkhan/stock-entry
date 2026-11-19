@@ -50,6 +50,10 @@ jobs:
           TV_SESSIONID_SIGN: ${{ secrets.TV_SESSIONID_SIGN }}
         run: python -m stock_entry.scan_job
 
+      - name: Zone Entry win rate (new signals, open trades rescored)
+        # Replays only the bars added since the last run; never fails the scan commit.
+        run: python -m stock_entry.zone_backtest --workers 2 || echo "Zone Entry replay failed; the scan is still committed."
+
       - name: Commit scan results
         env:
           FORCE: ${{ inputs.force }}   # empty on scheduled runs
@@ -71,7 +75,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/scan_latest.json data/fundamentals.json data/daily_bars.csv
+          git add data/scan_latest.json data/fundamentals.json data/daily_bars.csv data/zone_entry_trades.csv
           git commit -m "$message"
           for attempt in 1 2 3; do   # someone may push at the same moment: rebase onto it and try again
             if git pull --rebase && git push; then

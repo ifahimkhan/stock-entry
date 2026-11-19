@@ -33,6 +33,7 @@ def settings(tmp_path: Path) -> Settings:
     return replace(Settings(), universe_path=tmp_path / "stock_M_d_S_I.csv", tickers_path=tickers,
                    scan_path=tmp_path / "data" / "scan.json",
                    fundamentals_path=tmp_path / "data" / "fundamentals.json",
+                   zone_trades_path=tmp_path / "data" / "zone_entry_trades.csv",
                    web_dir=PROJECT_ROOT / "web", batch_size=2, max_failed_share=0.5)
 
 
@@ -166,3 +167,20 @@ def test_scan_job_saves_a_scan_and_reports_failure(settings: Settings, tmp_path:
     broken = build_services(replace(settings, tickers_path=tmp_path / "missing.csv"),
                             fetch=fake_fetch, fetch_fundamentals=fake_fundamentals)
     assert run_once(broken) == 1
+
+
+def test_zone_results_endpoint_returns_summary_trades_and_rules(client: FlaskClient, settings: Settings) -> None:
+    empty = client.get("/api/zone-results").get_json()["data"]
+    assert empty["summary"] == [] and empty["trades"] == [] and "Win" in empty["rules"]
+    settings.zone_trades_path.parent.mkdir(parents=True, exist_ok=True)
+    settings.zone_trades_path.write_text(
+        "timeframe,ticker,hh_at,signal_at,pattern,hh_close,change_pct,entry_at,entry,outcome,exit_at,exit,return_pct,sessions\n"
+        "1d,A.NS,2026-01-01 00:00,2026-01-08 00:00,3LL-HH,10,4.2,2026-01-09 00:00,10,win,2026-01-12 00:00,10.5,5.0,2\n"
+        "2h,B.NS,2026-01-01 09:15,2026-01-02 11:15,4LL-HH,20,,,,open,,,,0\n", encoding="utf-8")
+    response = client.get("/api/zone-results")
+    assert b"NaN" not in response.data   # strict JSON: the browser cannot read NaN
+    data = response.get_json()["data"]
+    every = {(row["timeframe"], row["pattern"]): row for row in data["summary"]}
+    assert every[("1d", "all")]["win_rate"] == 100.0 and every[("2h", "all")]["open"] == 1
+    assert [trade["ticker"] for trade in data["trades"]] == ["A.NS", "B.NS"]   # newest signal first
+    assert data["trades"][1]["change_pct"] is None   # missing values come back as null, not NaN

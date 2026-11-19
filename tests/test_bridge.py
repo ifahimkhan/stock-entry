@@ -39,6 +39,7 @@ def settings(tmp_path: Path) -> Settings:
     return replace(Settings(), universe_path=tmp_path / "stock_M_d_S_I.csv", tickers_path=tickers,
                    scan_path=tmp_path / "data" / "scan.json",
                    fundamentals_path=tmp_path / "data" / "fundamentals.json",
+                   zone_trades_path=tmp_path / "data" / "zone_entry_trades.csv",
                    web_dir=PROJECT_ROOT / "web", batch_size=2, max_failed_share=0.5)
 
 
@@ -219,3 +220,8 @@ def test_code_fingerprint_changes_with_the_python_code(tmp_path) -> None:
     (tmp_path / "a.py").write_text("x = 2\n", encoding="utf-8")
     assert code_fingerprint(tmp_path) != first
     assert code_fingerprint() == code_fingerprint()   # the real package
+
+
+def test_zone_results_op_reads_the_saved_trades(services: Services) -> None:
+    body = call(services, "zone_results")
+    assert body["error"] is None and body["data"]["summary"] == [] and body["data"]["max_sessions"] == 20

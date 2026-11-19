@@ -19,6 +19,15 @@ from TradingView. To update the live site, re-run the notebook loop and push the
 workflow then recomputes the 2-hour fields of the saved scan (`python -m stock_entry.apply_two_hour_csv`, no
 downloads) and commits it. `TBC_all_stocks_summary.csv` is the notebook's one-row-per-stock view of the same data.
 
+**Zone Entry win rate:** `python -m stock_entry.zone_backtest` replays the TBC Zone Entry lists (1D from
+`data/daily_bars.csv`, 2h from `TBC_all_stocks_bars.csv`) without hindsight: each HH is checked only on the
+bars known on the day it could be listed, with the same rules as the app (3LL-HH / 4LL-HH, 15 sessions /
+12 bars, no swings at a new closing high). Each signal is scored as a trade: entry at the next session's
+open, win = +5 % before -3 % on daily highs / lows (both in one candle = loss), timeout after 20 sessions.
+Trades are kept in `data/zone_entry_trades.csv`; `--full` replays everything (first run, a few minutes),
+otherwise only the new bars are replayed and open trades scored again (seconds). Both workflows run it, and
+the Zone Entry lists show the win rate and every trade.
+
 **Daily bars on disk:** `data/daily_bars.csv` keeps the latest 500 daily bars (about 2 years) of every
 stock (`stock_entry/daily_store.py`). The first scan downloads the full history from Yahoo; after that a scan
 asks only for the days it is missing (5 days to a few months, grouped by how far behind each stock is),

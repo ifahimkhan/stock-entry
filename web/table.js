@@ -1,8 +1,10 @@
 // A sortable table of stock rows. Column `type` picks the cell renderer.
 
-import { DASH, el, formatAngle, formatBarTime, formatDate, formatPercent, formatPrice, isNumber, signClass, statusBadge } from "./format.js";
+import { DASH, el, formatAngle, formatBarTime, formatDate, formatDateTime, formatPercent, formatPrice, isNumber, signClass, statusBadge } from "./format.js";
 
-const NUMERIC_TYPES = new Set(["price", "pct", "int", "num2", "crore", "angle"]);
+const NUMERIC_TYPES = new Set(["price", "pct", "int", "num2", "crore", "angle", "pctplain"]);
+const OUTCOME_LABEL = { win: "Win", loss: "Loss", timeout: "Timeout", open: "Open" };
+const OUTCOME_CLASS = { win: "up", loss: "down", timeout: "", open: "dim" };
 const CRORE = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
 
 function cell(column, row) {
@@ -21,6 +23,10 @@ function cell(column, row) {
     case "screens": return el("td", { text: row.screens || DASH, class: row.screens ? "" : "dim" });
     case "flag": return el("td", { text: value === true ? "Yes" : DASH, class: value === true ? "" : "dim" });
     case "date": return el("td", { text: formatDate(value) });
+    case "dateyear": return el("td", { text: formatDate(value, true), class: value ? "" : "dim" });
+    case "datetime": return el("td", { text: formatDateTime(value), class: value ? "" : "dim" });
+    case "pctplain": return el("td", { class: "num", text: isNumber(value) ? `${value.toFixed(1)}%` : DASH });
+    case "outcome": return el("td", { class: OUTCOME_CLASS[value] || "dim", text: OUTCOME_LABEL[value] || DASH });
     case "pattern": return el("td", { text: value || `${row[column.llKey || "before_entry_ll"] ?? "?"} LL (other)`, class: value ? "" : "dim" });
     case "bartime": return el("td", { text: formatBarTime(value), class: value ? "" : "dim" });
     case "angle": return el("td", { class: `num ${signClass(value)}`, text: formatAngle(value) });

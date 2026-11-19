@@ -21,12 +21,13 @@ from stock_entry.history import StockNotFoundError
 from stock_entry.market_data import MarketDataError
 from stock_entry.services import Services
 from stock_entry.tickers import InvalidSymbolError, normalize_symbol
+from stock_entry.zone_backtest import results as zone_results
 
 logger = logging.getLogger(__name__)
 
 BRIDGE_CLIENT = "api.streamlit.js"
 MAX_ID_LENGTH = 64
-PAGE_FILES = ("index.html", "app.js", "cards.js", "chart.js", "detail.js", "format.js", "market.js", "table.js", "theme.js", "styles.css")
+PAGE_FILES = ("index.html", "app.js", "cards.js", "chart.js", "detail.js", "format.js", "market.js", "table.js", "theme.js", "winrate.js", "styles.css")
 
 
 class BridgeError(Exception):
@@ -103,6 +104,15 @@ def _stock(services: Services, request: dict[str, Any]) -> Any:
         raise BridgeError("Could not reach Yahoo Finance. Try again in a minute.") from exc
 
 
+def _zone_results(services: Services, request: dict[str, Any]) -> Any:
+    """TBC Zone Entry win rate: summary, every replayed trade and the trade rules."""
+    try:
+        return zone_results(services.settings.zone_trades_path)
+    except (OSError, ValueError, KeyError) as exc:
+        logger.error("Could not read the Zone Entry results: %s", exc)
+        raise BridgeError("The Zone Entry results could not be read.") from exc
+
+
 def _tradingview(services: Services, request: dict[str, Any]) -> Any:
     """The public site is shared by every visitor, so a login typed there would be used for everyone."""
     raise BridgeError("Signing in to TradingView from the page only works in the local app. "
@@ -113,6 +123,7 @@ Handler = Callable[[Services, dict[str, Any]], Any]
 HANDLERS: dict[str, Handler] = {
     "scan": _scan, "scan_status": _scan_status, "start_scan": _start_scan, "tickers": _tickers, "stock": _stock,
     "tradingview": _tradingview, "tradingview_login": _tradingview, "tradingview_logout": _tradingview,
+    "zone_results": _zone_results,
 }
 
 

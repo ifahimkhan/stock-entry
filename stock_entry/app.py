@@ -17,6 +17,7 @@ from stock_entry.market_data import MarketDataError
 from stock_entry.services import Fetch, build_services
 from stock_entry.tickers import InvalidSymbolError, normalize_symbol
 from stock_entry.tv_login import TradingViewLogin, TradingViewLoginError
+from stock_entry.zone_backtest import results as zone_results
 
 logger = logging.getLogger(__name__)
 
@@ -122,6 +123,15 @@ def create_app(settings: Settings, fetch: Fetch | None = None,
         except (FileNotFoundError, ValueError) as exc:
             return _fail(str(exc), 404)
         return _ok([{"ticker": t.symbol, "name": t.name, "sector": t.sector} for t in tickers])
+
+    @app.get("/api/zone-results")
+    def get_zone_results() -> tuple[Response, int]:
+        """TBC Zone Entry win rate: summary, every replayed trade and the trade rules."""
+        try:
+            return _ok(zone_results(settings.zone_trades_path))
+        except (OSError, ValueError, KeyError) as exc:
+            logger.error("Could not read %s: %s", settings.zone_trades_path.name, exc)
+            return _fail("The Zone Entry results could not be read.", 500)
 
     @app.get("/api/stocks/<symbol>")
     def get_stock(symbol: str) -> tuple[Response, int]:

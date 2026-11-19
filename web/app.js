@@ -1,7 +1,7 @@
 // Page controller: loads the scan, renders tiles / tabs / table, opens the single-stock panel.
 
 import {
-  POLL_MS, TV_LOGIN_AVAILABLE, getScan, getScanStatus, getStock, getTickers, getTradingView, signInTradingView,
+  POLL_MS, TV_LOGIN_AVAILABLE, getScan, getScanStatus, getStock, getTickers, getTradingView, getZoneResults, signInTradingView,
   signOutTradingView, startScan,
 } from "./api.js";
 import { renderDetail, renderDetailMessage } from "./detail.js";
@@ -9,6 +9,7 @@ import { renderCards } from "./cards.js";
 import { MARKET_HOURS_TEXT, isMarketHours } from "./market.js";
 import { DASH, el, formatAngle, formatBarTime, formatDate, formatDateTime, formatPercent, formatPrice, isNumber } from "./format.js";
 import { renderTable, sortRows } from "./table.js";
+import { renderWinRate } from "./winrate.js";
 import { initThemeToggle } from "./theme.js";
 
 const RECENT_SESSIONS = 5;
@@ -283,7 +284,7 @@ const dom = {
   toTop: $("to-top"), confirm: $("scan-confirm"), confirmText: $("confirm-text"), confirmRun: $("confirm-run"),
   confirmCancel: $("confirm-cancel"), marketWarning: $("market-warning"), marketWarningText: $("market-warning-text"),
   searchForm: $("search-form"), searchInput: $("search-input"), tickerList: $("ticker-list"),
-  listTitle: $("list-title"), listCount: $("list-count"), listHint: $("list-hint"),
+  listTitle: $("list-title"), listCount: $("list-count"), listHint: $("list-hint"), winRate: $("win-rate"),
   table: $("stock-table"), listEmpty: $("list-empty"), detail: $("detail"), capFilter: $("cap-filter"),
   patternFilter: $("pattern-filter"), timeframeFilter: $("timeframe-filter"), topbar: document.querySelector(".topbar"),
   tvButton: $("tv-button"), tvDialog: $("tv-dialog"), tvForm: $("tv-form"), tvStatus: $("tv-status"),
@@ -430,6 +431,28 @@ function sourceNote(scanRows) {
   return parts.length ? ` 2-hour prices: ${parts.join(", ")}.` : "";
 }
 
+/** Win rate of the replayed Zone Entry trades above the TBC Zone Entry lists; loaded once, on first view. */
+let zoneResults = null;
+let zoneResultsAsked = false;
+let zoneResultsError = null;
+function renderZoneWinRate(view) {
+  const show = view.group === "before";
+  dom.winRate.hidden = !show;
+  if (!show) return;
+  if (!zoneResultsAsked) {
+    zoneResultsAsked = true;
+    getZoneResults()
+      .then((data) => { zoneResults = data; })
+      .catch((error) => { zoneResultsError = error.message; })
+      .finally(() => renderZoneWinRate(currentView()));
+  }
+  if (zoneResultsError) {
+    dom.winRate.textContent = `Win rate not available: ${zoneResultsError}`;
+    return;
+  }
+  renderWinRate(dom.winRate, zoneResults, view.tf, (ticker) => openStock(ticker));
+}
+
 function renderList() {
   const view = currentView();
   renderCapFilter(view);
@@ -447,6 +470,7 @@ function renderList() {
   }
   if (view.tf === "2h" && state.scan) hint += sourceNote(rows());
   dom.listHint.textContent = hint;
+  renderZoneWinRate(view);
   const shown = state.query.trim() ? `${visible.length} of ${inView.length}` : String(inView.length);
   dom.listCount.textContent = state.scan ? `· ${shown} stock${inView.length === 1 ? "" : "s"}` : "";
   renderSortSelect(view);
