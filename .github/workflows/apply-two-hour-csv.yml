@@ -1,9 +1,11 @@
 # 2-hour bars of TBC_all_stocks_bars.csv (the TradingView.ipynb loop output) on the live site.
 #
-# - Run manually ("Run workflow") or on the weekday schedule: fetch the latest 2-hour bars of every stock in
+# - Run manually ("Run workflow"): fetch the latest 2-hour bars of every stock in
 #   the CSV from TradingView (TV_SESSIONID / TV_SESSIONID_SIGN, else TV_USERNAME / TV_PASSWORD), merge them
 #   into the CSV, rebuild TBC_all_stocks_summary.csv and the saved scan, and commit all three.
-# - A pushed CSV (e.g. after running the notebook): only recompute the saved scan from it (no download).
+# - A pushed CSV (the usual way: python -m stock_entry.update_two_hour_csv on your computer, where the
+#   TradingView session signs in): only recompute the saved scan from it (no download).
+# No schedule: a scheduled fetch here would commit the CSV and make a local push conflict.
 name: Apply 2-hour CSV
 
 on:
@@ -16,9 +18,6 @@ on:
         description: "2-hour bars to fetch per stock (4 = one session, 12 = about three)"
         required: false
         default: "8"
-  schedule:
-    # 16:05 IST Mon-Fri (10:35 UTC), after the 15:30 close; GitHub may start scheduled runs late.
-    - cron: "35 10 * * 1-5"
 
 permissions:
   contents: write   # needed to commit the CSVs and data/
