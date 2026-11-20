@@ -175,16 +175,20 @@ const barColumns = (frame) => [
   { key: "label", label: "Clean", type: "text", title: "status_clean: the label after the clean-up" },
   { key: "ang_ll_ll", label: "LL→LL", type: "angle", title: "ang_LL_LL" },
   { key: "ang_ll_hl", label: "LL→HL", type: "angle", title: "ang_LL_HL" },
-  { key: "final", label: "Final", type: "text", title: "Final: Before Entry on a confirmed HH (TBC Zone Entry)" },
+  { key: "final", label: "Final", type: "text", title: frame.prefix
+    ? "Final: Before Entry on a TBC Zone Entry HH; Entry on the first 3-rule candle once that HH is confirmed"
+    : "Final: Before Entry on a confirmed HH (TBC Zone Entry)" },
   { key: "ll3_hh", label: "3LL_HH", type: "flag" },
   { key: "ll4_hh", label: "4LL_HH", type: "flag" },
   { key: "breakout", label: "LH_breakout", type: "text", title: "LH_breakout and LH_breakout_level" },
   { key: "volume", label: "Volume", type: "crore", title: "Shares traded in the bar" },
 ];
 
-const barRow = (bar) => ({
+const ENTRY = "Entry";
+// `daily`: Entry (first 3-rule candle after a confirmed Zone Entry HH) is shown on the daily table only
+const barRow = (bar, daily) => ({
   ...bar,
-  final: bar.before_entry ? BEFORE_ENTRY : null,
+  final: bar.before_entry ? BEFORE_ENTRY : (daily && bar.entry ? ENTRY : null),
   breakout: bar.lh_breakout ? `Yes > ${formatPrice(bar.lh_breakout_level)}` : null,
 });
 
@@ -244,7 +248,7 @@ function swingSection(summary, swings, frame, everyBar = null) {
   const table = el("table", { class: "compact" }, [el("thead"), el("tbody")]);
   const allBars = Array.isArray(everyBar) && everyBar.length > 0;
   const rows = allBars
-    ? [...everyBar].reverse().map(barRow)   // newest first, every bar as in the CSV
+    ? [...everyBar].reverse().map((bar) => barRow(bar, Boolean(frame.prefix)))   // newest first, every bar as in the CSV
     : [...(swings || [])].reverse().map((point) => ({ ...point, signal: swingSignal(point) }));
   renderTable(table, { rows, columns: allBars ? barColumns(frame) : swingColumns(frame) });
   return el("div", {}, [

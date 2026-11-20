@@ -347,14 +347,37 @@ def hh_change_from_lh(frame: pd.DataFrame) -> pd.Series:
     return pd.Series(values, index=frame.index)
 
 
+def three_rule_candle(frame: pd.DataFrame) -> pd.Series:
+    """The 3-rule candle: a higher high, a higher low and a close above the previous bar's high."""
+    high, low, close = (frame[column].astype(float) for column in ("High", "Low", "Close"))
+    return (high > high.shift(1)) & (low > low.shift(1)) & (close > high.shift(1))
+
+
+def entry_after_hh(frame: pd.DataFrame) -> pd.Series:
+    """Entry: the first 3-rule candle once a TBC Zone Entry HH ("Before Entry") is confirmed.
+
+    An HH is known PIVOT_RIGHT bars after the pivot, so the entry is searched from that bar on, until the
+    next Zone Entry HH (one entry per HH)."""
+    candle = three_rule_candle(frame).to_numpy()
+    zone_hh = np.flatnonzero(frame["before_entry"].to_numpy(dtype=bool))
+    entry = np.zeros(len(frame), dtype=bool)
+    for k, pivot in enumerate(zone_hh):
+        end = zone_hh[k + 1] + PIVOT_RIGHT if k + 1 < len(zone_hh) else len(frame)
+        hits = np.flatnonzero(candle[pivot + PIVOT_RIGHT:end])
+        if hits.size:
+            entry[pivot + PIVOT_RIGHT + hits[0]] = True
+    return pd.Series(entry, index=frame.index)
+
+
 def swing_points(frame: pd.DataFrame, limit: int, every_bar: bool = False) -> list[dict[str, Any]]:
     """The latest `limit` labelled or breakout bars (oldest first) for the single-stock view; with
     `every_bar`, the latest `limit` bars whether labelled or not (the rows of TBC_all_stocks_bars.csv)."""
     marked = frame if every_bar else frame[(frame["swing_clean"] != NONE) | frame["lh_breakout"].astype(bool)]
     change = hh_change_from_lh(frame)
+    entry = entry_after_hh(frame)
     marked = marked.tail(limit)
     return [{
-        "hh_change_pct": _number(change.loc[index]),
+        "hh_change_pct": _number(change.loc[index]), "entry": bool(entry.loc[index]),
         "time": bar_time(row["Date"]), "open": _number(row.get("Open")), "high": _number(row["High"]),
         "low": _number(row["Low"]), "volume": _number(row.get("Volume")),
         "close": _number(row["Close"]), "label": row["swing_clean"] or None,

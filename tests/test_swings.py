@@ -402,3 +402,31 @@ def test_a_closing_high_gets_no_swing_fields_and_no_two_hour_download() -> None:
     assert by["UP.NS"]["at_closing_high"] is True
     assert by["UP.NS"]["swing_bars"] == 0 and by["UP.NS"]["d1_swing_bars"] == 0
     assert by["DIP.NS"]["at_closing_high"] is False and by["DIP.NS"]["swing_bars"] > 0
+
+
+def entry_frame(before: list[bool], ohlc: list[tuple[float, float, float]]) -> pd.DataFrame:
+    """Bars with (high, low, close) and the before_entry flag of a swing frame."""
+    return pd.DataFrame({"High": [h for h, _, _ in ohlc], "Low": [lo for _, lo, _ in ohlc],
+                         "Close": [c for _, _, c in ohlc], "before_entry": before})
+
+
+def test_entry_is_the_first_3_rule_candle_once_the_zone_hh_is_confirmed() -> None:
+    from stock_entry.swings import PIVOT_RIGHT, entry_after_hh
+
+    flat = (10.0, 9.0, 9.5)
+    up = (11.0, 9.5, 10.5)            # high > prev high, low > prev low, close > prev high
+    bars = [flat, up] + [flat] * (PIVOT_RIGHT - 1) + [flat, up, flat, up]
+    before = [False, True] + [False] * (len(bars) - 2)   # the Zone Entry HH is bar 1
+    entry = entry_after_hh(entry_frame(before, bars)).tolist()
+    confirmed = 1 + PIVOT_RIGHT
+    # bar 1 itself passes the 3 rules but the HH is not confirmed yet; first pass on or after bar 6 is bar 7
+    assert [i for i, flag in enumerate(entry) if flag] == [confirmed + 1]
+
+
+def test_entry_needs_a_zone_hh_and_one_entry_per_hh() -> None:
+    from stock_entry.swings import entry_after_hh
+
+    up_bars = [(10.0 + i, 9.0 + i, 10.5 + i) for i in range(12)]   # every bar passes the 3 rules
+    assert not entry_after_hh(entry_frame([False] * 12, up_bars)).any()
+    before = [True] + [False] * 11
+    assert entry_after_hh(entry_frame(before, up_bars)).sum() == 1
