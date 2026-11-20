@@ -286,6 +286,7 @@ const dom = {
   confirmCancel: $("confirm-cancel"), marketWarning: $("market-warning"), marketWarningText: $("market-warning-text"),
   searchForm: $("search-form"), searchInput: $("search-input"), tickerList: $("ticker-list"),
   listTitle: $("list-title"), listCount: $("list-count"), listHint: $("list-hint"), winRate: $("win-rate"),
+  listTabs: $("list-tabs"), listPane: document.querySelector(".list-pane"),
   pickBar: $("pick-bar"),
   table: $("stock-table"), listEmpty: $("list-empty"), detail: $("detail"), capFilter: $("cap-filter"),
   patternFilter: $("pattern-filter"), timeframeFilter: $("timeframe-filter"), topbar: document.querySelector(".topbar"),
@@ -297,7 +298,7 @@ const dom = {
 let state = {
   scan: undefined,  // undefined until the first load answers; null when there is no scan yet
   progress: { running: false }, tickers: [], viewId: "entry",
-  sort: VIEWS[0].sort, query: "", selected: null, capFilter: "all", patternFilter: "all",
+  sort: VIEWS[0].sort, query: "", selected: null, capFilter: "all", patternFilter: "all", zoneTab: "stocks",
   timeframe: DEFAULT_TIMEFRAME,
 };
 let pollTimer = null;
@@ -437,8 +438,23 @@ function sourceNote(scanRows) {
 let zoneResults = null;
 let zoneResultsAsked = false;
 let zoneResultsError = null;
+const ZONE_TABS = [{ id: "stocks", label: "Stocks" }, { id: "winrate", label: "Win rate" }];
+
+/** Stocks / Win rate tabs of the TBC Zone Entry list: the win rate gets its own tab so the list keeps its height. */
+function renderListTabs(view) {
+  const zone = view.group === "before";
+  dom.listTabs.hidden = !zone;
+  dom.listPane.classList.toggle("zone-list", zone);
+  dom.listPane.classList.toggle("show-win-rate", zone && state.zoneTab === "winrate");
+  if (!zone) return;
+  dom.listTabs.replaceChildren(...ZONE_TABS.map((tab) => el("button", {
+    type: "button", "aria-pressed": String(state.zoneTab === tab.id), text: tab.label,
+    onclick: () => setState({ zoneTab: tab.id }),
+  })));
+}
+
 function renderZoneWinRate(view) {
-  const show = view.group === "before";
+  const show = view.group === "before" && state.zoneTab === "winrate";
   dom.winRate.hidden = !show;
   if (!show) return;
   if (!zoneResultsAsked) {
@@ -531,6 +547,7 @@ function renderList() {
   }
   if (view.tf === "2h" && state.scan) hint += sourceNote(rows());
   dom.listHint.textContent = hint;
+  renderListTabs(view);
   renderZoneWinRate(view);
   const shown = state.query.trim() ? `${visible.length} of ${inView.length}` : String(inView.length);
   dom.listCount.textContent = state.scan ? `· ${shown} stock${inView.length === 1 ? "" : "s"}` : "";

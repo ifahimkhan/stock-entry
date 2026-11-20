@@ -80,7 +80,15 @@ button:disabled { opacity: 0.55; cursor: default; }
 .win-rate { margin: 0 0 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); }
 .win-rate-head { font-weight: 600; margin: 0 0 8px; }
 .win-rate-rules { font-size: 0.85em; margin: 8px 0; }
-.win-rate-trades { margin-top: 10px; max-height: 420px; overflow: auto; }
+.segmented.list-tabs { display: inline-grid; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: max-content; margin: 0 0 10px; }
+.segmented.list-tabs button { padding: 6px 16px; }
+/* Win rate tab of the TBC Zone Entry list: the stocks are hidden, so each tab has the pane to itself. */
+.list-pane.show-win-rate > .cards, .list-pane.show-win-rate > .table-wrap, .list-pane.show-win-rate > .pick-bar,
+.list-pane.show-win-rate > #list-empty { display: none !important; }
+/* The win-rate tables are not the stock list: always shown (the list's table is hidden on phones), full height. */
+.list-pane .win-rate .table-wrap { display: block; max-height: none; }
+.list-pane .win-rate .win-rate-trades { max-height: 70vh; }
+.win-rate-trades { margin-top: 10px; overflow: auto; }
 
 /* Tick boxes and the export bar of the TBC Zone Entry lists. */
 .pick-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 10px; }
@@ -351,6 +359,8 @@ body.modal-open { overflow: hidden; }
   body.has-detail .layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   body:not(.has-detail) .detail { display: none; }
   .list-pane .table-wrap { display: block; max-height: calc(100vh - var(--header-h, 200px) - 110px); }
+  /* Zone Entry: the tabs and the tick bar sit above the table, so it is shorter and still ends on screen. */
+  .list-pane.zone-list > .table-wrap { max-height: calc(100vh - var(--header-h, 200px) - 225px); }
   .cards { display: none; }
   .sort-picker { display: none; }
   .scrim, .grabber { display: none !important; }
