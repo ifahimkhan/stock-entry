@@ -9,6 +9,7 @@ import hashlib
 import logging
 import sys
 import tempfile
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -45,6 +46,10 @@ from stock_entry.config import Settings  # noqa: E402
 from stock_entry.services import Services, build_services  # noqa: E402
 
 stock_entry._loaded_fingerprint = _PACKAGE_FINGERPRINT
+if not hasattr(stock_entry, "_load_id"):
+    # New on every fresh import of the package. Part of the cache keys below: services or a page built
+    # by modules that were since dropped must not be reused, even when the code on disk hashes the same.
+    stock_entry._load_id = uuid.uuid4().hex[:8]
 
 COMPONENT_NAME = "stock_entry_page"
 RESPONSE_KEY = "bridge_response"
@@ -82,8 +87,9 @@ def main() -> None:
     st.set_page_config(page_title="Stock Entry", layout="wide")
     st.markdown(PAGE_CSS, unsafe_allow_html=True)
     try:
-        services = get_services(code_fingerprint())
-        page = get_component(page_fingerprint(Settings().web_dir))
+        load_id = stock_entry._load_id
+        services = get_services(f"{code_fingerprint()}-{load_id}")
+        page = get_component(f"{page_fingerprint(Settings().web_dir)}-{load_id}")
     except (OSError, ValueError) as exc:
         logging.getLogger(__name__).exception("Stock Entry could not start")
         st.error(f"Stock Entry could not start: {exc}")
