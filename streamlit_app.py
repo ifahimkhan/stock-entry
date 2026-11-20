@@ -5,7 +5,9 @@ component instead of HTTP - see stock_entry/bridge.py and web/api.streamlit.js.
 """
 from __future__ import annotations
 
+import hashlib
 import logging
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -13,9 +15,36 @@ from typing import Any
 import streamlit as st
 import streamlit.components.v1 as components
 
-from stock_entry.bridge import build_component_dir, code_fingerprint, handle_request, is_new_request, page_fingerprint
-from stock_entry.config import Settings
-from stock_entry.services import Services, build_services
+PACKAGE_DIR = Path(__file__).resolve().parent / "stock_entry"
+
+
+def _drop_stale_package() -> str:
+    """Forget the stock_entry modules imported before a redeploy changed them.
+
+    Streamlit reruns this script after a push but keeps modules it already imported in sys.modules,
+    so without this the old stock_entry code (e.g. an old list of page files) keeps running until the
+    server restarts. Returns the fingerprint of the package files now on disk.
+    """
+    digest = hashlib.sha256()
+    for path in sorted(PACKAGE_DIR.glob("*.py")):
+        digest.update(path.name.encode())
+        digest.update(path.read_bytes())
+    fingerprint = digest.hexdigest()[:12]
+    loaded = sys.modules.get("stock_entry")
+    if loaded is not None and getattr(loaded, "_loaded_fingerprint", None) != fingerprint:
+        for name in [name for name in sys.modules if name == "stock_entry" or name.startswith("stock_entry.")]:
+            del sys.modules[name]
+    return fingerprint
+
+
+_PACKAGE_FINGERPRINT = _drop_stale_package()
+
+import stock_entry  # noqa: E402
+from stock_entry.bridge import build_component_dir, code_fingerprint, handle_request, is_new_request, page_fingerprint  # noqa: E402
+from stock_entry.config import Settings  # noqa: E402
+from stock_entry.services import Services, build_services  # noqa: E402
+
+stock_entry._loaded_fingerprint = _PACKAGE_FINGERPRINT
 
 COMPONENT_NAME = "stock_entry_page"
 RESPONSE_KEY = "bridge_response"
