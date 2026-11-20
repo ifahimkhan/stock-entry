@@ -91,6 +91,8 @@ export function renderWinRate(container, results, timeframe, onOpen, capOf) {
     onclick: () => {
       panelState.open[timeframe] = !open;
       renderWinRate(container, results, timeframe, onOpen, capOf);
+      // bring the trades into view: the section scrolls on wide screens, the page on phones
+      if (!open) container.querySelector(".win-rate-trades")?.scrollIntoView({ block: "start", behavior: "smooth" });
     },
   });
   let tradeTable = null;

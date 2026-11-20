@@ -87,7 +87,7 @@ button:disabled { opacity: 0.55; cursor: default; }
 .list-pane.show-win-rate > #list-empty { display: none !important; }
 /* The win-rate tables are not the stock list: always shown (the list's table is hidden on phones), full height. */
 .list-pane .win-rate .table-wrap { display: block; max-height: none; }
-.list-pane .win-rate .win-rate-trades { max-height: 70vh; }
+.list-pane .win-rate .win-rate-trades { max-height: none; }   /* the whole section scrolls instead (wide screens) */
 .win-rate-trades { margin-top: 10px; overflow: auto; }
 
 /* Tick boxes and the export bar of the TBC Zone Entry lists. */
@@ -361,6 +361,10 @@ body.modal-open { overflow: hidden; }
   .list-pane .table-wrap { display: block; max-height: calc(100vh - var(--header-h, 200px) - 110px); }
   /* Zone Entry: the tabs and the tick bar sit above the table, so it is shorter and still ends on screen. */
   .list-pane.zone-list > .table-wrap { max-height: calc(100vh - var(--header-h, 200px) - 225px); }
+  /* Win rate tab: one scroll area that ends on screen, like the stock table (no small box inside it). */
+  .list-pane.show-win-rate > .win-rate { max-height: calc(100vh - var(--header-h, 200px) - 170px); overflow-y: auto; overscroll-behavior: contain; }
+  /* trades: no scroll box of their own, so their column headers stick to the top of the section */
+  .list-pane.show-win-rate > .win-rate .win-rate-trades { overflow: visible; }
   .cards { display: none; }
   .sort-picker { display: none; }
   .scrim, .grabber { display: none !important; }
