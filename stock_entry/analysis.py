@@ -14,6 +14,7 @@ from stock_entry.strategy import evaluate_screens
 from stock_entry.summary import summarize_latest
 from stock_entry.swings import daily_summary, empty_swing_summary, swing_summary
 from stock_entry.tickers import Ticker
+from stock_entry.tight_range import tight_fields
 
 logger = logging.getLogger(__name__)
 DAILY_SWING_BARS = 500   # same as the notebook's n_bars; the 2-year daily history has about this many
@@ -62,6 +63,7 @@ def build_row(ticker: Ticker, analyzed: pd.DataFrame, swings: pd.DataFrame | Non
         **evaluate_screens(analyzed, ticker.market_cap_cr, ticker.debt_to_equity),
         **smc_summary(analyzed),
         "at_closing_high": high,
+        **tight_fields(analyzed),
         **_swing_fields(ticker.symbol, swings),
         **daily_summary(_swing_fields(ticker.symbol, daily)),
     }

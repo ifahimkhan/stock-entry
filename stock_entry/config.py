@@ -29,6 +29,7 @@ class Settings:
     daily_keep_bars: int = 500
     # TBC Zone Entry trades replayed and scored for the win rate (python -m stock_entry.zone_backtest)
     zone_trades_path: Path = PROJECT_ROOT / "data" / "zone_entry_trades.csv"
+    hh_hl_path: Path = PROJECT_ROOT / "data" / "hh_hl_entries.json"   # written by analysis/hh_hl_entries.py
     # Swing scan (TradingView.ipynb): TradingView 2-hour bars (TV_USERNAME / TV_PASSWORD), latest 500.
     swing_bars: int = 500            # same as the notebook's n_bars
     swing_detail_points: int = 30    # swing points listed in the single-stock view

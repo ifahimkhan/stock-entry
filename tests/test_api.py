@@ -34,6 +34,7 @@ def settings(tmp_path: Path) -> Settings:
                    scan_path=tmp_path / "data" / "scan.json",
                    fundamentals_path=tmp_path / "data" / "fundamentals.json",
                    zone_trades_path=tmp_path / "data" / "zone_entry_trades.csv",
+                   hh_hl_path=tmp_path / "data" / "hh_hl_entries.json",
                    web_dir=PROJECT_ROOT / "web", batch_size=2, max_failed_share=0.5)
 
 
@@ -184,3 +185,19 @@ def test_zone_results_endpoint_returns_summary_trades_and_rules(client: FlaskCli
     assert every[("1d", "all")]["win_rate"] == 100.0 and every[("2h", "all")]["open"] == 1
     assert [trade["ticker"] for trade in data["trades"]] == ["A.NS", "B.NS"]   # newest signal first
     assert data["trades"][1]["change_pct"] is None   # missing values come back as null, not NaN
+
+
+HH_HL_FILE = ('{"data_date": "2026-11-20", "rules": "r", "status": {"A.NS": "HH2"}, "status_2h": {"B.NS": "HL1"}, "summary": [{"group": "Entry 1"}],'
+              ' "comparison": [], "trend_split": [], "signals": [{"stock": "A.NS", "r1": null}]}')
+
+
+def test_hh_hl_endpoints_return_the_saved_analysis(client: FlaskClient, settings: Settings) -> None:
+    assert client.get("/api/hh-hl-status").status_code == 500   # not generated yet: a clear error, no crash
+    settings.hh_hl_path.parent.mkdir(parents=True, exist_ok=True)
+    settings.hh_hl_path.write_text(HH_HL_FILE, encoding="utf-8")
+    status = client.get("/api/hh-hl-status").get_json()["data"]
+    assert status == {"data_date": "2026-11-20", "status": {"A.NS": "HH2"}, "status_2h": {"B.NS": "HL1"}}   # the light part only
+    full = client.get("/api/hh-hl-results").get_json()["data"]
+    assert full["summary"] == [{"group": "Entry 1"}] and full["signals"][0]["stock"] == "A.NS"
+    settings.hh_hl_path.write_text("[1, 2]", encoding="utf-8")
+    assert client.get("/api/hh-hl-results").status_code == 500   # not the expected shape

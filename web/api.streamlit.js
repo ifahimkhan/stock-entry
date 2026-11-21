@@ -64,6 +64,8 @@ export const startScan = () => request("start_scan");
 export const getTickers = () => request("tickers");
 export const getStock = (symbol) => request("stock", { symbol });
 export const getZoneResults = () => request("zone_results");
+export const getHhHlStatus = () => request("hh_hl_status");
+export const getHhHlResults = () => request("hh_hl_results");
 
 // The live site is shared by every visitor, so it never takes a TradingView login from the page:
 // there the login comes from the Streamlit secrets (TV_USERNAME / TV_PASSWORD). The server refuses these too.

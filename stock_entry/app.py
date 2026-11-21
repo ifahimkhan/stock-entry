@@ -17,6 +17,7 @@ from stock_entry.market_data import MarketDataError
 from stock_entry.services import Fetch, build_services
 from stock_entry.tickers import InvalidSymbolError, normalize_symbol
 from stock_entry.tv_login import TradingViewLogin, TradingViewLoginError
+from stock_entry.hh_hl import results as hh_hl_results
 from stock_entry.zone_backtest import results as zone_results
 
 logger = logging.getLogger(__name__)
@@ -132,6 +133,23 @@ def create_app(settings: Settings, fetch: Fetch | None = None,
         except (OSError, ValueError, KeyError) as exc:
             logger.error("Could not read %s: %s", settings.zone_trades_path.name, exc)
             return _fail("The Zone Entry results could not be read.", 500)
+
+    def _hh_hl(status_only: bool) -> tuple[Response, int]:
+        try:
+            return _ok(hh_hl_results(settings.hh_hl_path, status_only))
+        except (OSError, ValueError) as exc:
+            logger.error("Could not read %s: %s", settings.hh_hl_path.name, exc)
+            return _fail("The HH/HL entries analysis could not be read. Run analysis/hh_hl_entries.py first.", 500)
+
+    @app.get("/api/hh-hl-status")
+    def get_hh_hl_status() -> tuple[Response, int]:
+        """Each stock's current HH/HL stage (HH1 / HL1 / HH2 / Entry fired)."""
+        return _hh_hl(status_only=True)
+
+    @app.get("/api/hh-hl-results")
+    def get_hh_hl_results() -> tuple[Response, int]:
+        """The whole HH/HL entries study: summary tables, comparison and every signal."""
+        return _hh_hl(status_only=False)
 
     @app.get("/api/stocks/<symbol>")
     def get_stock(symbol: str) -> tuple[Response, int]:

@@ -353,13 +353,34 @@ def three_rule_candle(frame: pd.DataFrame) -> pd.Series:
     return (high > high.shift(1)) & (low > low.shift(1)) & (close > high.shift(1))
 
 
-def entry_after_hh(frame: pd.DataFrame) -> pd.Series:
-    """Entry: the first 3-rule candle once a TBC Zone Entry HH ("Before Entry") is confirmed.
+def before_entry_after_breakout(frame: pd.DataFrame) -> pd.Series:
+    """Before Entry of the Final column: an HH that comes right after an LH breakout.
 
-    An HH is known PIVOT_RIGHT bars after the pivot, so the entry is searched from that bar on, until the
-    next Zone Entry HH (one entry per HH)."""
+    Sequence on the clean labels: LH, then the LH breakout candle (`lh_breakout`), then the HH, with no other
+    label between the breakout candle and the HH. The breakout candle may be the HH itself."""
+    clean = frame["swing_clean"].to_numpy()
+    breakout = frame["lh_breakout"].to_numpy(dtype=bool)
+    flags = np.zeros(len(frame), dtype=bool)
+    armed = False   # a breakout has fired and no label has come since
+    for i, label in enumerate(clean):
+        if breakout[i]:
+            armed = True
+            if label != HH:
+                continue   # a label on the breakout candle itself does not break the sequence
+        if label == HH:
+            flags[i] = armed
+        if label != NONE:
+            armed = False
+    return pd.Series(flags, index=frame.index)
+
+
+def entry_after_hh(frame: pd.DataFrame, before: pd.Series | None = None) -> pd.Series:
+    """Entry: the first 3-rule candle once a "Before Entry" HH is confirmed.
+
+    `before` flags those HHs (default: the frame's before_entry, every clean HH). An HH is known PIVOT_RIGHT
+    bars after the pivot, so the entry is searched from that bar on, until the next such HH (one entry per HH)."""
     candle = three_rule_candle(frame).to_numpy()
-    zone_hh = np.flatnonzero(frame["before_entry"].to_numpy(dtype=bool))
+    zone_hh = np.flatnonzero((frame["before_entry"] if before is None else before).to_numpy(dtype=bool))
     entry = np.zeros(len(frame), dtype=bool)
     for k, pivot in enumerate(zone_hh):
         end = zone_hh[k + 1] + PIVOT_RIGHT if k + 1 < len(zone_hh) else len(frame)
@@ -369,15 +390,44 @@ def entry_after_hh(frame: pd.DataFrame) -> pd.Series:
     return pd.Series(entry, index=frame.index)
 
 
+ENTRY_2_SEQUENCE = (LH, HH, HL, HH)
+
+
+def entry_2_after_hh2(frame: pd.DataFrame) -> pd.Series:
+    """Entry 2 (the Final2 column): the first 3-rule candle after the clean labels LH, HH, HL, HH in a row.
+
+    The last HH is known PIVOT_RIGHT bars after its pivot, so the entry is searched from that bar until the
+    next label is confirmed (one entry per sequence). The candle must also close below the close of that last
+    HH; a 3-rule candle closing at or above it is skipped and the search goes on."""
+    candle = three_rule_candle(frame).to_numpy()
+    close = frame["Close"].to_numpy(dtype=float)
+    clean = frame["swing_clean"].to_numpy()
+    labelled = np.flatnonzero(clean != NONE)
+    size = len(ENTRY_2_SEQUENCE)
+    entry = np.zeros(len(frame), dtype=bool)
+    for k in range(size - 1, len(labelled)):
+        if tuple(clean[p] for p in labelled[k - size + 1:k + 1]) != ENTRY_2_SEQUENCE:
+            continue
+        start = labelled[k] + PIVOT_RIGHT
+        end = labelled[k + 1] + PIVOT_RIGHT if k + 1 < len(labelled) else len(frame)
+        hits = np.flatnonzero(candle[start:end] & (close[start:end] < close[labelled[k]]))
+        if hits.size:
+            entry[start + hits[0]] = True
+    return pd.Series(entry, index=frame.index)
+
+
 def swing_points(frame: pd.DataFrame, limit: int, every_bar: bool = False) -> list[dict[str, Any]]:
     """The latest `limit` labelled or breakout bars (oldest first) for the single-stock view; with
     `every_bar`, the latest `limit` bars whether labelled or not (the rows of TBC_all_stocks_bars.csv)."""
     marked = frame if every_bar else frame[(frame["swing_clean"] != NONE) | frame["lh_breakout"].astype(bool)]
     change = hh_change_from_lh(frame)
-    entry = entry_after_hh(frame)
+    before_1 = before_entry_after_breakout(frame)   # the Final column's Before Entry and Entry1
+    entry = entry_after_hh(frame, before_1)
+    entry_2 = entry_2_after_hh2(frame)
     marked = marked.tail(limit)
     return [{
-        "hh_change_pct": _number(change.loc[index]), "entry": bool(entry.loc[index]),
+        "hh_change_pct": _number(change.loc[index]), "entry": bool(entry.loc[index]), "entry_2": bool(entry_2.loc[index]),
+        "before_entry_1": bool(before_1.loc[index]),
         "time": bar_time(row["Date"]), "open": _number(row.get("Open")), "high": _number(row["High"]),
         "low": _number(row["Low"]), "volume": _number(row.get("Volume")),
         "close": _number(row["Close"]), "label": row["swing_clean"] or None,

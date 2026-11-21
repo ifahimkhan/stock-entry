@@ -27,3 +27,6 @@ htmlcov/
 *.ipynb
 .ipynb_checkpoints/
 Screenshot*.png
+
+# HH/HL study outputs (regenerate with analysis/hh_hl_entries.py); the page data is data/hh_hl_entries.json
+analysis/output/

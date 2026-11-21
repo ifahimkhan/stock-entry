@@ -2,6 +2,7 @@
 
 import {
   POLL_MS, TV_LOGIN_AVAILABLE, getScan, getScanStatus, getStock, getTickers, getTradingView, getZoneResults, signInTradingView,
+  getHhHlResults, getHhHlStatus,
   signOutTradingView, startScan,
 } from "./api.js";
 import { renderDetail, renderDetailMessage } from "./detail.js";
@@ -10,6 +11,7 @@ import { MARKET_HOURS_TEXT, isMarketHours } from "./market.js";
 import { DASH, el, formatAngle, formatBarTime, formatDate, formatDateTime, formatPercent, formatPrice, isNumber } from "./format.js";
 import { renderTable, sortRows } from "./table.js";
 import { renderWinRate } from "./winrate.js";
+import { renderHhHl } from "./hhhl.js";
 import { downloadCsv, exportDate, toCsv } from "./export.js";
 import { initThemeToggle } from "./theme.js";
 
@@ -48,6 +50,26 @@ const OLD_SCAN = " This scan was made before this screen was added: run the scan
 const SWING_NOTE = " Labels are confirmed 5 bars (about 1 session) after the pivot, and an HH can still turn into LH if price later closes below the previous LL.";
 /** True when a record `bars` 2-hour bars old is at most `maxBars` old. */
 const withinBars = (bars, maxBars) => isNumber(bars) && bars <= maxBars;
+const TIGHT_DAYS = 7;   // Tight Range: same numbers as stock_entry/tight_range.py
+const TIGHT_PCT = 2;
+const FALL_DAYS = 20;   // Fall → Tight Range: the fall is looked for in this many trading days before the range
+const FALL_PCT = 8;
+const TIGHT_VOLUME_DAYS = 20;   // Entry: the breakout volume is compared with the average of this many days
+const TIGHT_ENTRY_DAYS = 5;     // Entry: breakouts of the last this many trading days are listed
+const TIGHT_TABS = "Wait";      // tab name of the lists of stocks still inside the range
+// Entry tab of the two tight-range lists: a breakout up from the range, on volume.
+const ENTRY_RULE = `Entry: the close broke more than ${TIGHT_PCT}% above the base close of a tight range (${TIGHT_DAYS} or more days), `
+  + `and that day's volume was above the volume of every day of the range and above the average volume of the ${TIGHT_VOLUME_DAYS} days before it. `
+  + `Breakouts of the last ${TIGHT_ENTRY_DAYS} trading days are listed, newest first.`;
+const entryColumns = (fall) => [TICKER,
+  { key: "tight_entry_date", label: "Breakout", type: "date", title: "Day the close broke above the range" },
+  { key: "tight_entry_days_ago", label: "Days ago", type: "int", title: "Trading days since the breakout (0 = the latest day)" },
+  { key: "tight_entry_pct", label: "Breakout %", type: "pct", title: "Close of the breakout day against the base close of the range" },
+  { key: "tight_entry_volume_x", label: "Volume ×", type: "num2", title: `Breakout day's volume as a multiple of the average of the ${TIGHT_VOLUME_DAYS} days before it` },
+  { key: "tight_entry_range_days", label: "Range days", type: "int", title: "Length of the tight range before the breakout" },
+  ...(fall ? [{ key: "tight_entry_fall_pct", label: "Fall", type: "pct", title: "Base close of the range against the highest close of the 20 trading days before it" }] : []),
+  { key: "tight_entry_base_close", label: "Base close", type: "price" },
+  CLOSE, { key: "tight_entry_now_pct", label: "From base", type: "pct", title: "Latest close against the base close" }, CAP];
 const BEFORE_ENTRY_MAX_BARS = 12;  // TBC Zone Entry (2h): only HHs at most this many 2-hour bars old
 const BEFORE_ENTRY_MAX_SESSIONS = 15;   // TBC Zone Entry (1D): HHs at most this many daily bars (sessions) old
 const LL_HH_MAX_BARS = 12;         // 3 LL -> HH and 4 LL -> HH lists: same idea, a wider window
@@ -94,7 +116,7 @@ const beforeEntryView = (tf) => {
   const key = (name) => `${tf.prefix}${name}`;
   const maxBars = tf.prefix === DAILY ? BEFORE_ENTRY_MAX_SESSIONS : BEFORE_ENTRY_MAX_BARS;
   return {
-    ...swingBase("before", "TBC Zone Entry", tf), label: `TBC Zone Entry (${tf.short})`,
+    ...swingBase("before", "TBC Zone Entry (3LL & 4LL)", tf), label: `TBC Zone Entry (3LL & 4LL) (${tf.short})`,
     patternMatch: (row, id) => id === "all" || row[key("before_entry_pattern")] === id,
     note: (row) => `TBC Zone Entry ${tf.format(row[key("before_entry_at")])} · ${patternText(row, tf.prefix)} · LL→HL ${formatAngle(row[key("ang_ll_hl")])}`,
     hint: `TBC Zone Entry (the notebook's Final = "Before Entry"): a higher high (HH) that survived the clean-up (${tf.barWord} bars). Only HHs that complete a 3LL-HH or 4LL-HH pattern (3 or 4 lower lows before it), from the last ${maxBars} ${tf.barWord} bars. Stocks at a new closing high (latest close ≥ every close of the last 500 daily candles) get no swing analysis and are not listed.${tf.note}`,
@@ -145,6 +167,36 @@ const lhBreakoutView = (tf) => {
   };
 };
 
+// The "i" next to the Stage column of TBC Zone Entry Sequence: what each stage means.
+const STAGE_INFO = {
+  label: "What the stages mean",
+  title: "Stage: how far the stock is in the sequence LH → HH → HL → HH",
+  columns: ["Stage", "Latest Clean labels", "Meaning"],
+  rows: [
+    ["HH1", "LH, HH", "A higher high has formed right after a lower high. This is the start of the sequence; nothing to act on yet."],
+    ["HL1", "LH, HH, HL", "A higher low followed. The stock is now waiting for an Entry 1 candle."],
+    ["Entry 1 fired", "LH, HH, HL", "Same labels as HL1, and a 3-rule candle has already appeared since the HL was confirmed."],
+    ["HH2", "LH, HH, HL, HH", "A second higher high followed. The stock is now waiting for an Entry 2 candle."],
+    ["Entry 2 fired", "LH, HH, HL, HH", "Same labels as HH2, and the Entry 2 candle has already appeared."],
+  ],
+};
+
+/** TBC Zone Entry Sequence: stocks in an LH → HH → HL → HH sequence right now, by stage (2-hour or daily bars). */
+const zoneEntry2View = (tf) => {
+  const key = (name) => `${tf.prefix}${name}`;
+  return {
+    ...swingBase("hhhl", "TBC Zone Entry Sequence", tf), label: `TBC Zone Entry Sequence (${tf.short})`,
+    note: (row) => `Stage: ${row[key("hhhl_status")] || DASH}`,
+    hint: `Stocks in an LH → HH → HL → HH sequence right now (Clean labels in a row, ${tf.barWord} bars), by stage: HH1 (LH, HH), HL1, HH2, or an entry already fired. `
+      + "Entry 1 (assumed rule) = first 3-rule candle after HL1 is confirmed; Entry 2 = first 3-rule candle after HH2 is confirmed that closes below HH2's close. "
+      + "The Results tab shows how these entries did in the past.",
+    filter: (row) => Boolean(row[key("hhhl_status")]),
+    columns: [TICKER, { key: key("hhhl_status"), label: "Stage", type: "text", info: STAGE_INFO },
+      CAP, CLOSE, CHANGE, RSI],
+    sort: { key: key("hhhl_rank"), dir: "desc" },
+  };
+};
+
 const SWING_VIEWS = [beforeEntryView, llThenHhView, lhBreakoutView]
   .flatMap((make) => TIMEFRAMES.map((tf) => make(tf)));
 
@@ -178,7 +230,7 @@ const LEGACY_LINKS = {
 
 /** Each list: which rows it shows (given the latest market date), its columns and default sort. */
 // Lists kept in the code but not shown as chips (turn one back on by removing its id here).
-const HIDDEN_VIEWS = new Set(["recent", "cci", "spv", "pv"]);
+const HIDDEN_VIEWS = new Set(["recent", "cci", "spv", "pv", "llhh", "llhh1d", "lhbreak", "lhbreak1d"]);
 const ALL_VIEWS = [
   {
     id: "entry", label: "Entry today", mark: "entry",
@@ -264,6 +316,58 @@ const ALL_VIEWS = [
     sort: { key: "pv_date", dir: "desc" },
   },
   ...SWING_VIEWS,
+  ...TIMEFRAMES.map((tf) => zoneEntry2View(tf)),
+  {
+    id: "tight", label: `Tight Range (${TIGHT_DAYS} days, ±${TIGHT_PCT}%)`, mark: null, needsKey: "tight_range",
+    chip: "Tight Range", tabGroup: "tight", tabLabel: TIGHT_TABS,
+    note: (row) => `${row.tight_days} days within ±${TIGHT_PCT}% of ${formatPrice(row.tight_base_close)} (${formatDate(row.tight_base_date)})`,
+    hint: `The close has stayed within ±${TIGHT_PCT}% of a base close for ${TIGHT_DAYS} or more trading days in a row, up to the latest day (daily bars). `
+      + "The base is the close of the first day of the run. Days = length of the run, base day included. "
+      + "Lowest / Highest = the lowest and highest close of the run against the base; From base = the latest close against it.",
+    filter: (row) => row.tight_range === true,
+    columns: [TICKER, { key: "tight_days", label: "Days", type: "int", title: "Trading days in a row inside the range, the base day included" },
+      { key: "tight_base_date", label: "Since", type: "date", title: "First day of the run: its close is the base" },
+      { key: "tight_base_close", label: "Base close", type: "price" },
+      { key: "tight_low_pct", label: "Lowest", type: "pct", title: "Lowest close of the run against the base close" },
+      { key: "tight_high_pct", label: "Highest", type: "pct", title: "Highest close of the run against the base close" },
+      CLOSE, { key: "tight_change_pct", label: "From base", type: "pct", title: "Latest close against the base close" }, CAP],
+    sort: { key: "tight_days", dir: "desc" },
+  },
+  {
+    id: "tightentry", label: "Tight Range: Entry", mark: null, needsKey: "tight_entry",
+    chip: "Tight Range", tabGroup: "tight", tabLabel: "Entry", tabOf: "tight",
+    note: (row) => `Broke out ${formatPercent(row.tight_entry_pct)} on ${formatDate(row.tight_entry_date)} · volume ${fixed(row.tight_entry_volume_x)}× average`,
+    hint: ENTRY_RULE,
+    filter: (row) => row.tight_entry === true,
+    columns: entryColumns(false),
+    sort: { key: "tight_entry_date", dir: "desc" },
+  },
+  {
+    id: "falltight", label: "Fall → Tight Range", mark: null, needsKey: "tight_after_fall",
+    chip: "Fall → Tight Range", tabGroup: "falltight", tabLabel: TIGHT_TABS,
+    note: (row) => `Fell ${formatPercent(row.tight_fall_pct)} from ${formatPrice(row.tight_peak_close)} (${formatDate(row.tight_peak_date)}), then ${row.tight_days} days within ±${TIGHT_PCT}%`,
+    hint: `A downtrend that has gone flat (daily closes). First the close fell ${FALL_PCT}% or more: from the highest close of the ${FALL_DAYS} trading days before the range to the base close. `
+      + `Then the close stayed within ±${TIGHT_PCT}% of that base close for ${TIGHT_DAYS} or more trading days in a row, up to the latest day. `
+      + "Fall = base close against that highest close; Days = length of the tight range.",
+    filter: (row) => row.tight_after_fall === true,
+    columns: [TICKER, { key: "tight_fall_pct", label: "Fall", type: "pct", title: "Base close of the range against the highest close of the 20 trading days before it" },
+      { key: "tight_peak_date", label: "High on", type: "date", title: "Day of that highest close" },
+      { key: "tight_peak_close", label: "High close", type: "price" },
+      { key: "tight_base_date", label: "Range since", type: "date", title: "First day of the tight range: its close is the base" },
+      { key: "tight_base_close", label: "Base close", type: "price" },
+      { key: "tight_days", label: "Days", type: "int", title: "Trading days in a row inside the range, the base day included" },
+      CLOSE, { key: "tight_change_pct", label: "From base", type: "pct", title: "Latest close against the base close" }, CAP],
+    sort: { key: "tight_fall_pct", dir: "asc" },
+  },
+  {
+    id: "falltightentry", label: "Fall → Tight Range: Entry", mark: null, needsKey: "tight_entry",
+    chip: "Fall → Tight Range", tabGroup: "falltight", tabLabel: "Entry", tabOf: "falltight",
+    note: (row) => `Fell ${formatPercent(row.tight_entry_fall_pct)}, ranged ${row.tight_entry_range_days} days, broke out ${formatPercent(row.tight_entry_pct)} on ${formatDate(row.tight_entry_date)}`,
+    hint: `${ENTRY_RULE} Only ranges that came after a fall of ${FALL_PCT}% or more (from the highest close of the ${FALL_DAYS} trading days before the range).`,
+    filter: (row) => row.tight_entry === true && row.tight_entry_after_fall === true,
+    columns: entryColumns(true),
+    sort: { key: "tight_entry_date", dir: "desc" },
+  },
   {
     id: "all", label: "All stocks", mark: null,
     chip: "All",
@@ -311,10 +415,29 @@ const setState = (changes) => {
 };
 const currentView = () => VIEWS.find((view) => view.id === state.viewId);
 /** Chips: every list, but swing lists only for the selected timeframe (one chip per signal). */
-const chipViews = () => VIEWS.filter((view) => !view.tf || view.tf === state.timeframe);
+const chipViews = () => VIEWS.filter((view) => !view.tabOf && (!view.tf || view.tf === state.timeframe));
+/** The lists of one section that are shown as tabs (e.g. Wait / Entry), or null when the list has none. */
+const tabViews = (view) => (view.tabGroup ? VIEWS.filter((other) => other.tabGroup === view.tabGroup) : null);
 /** The same signal on another timeframe, e.g. TBC Zone Entry 2h -> TBC Zone Entry 1D. */
 const sibling = (view, tf) => VIEWS.find((other) => other.group === view.group && other.tf === tf) || view;
-const rows = () => (state.scan ? state.scan.rows : []);
+/** Current stage per ticker, { daily: {...}, twoHour: {...} } (data/hh_hl_entries.json); loaded once with the page. */
+let hhhlStatus = null;
+const HHHL_RANK = { "Entry 2 fired": 6, HH2: 5, "Entry 1 fired": 4, HL1: 3, HH1: 2 };
+let staged = { scan: null, status: null, rows: [] };
+/** Scan rows, each with its HH/HL stage (hhhl_status, hhhl_rank) once the stages are loaded. */
+const rows = () => {
+  if (!state.scan) return [];
+  if (!hhhlStatus) return state.scan.rows;
+  if (staged.scan !== state.scan || staged.status !== hhhlStatus) {
+    staged = { scan: state.scan, status: hhhlStatus, rows: state.scan.rows.map((row) => {
+      const stage = hhhlStatus.twoHour[row.ticker] || null;      // 2-hour fields have no prefix, daily ones "d1_"
+      const daily = hhhlStatus.daily[row.ticker] || null;
+      return { ...row, hhhl_status: stage, hhhl_rank: HHHL_RANK[stage] || 0,
+        [`${DAILY}hhhl_status`]: daily, [`${DAILY}hhhl_rank`]: HHHL_RANK[daily] || 0 };
+    }) };
+  }
+  return staged.rows;
+};
 /** Rows of a list before the market-cap filter. */
 const viewRows = (view) => rows().filter((row) => view.filter(row, state.scan.data_date));
 const capMatches = (row, capId) => capId === "all" || row.cap_category === capId;
@@ -357,7 +480,7 @@ function renderTiles() {
   const { scan } = state;
   const failed = scan ? scan.failed.length : 0;
   dom.tiles.replaceChildren(...chipViews().map((view) => {
-    const selected = state.viewId === view.id;
+    const selected = state.viewId === view.id || currentView().tabOf === view.id;   // a tab of this section is open
     const title = view.id === "all" && failed ? `${view.hint} ${failed} returned no data.` : view.hint;
     return el("button", {
       type: "button", class: "chip", "aria-pressed": String(selected), title,
@@ -439,24 +562,63 @@ let zoneResults = null;
 let zoneResultsAsked = false;
 let zoneResultsError = null;
 const ZONE_TABS = [{ id: "stocks", label: "Stocks" }, { id: "winrate", label: "Win rate" }];
+const HHHL_TABS = [{ id: "stocks", label: "Stocks" }, { id: "winrate", label: "Results" }];
+/** Lists with a second tab beside the stocks: TBC Zone Entry (win rate) and TBC Zone Entry Sequence (results). */
+const tabsOf = (view) => (view.group === "before" ? ZONE_TABS : view.group === "hhhl" ? HHHL_TABS : null);
+let hhhlResults = null;
+let hhhlResultsAsked = false;
+let hhhlResultsError = null;
 
 /** Stocks / Win rate tabs of the TBC Zone Entry list: the win rate gets its own tab so the list keeps its height. */
 function renderListTabs(view) {
-  const zone = view.group === "before";
+  const lists = tabViews(view);
+  if (lists) {   // tabs that are lists of their own, e.g. Wait / Entry
+    dom.listTabs.hidden = false;
+    dom.listPane.classList.add("zone-list");
+    dom.listPane.classList.remove("show-win-rate");
+    dom.listTabs.replaceChildren(...lists.map((list) => el("button", {
+      type: "button", "aria-pressed": String(list.id === view.id),
+      text: `${list.tabLabel} (${state.scan ? capRows(list).length : DASH})`,
+      onclick: () => selectView(list.id),
+    })));
+    return;
+  }
+  const tabs = tabsOf(view);
+  const zone = Boolean(tabs);
   dom.listTabs.hidden = !zone;
   dom.listPane.classList.toggle("zone-list", zone);
   dom.listPane.classList.toggle("show-win-rate", zone && state.zoneTab === "winrate");
   if (!zone) return;
-  dom.listTabs.replaceChildren(...ZONE_TABS.map((tab) => el("button", {
+  dom.listTabs.replaceChildren(...tabs.map((tab) => el("button", {
     type: "button", "aria-pressed": String(state.zoneTab === tab.id), text: tab.label,
     onclick: () => setState({ zoneTab: tab.id }),
   })));
 }
 
+/** Results tab of the TBC Zone Entry Sequence list; the study is loaded once, on first view. */
+function renderHhHlResults() {
+  if (!hhhlResultsAsked) {
+    hhhlResultsAsked = true;
+    getHhHlResults()
+      .then((data) => { hhhlResults = data; })
+      .catch((error) => { hhhlResultsError = error.message; })
+      .finally(() => renderZoneWinRate(currentView()));
+  }
+  if (hhhlResultsError) {
+    dom.winRate.textContent = `TBC Zone Entry Sequence results not available: ${hhhlResultsError}`;
+    return;
+  }
+  renderHhHl(dom.winRate, hhhlResults, (ticker) => openStock(ticker), currentView().tf === "2h" ? "2h" : "Daily");
+}
+
 function renderZoneWinRate(view) {
-  const show = view.group === "before" && state.zoneTab === "winrate";
+  const show = Boolean(tabsOf(view)) && state.zoneTab === "winrate";
   dom.winRate.hidden = !show;
   if (!show) return;
+  if (view.group === "hhhl") {
+    renderHhHlResults();
+    return;
+  }
   if (!zoneResultsAsked) {
     zoneResultsAsked = true;
     getZoneResults()
@@ -897,6 +1059,9 @@ async function init() {
   if (linkedPattern) state = { ...state, patternFilter: linkedPattern.id };
   if (linkedCap) state = { ...state, capFilter: linkedCap.id };
   render();
+  // HH/HL stages for the "TBC Zone Entry Sequence" list; the page works without them (the list is then empty)
+  getHhHlStatus().then((data) => { hhhlStatus = { daily: data.status || {}, twoHour: data.status_2h || {} }; render(); })
+    .catch(() => { hhhlStatus = null; });
   try {
     const progress = await refreshScan();
     if (progress.running) startPolling();

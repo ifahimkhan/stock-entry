@@ -210,6 +210,28 @@ table { border-collapse: collapse; width: 100%; }
 th, td { padding: 8px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--grid); }
 th { position: sticky; top: 0; background: var(--surface-2); color: var(--ink-2); font-weight: 600; font-size: 12px; z-index: 1; }
 th button { all: unset; cursor: pointer; display: inline-flex; gap: 4px; align-items: center; }
+/* "i" button in a column header, and the box it shows (web/infotip.js) */
+button.info-button {
+  all: unset; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; flex: none;
+  margin-left: 6px; width: 16px; height: 16px; border: 1px solid var(--muted); border-radius: 50%;
+  font: italic 700 11px/1 Georgia, "Times New Roman", serif; color: var(--muted); cursor: help; vertical-align: middle;
+  text-transform: none; letter-spacing: 0;   /* headers that are upper case keep a small "i" */
+}
+button.info-button:hover, button.info-button:focus-visible, button.info-button[aria-expanded="true"] { color: var(--ink); border-color: var(--ink); }
+.info-tip {
+  position: fixed; z-index: 60; max-width: min(620px, calc(100vw - 16px)); padding: 10px 12px; border-radius: 10px;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--axis); box-shadow: 0 8px 20px var(--shadow);
+  font-size: 12.5px; line-height: 1.4; pointer-events: none;
+}
+.info-tip-title { margin: 0 0 6px; font-weight: 650; }
+.info-tip-line { margin: 0 0 4px; color: var(--ink-2); }
+.info-tip-line:last-child { margin-bottom: 0; }
+.info-tip table { border-collapse: collapse; width: 100%; }
+.info-tip th, .info-tip td { padding: 5px 8px; text-align: left; vertical-align: top; border-top: 1px solid var(--border); background: none; position: static; }
+.info-tip th { border-top: 0; color: var(--ink-2); font-weight: 600; white-space: nowrap; }
+.info-tip td:first-child { font-weight: 650; white-space: nowrap; }
+.info-tip td:nth-child(2) { white-space: nowrap; color: var(--ink-2); }
+.info-tip td:last-child { white-space: normal; min-width: 180px; }   /* the meaning wraps inside the box */
 th.num, td.num { text-align: right; }
 tbody tr.clickable { cursor: pointer; }
 tbody tr.clickable:hover { background: var(--wash); }

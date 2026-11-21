@@ -1,5 +1,6 @@
 // A sortable table of stock rows. Column `type` picks the cell renderer.
 
+import { infoButton } from "./infotip.js";
 import { DASH, el, formatAngle, formatBarTime, formatDate, formatDateTime, formatPercent, formatPrice, isNumber, signClass, statusBadge } from "./format.js";
 
 const NUMERIC_TYPES = new Set(["price", "pct", "int", "num2", "crore", "angle", "pctplain"]);
@@ -61,6 +62,7 @@ export function sortRows(rows, sort) {
 
 /**
  * @param {HTMLTableElement} table
+ * A column with `info` ({label, title?, columns, rows}) gets an "i" button in its header that shows that table.
  * @param {{rows: object[], columns: {key: string, label: string, type: string}[], sort?: {key: string, dir: string},
  *          selected?: string, onSort?: (key: string) => void, onSelect?: (row: object) => void}} options
  */
@@ -72,12 +74,15 @@ export function renderTable(table, { rows, columns, sort, selected, onSort, onSe
       class: numeric ? "num" : "", scope: "col", title: column.title || null,
       "aria-sort": active ? (sort.dir === "asc" ? "ascending" : "descending") : null,
     });
+    const info = column.info ? infoButton(column.info) : null;
     if (!onSort || column.type === "pick") {
       th.textContent = column.label;
+      if (info) th.append(info);
       return th;
     }
     const arrow = active ? (sort.dir === "asc" ? " ▲" : " ▼") : "";
     th.append(el("button", { type: "button", text: column.label + arrow, onclick: () => onSort(column.key) }));
+    if (info) th.append(info);
     return th;
   });
   table.tHead.replaceChildren(el("tr", {}, headerCells));

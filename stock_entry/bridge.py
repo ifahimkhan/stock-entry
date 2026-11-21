@@ -21,13 +21,14 @@ from stock_entry.history import StockNotFoundError
 from stock_entry.market_data import MarketDataError
 from stock_entry.services import Services
 from stock_entry.tickers import InvalidSymbolError, normalize_symbol
+from stock_entry.hh_hl import results as hh_hl_results
 from stock_entry.zone_backtest import results as zone_results
 
 logger = logging.getLogger(__name__)
 
 BRIDGE_CLIENT = "api.streamlit.js"
 MAX_ID_LENGTH = 64
-PAGE_FILES = ("index.html", "app.js", "cards.js", "chart.js", "detail.js", "format.js", "market.js", "table.js", "theme.js", "winrate.js", "export.js", "chartzoom.js", "styles.css")
+PAGE_FILES = ("index.html", "app.js", "cards.js", "chart.js", "detail.js", "format.js", "market.js", "table.js", "theme.js", "winrate.js", "export.js", "chartzoom.js", "hhhl.js", "infotip.js", "overviewinfo.js", "styles.css")
 
 
 class BridgeError(Exception):
@@ -113,6 +114,16 @@ def _zone_results(services: Services, request: dict[str, Any]) -> Any:
         raise BridgeError("The Zone Entry results could not be read.") from exc
 
 
+def _hh_hl(status_only: bool) -> Handler:
+    def handler(services: Services, request: dict[str, Any]) -> Any:
+        try:
+            return hh_hl_results(services.settings.hh_hl_path, status_only)
+        except (OSError, ValueError) as exc:
+            logger.error("Could not read the HH/HL entries analysis: %s", exc)
+            raise BridgeError("The HH/HL entries analysis could not be read.") from exc
+    return handler
+
+
 def _tradingview(services: Services, request: dict[str, Any]) -> Any:
     """The public site is shared by every visitor, so a login typed there would be used for everyone."""
     raise BridgeError("Signing in to TradingView from the page only works in the local app. "
@@ -124,6 +135,8 @@ HANDLERS: dict[str, Handler] = {
     "scan": _scan, "scan_status": _scan_status, "start_scan": _start_scan, "tickers": _tickers, "stock": _stock,
     "tradingview": _tradingview, "tradingview_login": _tradingview, "tradingview_logout": _tradingview,
     "zone_results": _zone_results,
+    "hh_hl_status": _hh_hl(status_only=True),
+    "hh_hl_results": _hh_hl(status_only=False),
 }
 
 

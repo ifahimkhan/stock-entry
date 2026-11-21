@@ -1,5 +1,7 @@
 // Single-stock panel: headline, plain-language status, chart, and the bars as a table.
 
+import { infoButton } from "./infotip.js";
+import { CYCLE_INFO, TILE_INFO } from "./overviewinfo.js";
 import { PLOT_MARGIN, renderChart } from "./chart.js";
 import { attachZoom, fitWindow, sliceWindow, zoomWindow, ZOOM_STEP } from "./chartzoom.js";
 import { DASH, el, formatAngle, formatBarTime, formatDate, formatPercent, formatPrice, isNumber, signClass, statusBadge, statusKind } from "./format.js";
@@ -131,7 +133,7 @@ function indicators(summary) {
       summary.screens ? "pass" : "muted"],
   ];
   const tile = ([label, value, note, kind]) => el("div", { class: "metric" }, [
-    el("dt", { text: label }),
+    el("dt", {}, [el("span", { text: label }), TILE_INFO[label] ? infoButton(TILE_INFO[label]) : null]),
     el("dd", {}, [
       el("span", { class: `metric-value ${kind ? `tone-${kind}` : ""}`, text: value }),
       note ? el("span", { class: "metric-note", text: note }) : null,
@@ -164,6 +166,10 @@ const swingColumns = (frame) => [
 
 // Every 2-hour bar, with the columns of TBC_all_stocks_bars.csv (status, status_clean, angles, Final, flags).
 const BEFORE_ENTRY = "Before Entry";
+const FINAL_TITLE = "Final: Before Entry on an HH that comes right after an LH breakout (LH, LH breakout, HH); "
+  + "Entry1 on the first 3-rule candle once that HH is confirmed (5 bars after it); "
+  + "Entry2 on the first 3-rule candle after the Clean labels LH, HH, HL, HH in a row, once the last HH is confirmed, closing below that HH's close; "
+  + "LH breakout > level when the close breaks the last LH (comma separated when a bar has more than one)";
 const barColumns = (frame) => [
   { key: "time", label: frame.prefix ? "Day" : "2h bar", type: frame.timeType },
   { key: "open", label: "Open", type: "price" },
@@ -174,28 +180,25 @@ const barColumns = (frame) => [
   ...(frame.prefix ? [{ key: "hh_change_pct", label: "Change %", type: "pct", title: "On an HH: (HH close - last LH close) / last LH close" }] : []),
   { key: "raw_label", label: "Status", type: "text", title: "status: the raw HH / HL / LH / LL label" },
   { key: "label", label: "Clean", type: "text", title: "status_clean: the label after the clean-up" },
-  { key: "final", label: "Final", type: "text", title: frame.prefix
-    ? "Final: Before Entry on a TBC Zone Entry HH; Entry on the first 3-rule candle once that HH is confirmed; "
-      + "LH breakout > level when the close breaks the last LH (comma separated when a day has more than one)"
-    : "Final: Before Entry on a confirmed HH (TBC Zone Entry)" },
+  { key: "final", label: "Final", type: "text", title: FINAL_TITLE },
   { key: "ang_ll_ll", label: "LL→LL", type: "angle", title: "ang_LL_LL" },
   { key: "ang_ll_hl", label: "LL→HL", type: "angle", title: "ang_LL_HL" },
   { key: "ll3_hh", label: "3LL_HH", type: "flag" },
   { key: "ll4_hh", label: "4LL_HH", type: "flag" },
-  // daily table: the LH breakout is part of Final
-  ...(frame.prefix ? [] : [{ key: "breakout", label: "LH_breakout", type: "text", title: "LH_breakout and LH_breakout_level" }]),
   { key: "volume", label: "Volume", type: "crore", title: "Shares traded in the bar" },
 ];
 
-const ENTRY = "Entry";
-// `daily`: Entry (first 3-rule candle after a confirmed Zone Entry HH) is shown on the daily table only
-const barRow = (bar, daily) => {
-  const final = bar.before_entry ? BEFORE_ENTRY : (daily && bar.entry ? ENTRY : null);
-  const breakout = bar.lh_breakout ? `Yes > ${formatPrice(bar.lh_breakout_level)}` : null;
-  if (!daily) return { ...bar, final, breakout };
-  // daily table: Final and the LH breakout share one column, comma separated when a day has both
-  const merged = [final, bar.lh_breakout && `LH breakout > ${formatPrice(bar.lh_breakout_level)}`].filter(Boolean);
-  return { ...bar, final: merged.length ? merged.join(", ") : null, breakout };
+const ENTRY = "Entry1";
+const ENTRY_2 = "Entry2";   // first 3-rule candle after LH, HH, HL, HH (stock_entry/swings.py entry_2_after_hh2)
+// Final of the daily and the 2-hour table: Before Entry or Entry1, Entry2 and the LH breakout share one cell,
+// comma separated when a bar has several.
+const barRow = (bar) => {
+  const merged = [
+    bar.before_entry_1 ? BEFORE_ENTRY : (bar.entry ? ENTRY : null),
+    bar.entry_2 && ENTRY_2,
+    bar.lh_breakout && `LH breakout > ${formatPrice(bar.lh_breakout_level)}`,
+  ].filter(Boolean);
+  return { ...bar, final: merged.length ? merged.join(", ") : null };
 };
 
 function swingSignal(point) {
@@ -246,21 +249,29 @@ function changeFact(frame, everyBar) {
   return `Change % (HH days only): how far the HH's close is above the close of the last LH before it, (HH close − LH close) ÷ LH close.${value}`;
 }
 
+const CLOSING_HIGH_NOTE = "it closed at a new high, and the scan does no swing analysis for a stock at a new closing high";
+
 function swingSection(summary, swings, frame, everyBar = null) {
   const bars = summary[`${frame.prefix}swing_bars`];
   if (bars === undefined) return null;
   const title = el("h3", { class: "section-title", text: frame.title });
-  if (!bars) return el("div", {}, [title, el("p", { class: "dim", text: `No ${frame.short} swing data for this stock (${frame.short} prices were not available).` })]);
-  const table = el("table", { class: "compact" }, [el("thead"), el("tbody")]);
   const allBars = Array.isArray(everyBar) && everyBar.length > 0;
+  // A stock at a new closing high gets no swing summary in the scan (so it is in no swing list), but its bars are still loaded.
+  const skipped = !bars && summary.at_closing_high === true;
+  if (!bars && !allBars) {
+    const why = skipped ? CLOSING_HIGH_NOTE : `${frame.short} prices were not available`;
+    return el("div", {}, [title, el("p", { class: "dim", text: `No ${frame.short} swing data for this stock (${why}).` })]);
+  }
+  const table = el("table", { class: "compact" }, [el("thead"), el("tbody")]);
   const rows = allBars
-    ? [...everyBar].reverse().map((bar) => barRow(bar, Boolean(frame.prefix)))   // newest first, every bar as in the CSV
+    ? [...everyBar].reverse().map(barRow)   // newest first, every bar as in the CSV
     : [...(swings || [])].reverse().map((point) => ({ ...point, signal: swingSignal(point) }));
   renderTable(table, { rows, columns: allBars ? barColumns(frame) : swingColumns(frame) });
   return el("div", {}, [
     title,
     el("div", { class: "facts facts-none" },
-      [...swingFacts(summary, frame), changeFact(frame, everyBar)].filter(Boolean).map((text) => el("p", { text }))),
+      [...(bars ? swingFacts(summary, frame) : [`No swing summary for this stock today (${skipped ? CLOSING_HIGH_NOTE : "it was not part of the last scan"}). The bars and their labels are shown below.`]),
+        changeFact(frame, everyBar)].filter(Boolean).map((text) => el("p", { text }))),
     rows.length ? el("div", { class: "table-wrap" }, [table]) : null,
   ]);
 }
@@ -382,7 +393,7 @@ export function renderDetail(panel, detail) {
   const tabs = tabbed([
     { id: "overview", label: "Overview", body: el("div", {}, [
       el("div", { class: `facts facts-${statusKind(summary.status, summary.valid) || "none"}` },
-        factLines(summary).map((text) => el("p", { text }))),
+        factLines(summary).map((text, i) => el("p", {}, [el("span", { text }), i === 0 ? infoButton(CYCLE_INFO) : null]))),
       indicators(summary),
     ]) },
     { id: "chart", label: "Chart", onShow: () => drawChart(), body: el("div", {}, [

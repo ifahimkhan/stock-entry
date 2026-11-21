@@ -40,6 +40,7 @@ def settings(tmp_path: Path) -> Settings:
                    scan_path=tmp_path / "data" / "scan.json",
                    fundamentals_path=tmp_path / "data" / "fundamentals.json",
                    zone_trades_path=tmp_path / "data" / "zone_entry_trades.csv",
+                   hh_hl_path=tmp_path / "data" / "hh_hl_entries.json",
                    web_dir=PROJECT_ROOT / "web", batch_size=2, max_failed_share=0.5)
 
 
@@ -225,3 +226,12 @@ def test_code_fingerprint_changes_with_the_python_code(tmp_path) -> None:
 def test_zone_results_op_reads_the_saved_trades(services: Services) -> None:
     body = call(services, "zone_results")
     assert body["error"] is None and body["data"]["summary"] == [] and body["data"]["max_sessions"] == 20
+
+
+def test_hh_hl_ops_read_the_saved_analysis(services: Services) -> None:
+    assert call(services, "hh_hl_status")["error"]   # no file yet
+    path = services.settings.hh_hl_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('{"data_date": "2026-11-20", "status": {"A.NS": "HL1"}, "signals": [], "summary": []}', encoding="utf-8")
+    assert call(services, "hh_hl_status")["data"]["status"] == {"A.NS": "HL1"}
+    assert call(services, "hh_hl_results")["data"]["signals"] == []

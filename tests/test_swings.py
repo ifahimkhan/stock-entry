@@ -430,3 +430,86 @@ def test_entry_needs_a_zone_hh_and_one_entry_per_hh() -> None:
     assert not entry_after_hh(entry_frame([False] * 12, up_bars)).any()
     before = [True] + [False] * 11
     assert entry_after_hh(entry_frame(before, up_bars)).sum() == 1
+
+
+def test_entry_2_is_the_first_3_rule_candle_after_lh_hh_hl_hh() -> None:
+    from stock_entry.swings import PIVOT_RIGHT, entry_2_after_hh2
+
+    flat, up = (10.0, 9.0, 9.5), (11.0, 9.5, 10.5)   # `up` after `flat` passes the 3 rules
+    labels = ["LH", "", "HH", "", "HL", "", "HH"] + [""] * 10 + ["LL"] + [""] * 8
+    bars = [flat] * len(labels)
+    hh2 = 6
+    bars[hh2] = (12.5, 9.0, 12.0)   # the last HH closes at 12.0, above the 10.5 close of every `up` candle
+    for i in (hh2 + 2, hh2 + PIVOT_RIGHT + 1, hh2 + PIVOT_RIGHT + 3, len(labels) - 1):
+        bars[i] = up
+    frame = entry_frame([False] * len(labels), bars).assign(swing_clean=labels)
+    entry = entry_2_after_hh2(frame).tolist()
+    # bar 8 passes but the last HH is not confirmed yet; one entry per sequence; nothing once the LL is confirmed
+    assert [i for i, flag in enumerate(entry) if flag] == [hh2 + PIVOT_RIGHT + 1]
+
+
+def test_entry_2_needs_the_whole_lh_hh_hl_hh_sequence() -> None:
+    from stock_entry.swings import entry_2_after_hh2
+
+    up_bars = [(10.0 + i, 9.0 + i, 10.5 + i) for i in range(24)]   # every bar passes the 3 rules
+    up_bars[6] = (40.0, 15.0, 39.0)   # the last HH of the right sequence closes above every later close
+    wrong = (["HH", "", "HL", "", "HH"],                 # no LH before the first HH
+             ["LL", "", "HH", "", "HL", "", "HH"],       # LL, not LH
+             ["LH", "", "HH", "", "LH", "", "HH"],       # no HL
+             ["LH", "", "HH", "", "HL", "", ""])         # second HH missing
+    for labels in wrong:
+        frame = entry_frame([False] * 24, up_bars).assign(swing_clean=labels + [""] * (24 - len(labels)))
+        assert not entry_2_after_hh2(frame).any(), labels
+    right = ["LH", "", "HH", "", "HL", "", "HH"]
+    frame = entry_frame([False] * 24, up_bars).assign(swing_clean=right + [""] * 17)
+    assert entry_2_after_hh2(frame).sum() == 1
+
+
+def test_entry_2_candle_must_close_below_the_close_of_the_last_hh() -> None:
+    from stock_entry.swings import PIVOT_RIGHT, entry_2_after_hh2
+
+    flat, up = (10.0, 9.0, 9.5), (11.0, 9.5, 10.5)   # `up` after `flat` passes the 3 rules, close 10.5
+    labels = ["LH", "", "HH", "", "HL", "", "HH"] + [""] * 14
+    hh2, first, second = 6, 6 + PIVOT_RIGHT + 1, 6 + PIVOT_RIGHT + 4
+
+    def entries(hh_close: float) -> list[int]:
+        bars = [flat] * len(labels)
+        bars[hh2] = (hh_close + 0.5, 9.0, hh_close)
+        bars[first] = (12.0, 9.5, 11.5)   # passes the 3 rules, close 11.5
+        bars[second] = up                  # passes the 3 rules, close 10.5
+        frame = entry_frame([False] * len(labels), bars).assign(swing_clean=labels)
+        return [i for i, flag in enumerate(entry_2_after_hh2(frame).tolist()) if flag]
+
+    assert entries(12.0) == [first]    # both close below the HH close 12.0: the first one is the entry
+    assert entries(11.0) == [second]   # 11.5 is not below 11.0, so it is skipped; 10.5 is
+    assert entries(10.5) == []         # neither closes below 10.5 (equal does not count)
+
+
+def breakout_frame(labels: list[str], breakout: list[int]) -> pd.DataFrame:
+    flags = [i in breakout for i in range(len(labels))]
+    return pd.DataFrame({"swing_clean": labels, "lh_breakout": flags})
+
+
+def test_before_entry_1_is_the_hh_right_after_an_lh_breakout() -> None:
+    from stock_entry.swings import before_entry_after_breakout
+
+    def marked(labels: list[str], breakout: list[int]) -> list[int]:
+        flags = before_entry_after_breakout(breakout_frame(labels, breakout)).tolist()
+        return [i for i, flag in enumerate(flags) if flag]
+
+    assert marked(["LH", "", "", "HH", "", "HH"], [2]) == [3]        # LH, breakout, HH; the next HH has no breakout
+    assert marked(["LH", "", "HH"], [2]) == [2]                      # the breakout candle is the HH itself
+    assert marked(["LH", "", "HH"], []) == []                        # no breakout
+    assert marked(["LH", "", "LL", "HH"], [1]) == []                 # another label between the breakout and the HH
+    assert marked(["LH", "", "HL", "HH"], [1]) == []
+    assert marked(["LH", "", "LH", "", "HH"], [1, 3]) == [4]         # a later breakout starts the sequence again
+
+
+def test_entry_1_follows_only_the_hhs_passed_to_it() -> None:
+    from stock_entry.swings import PIVOT_RIGHT, entry_after_hh
+
+    up_bars = [(10.0 + i, 9.0 + i, 10.5 + i) for i in range(20)]     # every bar passes the 3 rules
+    frame = entry_frame([True] + [False] * 19, up_bars)              # the old flag says bar 0
+    chosen = pd.Series([False] * 3 + [True] + [False] * 16)          # the new Before Entry is bar 3
+    entry = entry_after_hh(frame, chosen).tolist()
+    assert [i for i, flag in enumerate(entry) if flag] == [3 + PIVOT_RIGHT]
