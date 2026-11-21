@@ -64,21 +64,24 @@ def volume_bars(closes: list[float], volumes: list[float]) -> pd.DataFrame:
     return bars(closes).assign(Volume=volumes)
 
 
-def test_entry_is_an_up_breakout_with_the_biggest_volume_of_the_range() -> None:
+def test_entry_is_an_up_breakout_on_more_volume_than_the_range_average() -> None:
     from stock_entry.tight_range import empty_tight_entry, tight_entry
 
     before = [90.0 + i for i in range(20)]                    # 20 rising days, volume 100 each
     flat = [120.0, 121.0, 119.0, 120.5, 120.0, 121.5, 120.0]  # 7 days within +/-2% of 120
     closes, quiet = before + flat + [123.0], [100.0] * 20 + [150.0, 90.0, 80.0, 110.0, 95.0, 85.0, 90.0]
-    found = tight_entry(volume_bars(closes, quiet + [200.0]))   # +2.5% on the biggest volume
+    found = tight_entry(volume_bars(closes, quiet + [200.0]))   # +2.5%; the range averages 100
     assert found["tight_entry"] is True and found["tight_entry_days_ago"] == 0
     assert (found["tight_entry_range_days"], found["tight_entry_base_close"], found["tight_entry_pct"]) == (7, 120.0, 2.5)
-    assert found["tight_entry_volume_x"] == 2.0               # against the 20-day average of 100
-    assert tight_entry(volume_bars(closes, quiet + [140.0])) == empty_tight_entry()        # a range day had 150
+    assert found["tight_entry_volume_x"] == 2.0               # against the range average of 100
+    below_top = tight_entry(volume_bars(closes, quiet + [140.0]))   # a range day had 150: no longer a condition
+    assert below_top["tight_entry"] is True and below_top["tight_entry_volume_x"] == 1.4
+    assert tight_entry(volume_bars(closes, quiet + [100.0])) == empty_tight_entry()        # equal to the average
+    assert tight_entry(volume_bars(closes, quiet + [90.0])) == empty_tight_entry()         # below the average
     assert tight_entry(volume_bars(before + flat + [122.4], quiet + [200.0])) == empty_tight_entry()   # exactly +2%: still inside
     assert tight_entry(volume_bars(before + flat + [117.0], quiet + [200.0])) == empty_tight_entry()   # a break down
-    busy = [400.0] * 20 + quiet[20:]                          # above every range day, below the 20-day average
-    assert tight_entry(volume_bars(closes, busy + [200.0])) == empty_tight_entry()
+    busy = [400.0] * 20 + quiet[20:]                          # heavy volume before the range does not matter
+    assert tight_entry(volume_bars(closes, busy + [200.0]))["tight_entry"] is True
 
 
 def test_entry_stays_listed_for_a_few_days_and_needs_volume_data() -> None:

@@ -9,9 +9,8 @@ run (the base day included). A fall of FALL_PCT percent or more puts the stock i
 a downtrend that has gone flat.
 
 Entry: a breakout up from a tight range. The close is more than TIGHT_PCT percent above the base close, on
-the first day after a run of at least TIGHT_DAYS days, and the volume of that day is above the volume of every
-day of the run and above the average volume of the VOLUME_DAYS days before it. The latest such day counts
-while it is less than ENTRY_MAX_AGE trading days old.
+the first day after a run of at least TIGHT_DAYS days, and the volume of that day is above the average volume
+of the days of the run. The latest such day counts while it is less than ENTRY_MAX_AGE trading days old.
 
     python -m stock_entry.tight_range
 
@@ -36,7 +35,6 @@ TIGHT_PCT = 2.0         # every close within +/- this percent of the base close
 MAX_DAYS = 60           # the run is measured this far back at most
 FALL_DAYS = 20          # the downtrend is looked for in this many trading days before the run
 FALL_PCT = 8.0          # the base close is at least this percent below the highest close of those days
-VOLUME_DAYS = 20        # the breakout volume is compared with the average of this many days before it
 ENTRY_MAX_AGE = 5       # a breakout is listed while it is fewer than this many trading days old
 PRICE_DECIMALS = 2
 ROUNDING = 1e-9         # exactly +/- TIGHT_PCT counts, whatever the float arithmetic says
@@ -95,28 +93,27 @@ def empty_tight_entry() -> dict[str, Any]:
             "tight_entry_after_fall": False, "tight_entry_fall_pct": None}
 
 
-def tight_entry(bars: pd.DataFrame, max_age: int = ENTRY_MAX_AGE, pct: float = TIGHT_PCT,
-                volume_days: int = VOLUME_DAYS) -> dict[str, Any]:
+def tight_entry(bars: pd.DataFrame, max_age: int = ENTRY_MAX_AGE, pct: float = TIGHT_PCT) -> dict[str, Any]:
     """The latest breakout up from a tight range within the last `max_age` bars (see the module text).
 
     tight_entry_pct: the breakout close against the base close; tight_entry_now_pct: the latest close against
-    it; tight_entry_volume_x: the breakout volume as a multiple of the average of the `volume_days` days before."""
+    it; tight_entry_volume_x: the breakout volume as a multiple of the average volume of the days of the range."""
     if "Volume" not in bars.columns:
         return empty_tight_entry()
     clean = bars.dropna(subset=["Close", "Volume"]).reset_index(drop=True)
     closes, volumes = clean["Close"].to_numpy(dtype=float), clean["Volume"].to_numpy(dtype=float)
     for age in range(max_age):
         day = len(clean) - 1 - age
-        if day < volume_days:
+        if day < TIGHT_DAYS:
             break
         run = tight_range(clean.iloc[:day], pct=pct)   # the range as it stood the day before
         if not run["tight_range"]:
             continue
         length = run["tight_days"]
         base = closes[day - length]
-        average = volumes[day - volume_days:day].mean()
+        average = volumes[day - length:day].mean()   # the days of the range
         up = (closes[day] / base - 1) * 100 > pct + ROUNDING
-        if not (up and volumes[day] > volumes[day - length:day].max() and volumes[day] > average):
+        if not (up and volumes[day] > average):
             continue
         return {
             "tight_entry": True, "tight_entry_date": pd.Timestamp(clean["Date"].iloc[day]).strftime("%Y-%m-%d"),

@@ -54,7 +54,6 @@ const TIGHT_DAYS = 7;   // Tight Range: same numbers as stock_entry/tight_range.
 const TIGHT_PCT = 2;
 const FALL_DAYS = 20;   // TBC Strict: the fall is looked for in this many trading days before the range
 const FALL_PCT = 8;
-const TIGHT_VOLUME_DAYS = 20;   // Entry: the breakout volume is compared with the average of this many days
 const TIGHT_ENTRY_DAYS = 5;     // Entry: breakouts of the last this many trading days are listed
 const WAIT_RSI_MAX = 45;   // Wait tabs: only stocks with RSI below this and CCI below WAIT_CCI_MAX
 const WAIT_CCI_MAX = 0;
@@ -63,7 +62,7 @@ const WAIT_RULE = ` Wait tab: only stocks with RSI below ${WAIT_RSI_MAX} and CCI
 const TIGHT_TABS = "Wait";      // tab name of the lists of stocks still inside the range
 // Entry tab of the two tight-range lists: a breakout up from the range, on volume.
 const ENTRY_RULE = `Entry: the close broke more than ${TIGHT_PCT}% above the base close of a tight range (${TIGHT_DAYS} or more days), `
-  + `and that day's volume was above the volume of every day of the range and above the average volume of the ${TIGHT_VOLUME_DAYS} days before it. `
+  + "and that day's volume was above the average volume of the days of the range. "
   + `Breakouts of the last ${TIGHT_ENTRY_DAYS} trading days are listed, newest first.`;
 // Parallel channel (daily bars): same numbers as stock_entry/channel.py
 const CHANNEL_RULE = "Parallel channel on daily bars: two parallel lines through swing points (pivots with 5 bars on each side). "
@@ -95,7 +94,7 @@ const entryColumns = (fall) => [TICKER,
   { key: "tight_entry_date", label: "Breakout", type: "date", title: "Day the close broke above the range" },
   { key: "tight_entry_days_ago", label: "Days ago", type: "int", title: "Trading days since the breakout (0 = the latest day)" },
   { key: "tight_entry_pct", label: "Breakout %", type: "pct", title: "Close of the breakout day against the base close of the range" },
-  { key: "tight_entry_volume_x", label: "Volume ×", type: "num2", title: `Breakout day's volume as a multiple of the average of the ${TIGHT_VOLUME_DAYS} days before it` },
+  { key: "tight_entry_volume_x", label: "Volume ×", type: "num2", title: "Breakout day's volume as a multiple of the average volume of the days of the range" },
   { key: "tight_entry_range_days", label: "Range days", type: "int", title: "Length of the tight range before the breakout" },
   ...(fall ? [{ key: "tight_entry_fall_pct", label: "Fall", type: "pct", title: "Base close of the range against the highest close of the 20 trading days before it" }] : []),
   { key: "tight_entry_base_close", label: "Base close", type: "price" },
@@ -368,7 +367,7 @@ const ALL_VIEWS = [
   {
     id: "tightentry", label: "Tight Range: Entry", mark: null, needsKey: "tight_entry",
     chip: "Tight Range", tabGroup: "tight", tabLabel: "Entry", tabOf: "tight",
-    note: (row) => `Broke out ${formatPercent(row.tight_entry_pct)} on ${formatDate(row.tight_entry_date)} · volume ${fixed(row.tight_entry_volume_x)}× average`,
+    note: (row) => `Broke out ${formatPercent(row.tight_entry_pct)} on ${formatDate(row.tight_entry_date)} · volume ${fixed(row.tight_entry_volume_x)}× the range average`,
     hint: ENTRY_RULE,
     filter: (row) => row.tight_entry === true,
     columns: entryColumns(false),
