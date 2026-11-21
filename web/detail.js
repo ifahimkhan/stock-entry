@@ -173,12 +173,12 @@ const barColumns = (frame) => [
   ...(frame.prefix ? [{ key: "hh_change_pct", label: "Change %", type: "pct", title: "On an HH: (HH close - last LH close) / last LH close" }] : []),
   { key: "raw_label", label: "Status", type: "text", title: "status: the raw HH / HL / LH / LL label" },
   { key: "label", label: "Clean", type: "text", title: "status_clean: the label after the clean-up" },
-  { key: "ang_ll_ll", label: "LL→LL", type: "angle", title: "ang_LL_LL" },
-  { key: "ang_ll_hl", label: "LL→HL", type: "angle", title: "ang_LL_HL" },
   { key: "final", label: "Final", type: "text", title: frame.prefix
     ? "Final: Before Entry on a TBC Zone Entry HH; Entry on the first 3-rule candle once that HH is confirmed; "
       + "LH breakout > level when the close breaks the last LH (comma separated when a day has more than one)"
     : "Final: Before Entry on a confirmed HH (TBC Zone Entry)" },
+  { key: "ang_ll_ll", label: "LL→LL", type: "angle", title: "ang_LL_LL" },
+  { key: "ang_ll_hl", label: "LL→HL", type: "angle", title: "ang_LL_HL" },
   { key: "ll3_hh", label: "3LL_HH", type: "flag" },
   { key: "ll4_hh", label: "4LL_HH", type: "flag" },
   // daily table: the LH breakout is part of Final
