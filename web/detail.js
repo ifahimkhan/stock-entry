@@ -176,21 +176,26 @@ const barColumns = (frame) => [
   { key: "ang_ll_ll", label: "LL→LL", type: "angle", title: "ang_LL_LL" },
   { key: "ang_ll_hl", label: "LL→HL", type: "angle", title: "ang_LL_HL" },
   { key: "final", label: "Final", type: "text", title: frame.prefix
-    ? "Final: Before Entry on a TBC Zone Entry HH; Entry on the first 3-rule candle once that HH is confirmed"
+    ? "Final: Before Entry on a TBC Zone Entry HH; Entry on the first 3-rule candle once that HH is confirmed; "
+      + "LH breakout > level when the close breaks the last LH (comma separated when a day has more than one)"
     : "Final: Before Entry on a confirmed HH (TBC Zone Entry)" },
   { key: "ll3_hh", label: "3LL_HH", type: "flag" },
   { key: "ll4_hh", label: "4LL_HH", type: "flag" },
-  { key: "breakout", label: "LH_breakout", type: "text", title: "LH_breakout and LH_breakout_level" },
+  // daily table: the LH breakout is part of Final
+  ...(frame.prefix ? [] : [{ key: "breakout", label: "LH_breakout", type: "text", title: "LH_breakout and LH_breakout_level" }]),
   { key: "volume", label: "Volume", type: "crore", title: "Shares traded in the bar" },
 ];
 
 const ENTRY = "Entry";
 // `daily`: Entry (first 3-rule candle after a confirmed Zone Entry HH) is shown on the daily table only
-const barRow = (bar, daily) => ({
-  ...bar,
-  final: bar.before_entry ? BEFORE_ENTRY : (daily && bar.entry ? ENTRY : null),
-  breakout: bar.lh_breakout ? `Yes > ${formatPrice(bar.lh_breakout_level)}` : null,
-});
+const barRow = (bar, daily) => {
+  const final = bar.before_entry ? BEFORE_ENTRY : (daily && bar.entry ? ENTRY : null);
+  const breakout = bar.lh_breakout ? `Yes > ${formatPrice(bar.lh_breakout_level)}` : null;
+  if (!daily) return { ...bar, final, breakout };
+  // daily table: Final and the LH breakout share one column, comma separated when a day has both
+  const merged = [final, bar.lh_breakout && `LH breakout > ${formatPrice(bar.lh_breakout_level)}`].filter(Boolean);
+  return { ...bar, final: merged.length ? merged.join(", ") : null, breakout };
+};
 
 function swingSignal(point) {
   const before = point.before_entry && `TBC Zone Entry (${point.pattern || `${point.ll_count} LL, other`})`;
