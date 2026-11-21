@@ -5,6 +5,7 @@ import { el, formatDate, formatPercent, formatPrice, isNumber, signClass, status
 const SVG_NS = "http://www.w3.org/2000/svg";
 const HEIGHT = 320;
 const MARGIN = { top: 28, right: 18, bottom: 26, left: 58 };
+export const PLOT_MARGIN = MARGIN;   // where the plot sits inside the chart, for zoom and pan
 const Y_TICKS = 4;
 const X_TICKS = 5;
 const LABEL_HALF_WIDTH = 44;   // keeps the "Entry 1,234.50" label inside the plot

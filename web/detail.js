@@ -1,6 +1,7 @@
 // Single-stock panel: headline, plain-language status, chart, and the bars as a table.
 
-import { renderChart } from "./chart.js";
+import { PLOT_MARGIN, renderChart } from "./chart.js";
+import { attachZoom, fitWindow, sliceWindow, zoomWindow, ZOOM_STEP } from "./chartzoom.js";
 import { DASH, el, formatAngle, formatBarTime, formatDate, formatPercent, formatPrice, isNumber, signClass, statusBadge, statusKind } from "./format.js";
 import { renderTable } from "./table.js";
 
@@ -349,11 +350,34 @@ export function renderDetail(panel, detail) {
   const legend = el("div", { class: "legend" });
   let visibleBars = RANGES.find((range) => range.label === DEFAULT_RANGE).bars;
   let chartMode = DEFAULT_MODE;
+  let zoom = null;   // null: the whole period; else { count, offset } (see chartzoom.js)
+  const zoomInfo = el("span", { class: "zoom-info dim" });
+  const periodBars = () => (visibleBars ? history.slice(-visibleBars) : history);
   const drawChart = () => {
     if (!chart.clientWidth) return;   // chart tab hidden: drawn when it is shown
-    const drawn = renderChart(chart, visibleBars ? history.slice(-visibleBars) : history, chartMode);
+    const period = periodBars();
+    const shown = sliceWindow(period, zoom);
+    const drawn = renderChart(chart, shown, chartMode);
     legend.replaceChildren(...legendItems(drawn));  // matches what was drawn, e.g. line when OHLC is missing
+    const zoomed = fitWindow(zoom, period.length).count < period.length;
+    zoomInfo.textContent = zoomed
+      ? `${shown.length} of ${period.length} days · drag to move, wheel to zoom`
+      : "Wheel or + to zoom in";
   };
+  const setZoom = (view) => {
+    zoom = view;
+    drawChart();
+  };
+  const zoomBy = (factor) => setZoom(zoomWindow(zoom, periodBars().length, factor, 1));   // keep the latest day
+  const stopZoom = attachZoom(chart, () => ({
+    view: zoom, total: periodBars().length, plotLeft: PLOT_MARGIN.left,
+    plotWidth: chart.clientWidth - PLOT_MARGIN.left - PLOT_MARGIN.right,
+  }), setZoom);
+  const zoomButtons = el("div", { class: "ranges zoom", role: "group", "aria-label": "Zoom the chart" }, [
+    el("button", { type: "button", text: "−", title: "Zoom out", "aria-label": "Zoom out", onclick: () => zoomBy(1 / ZOOM_STEP) }),
+    el("button", { type: "button", text: "+", title: "Zoom in", "aria-label": "Zoom in", onclick: () => zoomBy(ZOOM_STEP) }),
+    el("button", { type: "button", text: "Reset", title: "Show the whole period", onclick: () => setZoom(null) }),
+  ]);
 
   const tabs = tabbed([
     { id: "overview", label: "Overview", body: el("div", {}, [
@@ -369,10 +393,11 @@ export function renderDetail(panel, detail) {
         }),
         picker(RANGES, DEFAULT_RANGE, "Chart period", (option) => {
           visibleBars = option.bars;
-          drawChart();
+          setZoom(null);   // a new period starts unzoomed
         }),
+        zoomButtons,
       ])]),
-      el("div", { class: "chart-card" }, [chart]),
+      el("div", { class: "chart-card" }, [chart, zoomInfo]),
     ]) },
     { id: "swings2h", label: "Swings 2h",
       body: swingSection(summary, detail[SWING_FRAMES.twoHour.swingsKey], SWING_FRAMES.twoHour, detail[SWING_FRAMES.twoHour.barsKey]) },
@@ -409,5 +434,8 @@ export function renderDetail(panel, detail) {
     drawChart();
   });
   observer.observe(chart);
-  return () => observer.disconnect();
+  return () => {
+    observer.disconnect();
+    stopZoom();
+  };
 }
