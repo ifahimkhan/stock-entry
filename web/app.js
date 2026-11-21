@@ -505,7 +505,7 @@ function renderMeta() {
   }
   dom.meta.textContent = scan === undefined ? "Loading the latest scan…" : scan
     ? `Prices up to ${formatDate(scan.data_date, true)} · scanned ${formatDateTime(scan.scanned_at)}`
-    : "No scan yet. Press Run scan to check every stock in tickers.csv.";
+    : "No scan yet. The daily scan fills this page.";
 }
 
 /** One chip per list with its stock count; the row scrolls sideways on small screens. */
