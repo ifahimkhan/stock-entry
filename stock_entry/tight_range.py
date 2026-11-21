@@ -5,7 +5,7 @@ day, is within +/- TIGHT_PCT percent of that base. A run of at least TIGHT_DAYS 
 puts the stock in the "Tight Range" list.
 
 Fall before the range: the base close against the highest close of the FALL_DAYS trading days before the
-run (the base day included). A fall of FALL_PCT percent or more puts the stock in "Fall → Tight Range":
+run (the base day included). A fall of FALL_PCT percent or more puts the stock in "TBC Strict":
 a downtrend that has gone flat.
 
 Entry: a breakout up from a tight range. The close is more than TIGHT_PCT percent above the base close, on

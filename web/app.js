@@ -52,10 +52,14 @@ const SWING_NOTE = " Labels are confirmed 5 bars (about 1 session) after the piv
 const withinBars = (bars, maxBars) => isNumber(bars) && bars <= maxBars;
 const TIGHT_DAYS = 7;   // Tight Range: same numbers as stock_entry/tight_range.py
 const TIGHT_PCT = 2;
-const FALL_DAYS = 20;   // Fall → Tight Range: the fall is looked for in this many trading days before the range
+const FALL_DAYS = 20;   // TBC Strict: the fall is looked for in this many trading days before the range
 const FALL_PCT = 8;
 const TIGHT_VOLUME_DAYS = 20;   // Entry: the breakout volume is compared with the average of this many days
 const TIGHT_ENTRY_DAYS = 5;     // Entry: breakouts of the last this many trading days are listed
+const WAIT_RSI_MAX = 45;   // Wait tabs: only stocks with RSI below this and CCI below WAIT_CCI_MAX
+const WAIT_CCI_MAX = 0;
+const waitMomentum = (row) => isNumber(row.rsi) && row.rsi < WAIT_RSI_MAX && isNumber(row.cci) && row.cci < WAIT_CCI_MAX;
+const WAIT_RULE = ` Wait tab: only stocks with RSI below ${WAIT_RSI_MAX} and CCI below ${WAIT_CCI_MAX} on the latest day.`;
 const TIGHT_TABS = "Wait";      // tab name of the lists of stocks still inside the range
 // Entry tab of the two tight-range lists: a breakout up from the range, on volume.
 const ENTRY_RULE = `Entry: the close broke more than ${TIGHT_PCT}% above the base close of a tight range (${TIGHT_DAYS} or more days), `
@@ -230,7 +234,8 @@ const LEGACY_LINKS = {
 
 /** Each list: which rows it shows (given the latest market date), its columns and default sort. */
 // Lists kept in the code but not shown as chips (turn one back on by removing its id here).
-const HIDDEN_VIEWS = new Set(["recent", "cci", "spv", "pv", "llhh", "llhh1d", "lhbreak", "lhbreak1d"]);
+const HIDDEN_VIEWS = new Set(["recent", "cci", "spv", "pv", "llhh", "llhh1d", "lhbreak", "lhbreak1d", "tight", "tightentry",
+  "entry", "wait", "breakout", "screen"]);
 const ALL_VIEWS = [
   {
     id: "entry", label: "Entry today", mark: "entry",
@@ -323,14 +328,15 @@ const ALL_VIEWS = [
     note: (row) => `${row.tight_days} days within ±${TIGHT_PCT}% of ${formatPrice(row.tight_base_close)} (${formatDate(row.tight_base_date)})`,
     hint: `The close has stayed within ±${TIGHT_PCT}% of a base close for ${TIGHT_DAYS} or more trading days in a row, up to the latest day (daily bars). `
       + "The base is the close of the first day of the run. Days = length of the run, base day included. "
-      + "Lowest / Highest = the lowest and highest close of the run against the base; From base = the latest close against it.",
-    filter: (row) => row.tight_range === true,
+      + "Lowest / Highest = the lowest and highest close of the run against the base; From base = the latest close against it."
+      + WAIT_RULE,
+    filter: (row) => row.tight_range === true && waitMomentum(row),
     columns: [TICKER, { key: "tight_days", label: "Days", type: "int", title: "Trading days in a row inside the range, the base day included" },
       { key: "tight_base_date", label: "Since", type: "date", title: "First day of the run: its close is the base" },
       { key: "tight_base_close", label: "Base close", type: "price" },
       { key: "tight_low_pct", label: "Lowest", type: "pct", title: "Lowest close of the run against the base close" },
       { key: "tight_high_pct", label: "Highest", type: "pct", title: "Highest close of the run against the base close" },
-      CLOSE, { key: "tight_change_pct", label: "From base", type: "pct", title: "Latest close against the base close" }, CAP],
+      CLOSE, { key: "tight_change_pct", label: "From base", type: "pct", title: "Latest close against the base close" }, RSI, CCI, CAP],
     sort: { key: "tight_days", dir: "desc" },
   },
   {
@@ -343,25 +349,26 @@ const ALL_VIEWS = [
     sort: { key: "tight_entry_date", dir: "desc" },
   },
   {
-    id: "falltight", label: "Fall → Tight Range", mark: null, needsKey: "tight_after_fall",
-    chip: "Fall → Tight Range", tabGroup: "falltight", tabLabel: TIGHT_TABS,
+    id: "falltight", label: "TBC Strict (1D)", mark: null, needsKey: "tight_after_fall",
+    chip: "TBC Strict (1D)", tabGroup: "falltight", tabLabel: TIGHT_TABS,
     note: (row) => `Fell ${formatPercent(row.tight_fall_pct)} from ${formatPrice(row.tight_peak_close)} (${formatDate(row.tight_peak_date)}), then ${row.tight_days} days within ±${TIGHT_PCT}%`,
     hint: `A downtrend that has gone flat (daily closes). First the close fell ${FALL_PCT}% or more: from the highest close of the ${FALL_DAYS} trading days before the range to the base close. `
       + `Then the close stayed within ±${TIGHT_PCT}% of that base close for ${TIGHT_DAYS} or more trading days in a row, up to the latest day. `
-      + "Fall = base close against that highest close; Days = length of the tight range.",
-    filter: (row) => row.tight_after_fall === true,
+      + "Fall = base close against that highest close; Days = length of the tight range."
+      + WAIT_RULE,
+    filter: (row) => row.tight_after_fall === true && waitMomentum(row),
     columns: [TICKER, { key: "tight_fall_pct", label: "Fall", type: "pct", title: "Base close of the range against the highest close of the 20 trading days before it" },
       { key: "tight_peak_date", label: "High on", type: "date", title: "Day of that highest close" },
       { key: "tight_peak_close", label: "High close", type: "price" },
       { key: "tight_base_date", label: "Range since", type: "date", title: "First day of the tight range: its close is the base" },
       { key: "tight_base_close", label: "Base close", type: "price" },
       { key: "tight_days", label: "Days", type: "int", title: "Trading days in a row inside the range, the base day included" },
-      CLOSE, { key: "tight_change_pct", label: "From base", type: "pct", title: "Latest close against the base close" }, CAP],
+      CLOSE, { key: "tight_change_pct", label: "From base", type: "pct", title: "Latest close against the base close" }, RSI, CCI, CAP],
     sort: { key: "tight_fall_pct", dir: "asc" },
   },
   {
-    id: "falltightentry", label: "Fall → Tight Range: Entry", mark: null, needsKey: "tight_entry",
-    chip: "Fall → Tight Range", tabGroup: "falltight", tabLabel: "Entry", tabOf: "falltight",
+    id: "falltightentry", label: "TBC Strict (1D): Entry", mark: null, needsKey: "tight_entry",
+    chip: "TBC Strict (1D)", tabGroup: "falltight", tabLabel: "Entry", tabOf: "falltight",
     note: (row) => `Fell ${formatPercent(row.tight_entry_fall_pct)}, ranged ${row.tight_entry_range_days} days, broke out ${formatPercent(row.tight_entry_pct)} on ${formatDate(row.tight_entry_date)}`,
     hint: `${ENTRY_RULE} Only ranges that came after a fall of ${FALL_PCT}% or more (from the highest close of the ${FALL_DAYS} trading days before the range).`,
     filter: (row) => row.tight_entry === true && row.tight_entry_after_fall === true,
@@ -401,7 +408,7 @@ const dom = {
 
 let state = {
   scan: undefined,  // undefined until the first load answers; null when there is no scan yet
-  progress: { running: false }, tickers: [], viewId: "entry",
+  progress: { running: false }, tickers: [], viewId: VIEWS[0].id,
   sort: VIEWS[0].sort, query: "", selected: null, capFilter: "all", patternFilter: "all", zoneTab: "stocks",
   timeframe: DEFAULT_TIMEFRAME,
 };
