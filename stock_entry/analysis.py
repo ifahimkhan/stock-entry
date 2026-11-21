@@ -6,6 +6,7 @@ from typing import Any
 
 import pandas as pd
 
+from stock_entry.channel import parallel_channel
 from stock_entry.indicators import indicator_columns
 from stock_entry.intraday import analyze_swings
 from stock_entry.signals import add_entry_signals, clean_bars
@@ -64,6 +65,7 @@ def build_row(ticker: Ticker, analyzed: pd.DataFrame, swings: pd.DataFrame | Non
         **smc_summary(analyzed),
         "at_closing_high": high,
         **tight_fields(analyzed),
+        **parallel_channel(analyzed),
         **_swing_fields(ticker.symbol, swings),
         **daily_summary(_swing_fields(ticker.symbol, daily)),
     }

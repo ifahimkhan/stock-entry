@@ -65,6 +65,32 @@ const TIGHT_TABS = "Wait";      // tab name of the lists of stocks still inside 
 const ENTRY_RULE = `Entry: the close broke more than ${TIGHT_PCT}% above the base close of a tight range (${TIGHT_DAYS} or more days), `
   + `and that day's volume was above the volume of every day of the range and above the average volume of the ${TIGHT_VOLUME_DAYS} days before it. `
   + `Breakouts of the last ${TIGHT_ENTRY_DAYS} trading days are listed, newest first.`;
+// Parallel channel (daily bars): same numbers as stock_entry/channel.py
+const CHANNEL_RULE = "Parallel channel on daily bars: two parallel lines through swing points (pivots with 5 bars on each side). "
+  + "The base line joins the last two swing lows (rising or flat) or swing highs (falling or flat); the parallel line passes through the farthest swing point on the other side, "
+  + "and a second swing point must touch it. Channel: 30 or more trading days long, 3% to 20% wide, no bar outside the lines while it formed. "
+  + "Position: 0% = on the lower line, 100% = on the upper line. Breakout up / Breakdown = the first close outside the lines, listed for 5 trading days.";
+const CHANNEL_COLUMNS = [TICKER,
+  { key: "channel_zone", label: "Where", title: "Near lower line: position 25% or less. Near upper line: 75% or more. Or the break of the channel" },
+  { key: "channel_position_pct", label: "Position", type: "pctplain", title: "Latest close inside the channel: 0% = lower line, 100% = upper line" },
+  { key: "channel_lower", label: "Lower line", type: "price", title: "Value of the lower line on the latest day" },
+  { key: "channel_upper", label: "Upper line", type: "price", title: "Value of the upper line on the latest day" },
+  CLOSE,
+  { key: "channel_width_pct", label: "Width", type: "pctplain", title: "Distance between the lines, in percent of the middle line" },
+  { key: "channel_slope_pct", label: "Slope / day", type: "pct", title: "Rise or fall of the lines per trading day, in percent of the price" },
+  { key: "channel_since", label: "Since", type: "date", title: "First anchor of the channel" },
+  { key: "channel_days", label: "Days", type: "int", title: "Trading days from the first anchor to the latest day" },
+  { key: "channel_break_date", label: "Break on", type: "date", title: "Day of the first close outside the lines" },
+  RSI, CAP];
+const channelView = (kind, first) => ({
+  id: `channel${kind.toLowerCase()}`, label: `Parallel Channel (1D): ${kind}`, mark: null, needsKey: "channel",
+  chip: "Parallel Channel (1D)", tabGroup: "channel", tabLabel: kind, ...(first ? {} : { tabOf: "channelascending" }),
+  note: (row) => `${kind} channel since ${formatDate(row.channel_since)} · ${row.channel_zone} · ${formatPrice(row.channel_lower)} to ${formatPrice(row.channel_upper)}`,
+  hint: `${CHANNEL_RULE} ${kind}: ${kind === "Horizontal" ? "the lines move less than 0.3% of the price per day" : `the lines ${kind === "Ascending" ? "rise" : "fall"} more than 0.3% of the price per day`}.`,
+  filter: (row) => row.channel === true && row.channel_type === kind,
+  columns: CHANNEL_COLUMNS,
+  sort: { key: "channel_position_pct", dir: "asc" },
+});
 const entryColumns = (fall) => [TICKER,
   { key: "tight_entry_date", label: "Breakout", type: "date", title: "Day the close broke above the range" },
   { key: "tight_entry_days_ago", label: "Days ago", type: "int", title: "Trading days since the breakout (0 = the latest day)" },
@@ -375,6 +401,7 @@ const ALL_VIEWS = [
     columns: entryColumns(true),
     sort: { key: "tight_entry_date", dir: "desc" },
   },
+  channelView("Ascending", true), channelView("Descending", false), channelView("Horizontal", false),
   {
     id: "all", label: "All stocks", mark: null,
     chip: "All",

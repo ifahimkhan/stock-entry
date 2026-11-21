@@ -52,7 +52,22 @@ function factLines(summary) {
 }
 
 /** Legend items for the chart type actually drawn ("candles" or "line"). */
-function legendItems(drawn) {
+/** History whose bars from the channel's first anchor on carry the two line values (straight lines per bar). */
+function withChannel(history, summary) {
+  if (summary.channel !== true || !isNumber(summary.channel_start_lower) || !isNumber(summary.channel_lower)) return history;
+  const first = history.findIndex((bar) => bar.Date >= summary.channel_since);
+  const last = history.length - 1;
+  if (first < 0 || first >= last) return history;
+  const width = summary.channel_upper - summary.channel_lower;
+  const step = (summary.channel_lower - summary.channel_start_lower) / (last - first);
+  return history.map((bar, index) => {
+    if (index < first) return bar;
+    const lower = summary.channel_start_lower + step * (index - first);
+    return { ...bar, channel_lower: lower, channel_upper: lower + width };
+  });
+}
+
+function legendItems(drawn, channel) {
   const item = (mark, text) => el("span", { class: "badge" }, [mark, el("span", { text })]);
   const price = drawn === "candles"
     ? [item(el("span", { class: "candle up" }), "Up day (hollow)"), item(el("span", { class: "candle down" }), "Down day (filled)")]
@@ -63,6 +78,7 @@ function legendItems(drawn) {
     item(el("span", { class: "mark wait" }), "Wait"),
     item(el("span", { class: "mark entry" }), "Entry"),
     ...(drawn === "candles" ? [item(el("span", { class: "tag", text: "SPV" }), "MRI SPV / PV candle")] : []),
+    ...(channel ? [item(el("span", { class: "line channel" }), channel)] : []),
   ];
 }
 
@@ -353,7 +369,8 @@ export function renderDetailMessage(panel, text) {
  * @returns {() => void} cleanup that stops the chart's resize tracking
  */
 export function renderDetail(panel, detail) {
-  const { summary, history } = detail;
+  const { summary } = detail;
+  const history = withChannel(detail.history, summary);
   const subtitle = [summary.name, summary.sector].filter(Boolean).join(" · ");
   const chart = el("div", { class: "chart" });
   const table = el("table", { class: "compact" }, [el("thead"), el("tbody")]);
@@ -369,7 +386,7 @@ export function renderDetail(panel, detail) {
     const period = periodBars();
     const shown = sliceWindow(period, zoom);
     const drawn = renderChart(chart, shown, chartMode);
-    legend.replaceChildren(...legendItems(drawn));  // matches what was drawn, e.g. line when OHLC is missing
+    legend.replaceChildren(...legendItems(drawn, summary.channel === true ? `${summary.channel_type} channel` : null));  // matches what was drawn, e.g. line when OHLC is missing
     const zoomed = fitWindow(zoom, period.length).count < period.length;
     zoomInfo.textContent = zoomed
       ? `${shown.length} of ${period.length} days · drag to move, wheel to zoom`

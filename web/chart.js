@@ -84,6 +84,19 @@ function drawLine(root, bars, scales) {
   root.append(svg("path", { d: path }, "fill: none; stroke: var(--series); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round"));
 }
 
+/** Parallel channel: the bars that carry channel_lower / channel_upper get the two lines and a dashed middle. */
+function drawChannel(root, bars, scales) {
+  const inside = bars.map((bar, index) => ({ bar, index })).filter(({ bar }) => isNumber(bar.channel_lower) && isNumber(bar.channel_upper));
+  if (inside.length < 2) return;
+  const line = (value, dash) => {
+    const path = inside.map(({ bar, index }, at) => `${at === 0 ? "M" : "L"}${scales.x(index).toFixed(1)},${scales.y(value(bar)).toFixed(1)}`).join(" ");
+    root.append(svg("path", { d: path, class: "channel-line" }, `fill: none; stroke: var(--channel, #7c5cff); stroke-width: 1.5;${dash ? " stroke-dasharray: 4 4; opacity: 0.6;" : ""}`));
+  };
+  line((bar) => bar.channel_upper, false);
+  line((bar) => bar.channel_lower, false);
+  line((bar) => (bar.channel_upper + bar.channel_lower) / 2, true);
+}
+
 /** One candle per day. Up days are hollow, down days are filled, so direction never relies on colour alone. */
 function drawCandles(root, bars, scales) {
   const bodyWidth = Math.max(CANDLE_MIN_WIDTH, Math.min(CANDLE_MAX_WIDTH, scales.slot * CANDLE_FILL_SHARE));
@@ -218,6 +231,7 @@ export function renderChart(container, history, mode = "candles") {
   drawAxes(root, bars, scales, width);
   if (candles) drawCandles(root, bars, scales);
   else drawLine(root, bars, scales);
+  drawChannel(root, bars, scales);
   // On candles the marks sit above the day's high so they never cover the candle.
   drawMarks(root, bars, scales, width, (bar) => (candles ? scales.y(bar.High) - MARK_GAP : scales.y(bar.Close)));
   if (candles) drawMriMarks(root, bars, scales);

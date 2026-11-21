@@ -306,6 +306,7 @@ body.sheet-open .detail { transform: none; visibility: visible; }
 .candle.down { border-color: var(--critical); background: var(--critical); }
 .tag { font-size: 10px; font-weight: 700; color: var(--ink); padding: 0 4px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); }
 .legend .line { width: 16px; height: 2px; background: var(--series); display: inline-block; }
+.legend .line.channel { background: var(--channel, #7c5cff); }
 .chart-card { padding: 8px 4px 4px; border-radius: 12px; background: var(--page); border: 1px solid var(--border); }
 .chart { position: relative; touch-action: pan-y; cursor: grab; user-select: none; }
 .chart.dragging { cursor: grabbing; }
