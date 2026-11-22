@@ -699,10 +699,12 @@ function renderZoneWinRate(view) {
   renderWinRate(dom.winRate, zoneResults, view.tf, (ticker) => openStock(ticker), (ticker) => caps.get(ticker) || "");
 }
 
-/** Stocks ticked in each TBC Zone Entry list (view id -> pick keys); kept while the page is open. */
+/** Stocks ticked in each list (view id -> pick keys); kept while the page is open. */
 const picked = new Map();
 const pickedIn = (view) => picked.get(view.id) || new Set();
-const canPick = (view) => view.group === "before";
+const canPick = (view) => Boolean(view);   // every list can be ticked and exported
+/** CSV file of a list: the date for TBC Zone Entry (as before), the date and the list id for the others. */
+const exportName = (view) => (view.group === "before" ? `${exportDate()}.csv` : `${exportDate()}-${view.id}.csv`);
 /** One ticked row: the ticker, plus the timeframe in the "All" list where a stock can be listed twice. */
 const pickKey = (row) => (row.tf_label ? `${row.ticker}|${row.tf_label}` : row.ticker);
 
@@ -728,15 +730,21 @@ function exportFields(view) {
   const plain = (column) => (row) => {
     const value = row[column.key];
     if (column.type === "pattern") return value || `${row[column.llKey || "before_entry_ll"] ?? "?"} LL (other)`;
+    if (column.type === "screens") return row.screens || "";
+    if (column.type === "status") return row.status ?? row.entry_status ?? "";
     return value;
   };
-  return [
+  const fixed = [
     { label: "Ticker", value: (row) => row.ticker },
     { label: "Name", value: (row) => row.name || "" },
     { label: "Cap", value: (row) => row.cap_category || "" },
-    { label: "Timeframe", value: (row) => row.tf_label || (view.tf === "1d" ? "1D" : "2h") },
-    ...view.columns.filter((column) => column.type !== "ticker" && column !== TF_COLUMN).map((column) => ({ label: column.label, value: plain(column) })),
+    // swing lists only: the other lists read daily bars and have no timeframe switch
+    ...(view.tf ? [{ label: "Timeframe", value: (row) => row.tf_label || (view.tf === "1d" ? "1D" : "2h") }] : []),
   ];
+  const taken = new Set(fixed.map((field) => field.label));   // e.g. a list that already shows a Cap column
+  return [...fixed, ...view.columns
+    .filter((column) => column.type !== "ticker" && column !== TF_COLUMN && !taken.has(column.label))
+    .map((column) => ({ label: column.label, value: plain(column) }))];
 }
 
 function renderPickBar(view, visible) {
@@ -746,7 +754,7 @@ function renderPickBar(view, visible) {
   const chosen = visible.filter((row) => pickedIn(view).has(pickKey(row)));
   const exportRows = () => {
     const text = toCsv(chosen, exportFields(view));
-    downloadCsv(`${exportDate()}.csv`, text);
+    downloadCsv(exportName(view), text);
   };
   dom.pickBar.replaceChildren(
     el("button", { type: "button", text: `Select all (${visible.length})`, disabled: !visible.length,
@@ -754,7 +762,7 @@ function renderPickBar(view, visible) {
     el("button", { type: "button", text: "Clear", disabled: !chosen.length,
       onclick: () => setPicked(view, [...pickedIn(view)].filter((key) => !inList.has(key))) }),
     el("button", { type: "button", class: "primary", text: `Export CSV (${chosen.length})`, disabled: !chosen.length,
-      title: `Save the ticked stocks as ${exportDate()}.csv`, onclick: exportRows }),
+      title: `Save the ticked stocks as ${exportName(view)}`, onclick: exportRows }),
     el("span", { class: "pick-count dim", text: chosen.length ? `${chosen.length} selected` : "Tick stocks to export them" }),
   );
 }
