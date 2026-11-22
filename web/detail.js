@@ -169,6 +169,10 @@ const SWING_FRAMES = {
   daily: { prefix: "d1_", title: "Swings (1-day bars)", short: "daily", timeType: "date", format: formatDate, bar: "session", swingsKey: "swings_1d", barsKey: "bars_1d" },
 };
 
+// Columns of the Swings 2h / Swings 1D tables kept in the code but not shown (remove a key here to show it again).
+const HIDDEN_SWING_COLUMNS = new Set(["ang_ll_ll", "ang_ll_hl", "ll3_hh", "ll4_hh"]);
+const shownColumns = (columns) => columns.filter((column) => !HIDDEN_SWING_COLUMNS.has(column.key));
+
 const swingColumns = (frame) => [
   { key: "time", label: frame.prefix ? "Day" : "2h bar", type: frame.timeType },
   { key: "label", label: "Swing", type: "text" },
@@ -282,7 +286,7 @@ function swingSection(summary, swings, frame, everyBar = null) {
   const rows = allBars
     ? [...everyBar].reverse().map(barRow)   // newest first, every bar as in the CSV
     : [...(swings || [])].reverse().map((point) => ({ ...point, signal: swingSignal(point) }));
-  renderTable(table, { rows, columns: allBars ? barColumns(frame) : swingColumns(frame) });
+  renderTable(table, { rows, columns: shownColumns(allBars ? barColumns(frame) : swingColumns(frame)) });
   return el("div", {}, [
     title,
     el("div", { class: "facts facts-none" },
