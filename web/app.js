@@ -128,6 +128,9 @@ const TIMEFRAMES = [
   },
 ];
 const DEFAULT_TIMEFRAME = "2h";
+const ALL_TIMEFRAMES = "all";   // the "All" switch: the 2-hour and the daily list together, one row per stock and timeframe
+const TIMEFRAME_OPTIONS = [{ id: ALL_TIMEFRAMES, label: "All" }, ...TIMEFRAMES];
+const TF_COLUMN = { key: "tf_label", label: "Timeframe", type: "text", title: "Bars the signal was found on: 2h or 1D" };
 
 const patternText = (row, prefix = "") => row[`${prefix}before_entry_pattern`] || `${row[`${prefix}before_entry_ll`] ?? "?"} LL (other)`;
 
@@ -226,8 +229,33 @@ const zoneEntry2View = (tf) => {
   };
 };
 
-const SWING_VIEWS = [beforeEntryView, llThenHhView, lhBreakoutView]
-  .flatMap((make) => TIMEFRAMES.map((tf) => make(tf)));
+/** A scan row as one timeframe's hit in an "All" list: that timeframe's swing fields without prefix, plus tf_label. */
+function asTimeframe(row, tf) {
+  if (!tf.prefix) return { ...row, tf_label: tf.short, source_row: row };
+  const own = Object.entries(row).filter(([name]) => name.startsWith(tf.prefix))
+    .map(([name, value]) => [name.slice(tf.prefix.length), value]);
+  return { ...row, ...Object.fromEntries(own), tf_label: tf.short, source_row: row };
+}
+
+/** The "All" list of a swing signal: the rows of its 2-hour list and of its daily list, each marked with its timeframe. */
+const allTimeframesView = (make) => {
+  const parts = TIMEFRAMES.map((tf) => ({ tf, view: make(tf) }));
+  const base = parts[0].view;   // 2-hour view: its fields carry no prefix, as the rows of asTimeframe
+  const [ticker, ...rest] = base.columns;
+  const noteOf = new Map(parts.map(({ tf, view }) => [tf.short, view.note]));
+  return {
+    ...base, id: `${base.group}all`, tf: ALL_TIMEFRAMES, label: `${base.chip} (All)`,
+    hint: `2 hours and 1 day together: a stock is listed once for each timeframe it qualifies on (see the Timeframe column). ${base.hint}`,
+    rowsOf: (scanRows, dataDate) => parts.flatMap(({ tf, view }) => scanRows
+      .filter((row) => view.filter(row, dataDate)).map((row) => asTimeframe(row, tf))),
+    filter: (row, dataDate) => parts.some(({ view }) => view.filter(row, dataDate)),
+    note: (row) => `${row.tf_label} · ${noteOf.get(row.tf_label)(row.source_row)}`,
+    columns: [ticker, TF_COLUMN, ...rest.map((column) => (column.type === "bartime" ? { ...column, type: "swingtime" } : column))],
+  };
+};
+
+const SWING_MAKERS = [beforeEntryView, llThenHhView, lhBreakoutView];
+const SWING_VIEWS = SWING_MAKERS.flatMap((make) => [...TIMEFRAMES.map((tf) => make(tf)), allTimeframesView(make)]);
 
 /** The latest 3 LL or 4 LL then HH of one timeframe as llhh_* fields (null when there is none). */
 function llHhFields(row, prefix) {
@@ -252,14 +280,14 @@ function withLlHh(scan) {
 
 // Old bookmark ids, from when each timeframe and LL count had its own chip.
 const LEGACY_LINKS = {
-  before1d: { list: "before1d" }, lhbreak1d: { list: "lhbreak1d" },
+  before1d: { list: "before1d" },
   ll3: { list: "llhh", pattern: "3LL-HH" }, ll4: { list: "llhh", pattern: "4LL-HH" },
   ll31d: { list: "llhh1d", pattern: "3LL-HH" }, ll41d: { list: "llhh1d", pattern: "4LL-HH" },
 };
 
 /** Each list: which rows it shows (given the latest market date), its columns and default sort. */
 // Lists kept in the code but not shown as chips (turn one back on by removing its id here).
-const HIDDEN_VIEWS = new Set(["recent", "cci", "spv", "pv", "llhh", "llhh1d", "lhbreak", "lhbreak1d", "tight", "tightentry",
+const HIDDEN_VIEWS = new Set(["recent", "cci", "spv", "pv", "llhh", "llhh1d", "llhhall", "tight", "tightentry",
   "entry", "wait", "breakout", "screen"]);
 const ALL_VIEWS = [
   {
@@ -346,7 +374,7 @@ const ALL_VIEWS = [
     sort: { key: "pv_date", dir: "desc" },
   },
   ...SWING_VIEWS,
-  ...TIMEFRAMES.map((tf) => zoneEntry2View(tf)),
+  ...TIMEFRAMES.map((tf) => zoneEntry2View(tf)), allTimeframesView(zoneEntry2View),
   {
     id: "tight", label: `Tight Range (${TIGHT_DAYS} days, ±${TIGHT_PCT}%)`, mark: null, needsKey: "tight_range",
     chip: "Tight Range", tabGroup: "tight", tabLabel: TIGHT_TABS,
@@ -472,7 +500,8 @@ const rows = () => {
   return staged.rows;
 };
 /** Rows of a list before the market-cap filter. */
-const viewRows = (view) => rows().filter((row) => view.filter(row, state.scan.data_date));
+const viewRows = (view) => (view.rowsOf ? view.rowsOf(rows(), state.scan.data_date)
+  : rows().filter((row) => view.filter(row, state.scan.data_date)));
 const capMatches = (row, capId) => capId === "all" || row.cap_category === capId;
 /** Rows of a list for the selected market-cap group (chip counts ignore the pattern filter). */
 const capRows = (view) => viewRows(view).filter((row) => capMatches(row, state.capFilter));
@@ -555,11 +584,11 @@ function renderCapFilter(view) {
   dom.capFilter.hidden = !state.scan;
 }
 
-/** 2 hours / 1 day switch on the swing lists, with the stock count of the same signal on each. */
+/** All / 2 hours / 1 day switch on the swing lists, with the stock count of the same signal on each. */
 function renderTimeframeFilter(view) {
   dom.timeframeFilter.hidden = !(view.tf && state.scan);
   if (dom.timeframeFilter.hidden) return;
-  dom.timeframeFilter.replaceChildren(...TIMEFRAMES.map((tf) => el("button", {
+  dom.timeframeFilter.replaceChildren(...TIMEFRAME_OPTIONS.map((tf) => el("button", {
     type: "button", "aria-pressed": String(view.tf === tf.id),
     text: `${tf.label} (${capRows(sibling(view, tf.id)).length})`,
     onclick: () => selectTimeframe(tf.id),
@@ -641,7 +670,7 @@ function renderHhHlResults() {
     dom.winRate.textContent = `TBC Zone Entry Sequence results not available: ${hhhlResultsError}`;
     return;
   }
-  renderHhHl(dom.winRate, hhhlResults, (ticker) => openStock(ticker), currentView().tf === "2h" ? "2h" : "Daily");
+  renderHhHl(dom.winRate, hhhlResults, (ticker) => openStock(ticker), { "2h": "2h", "1d": "Daily" }[currentView().tf]);
 }
 
 function renderZoneWinRate(view) {
@@ -667,10 +696,12 @@ function renderZoneWinRate(view) {
   renderWinRate(dom.winRate, zoneResults, view.tf, (ticker) => openStock(ticker), (ticker) => caps.get(ticker) || "");
 }
 
-/** Stocks ticked in each TBC Zone Entry list (view id -> tickers); kept while the page is open. */
+/** Stocks ticked in each TBC Zone Entry list (view id -> pick keys); kept while the page is open. */
 const picked = new Map();
 const pickedIn = (view) => picked.get(view.id) || new Set();
 const canPick = (view) => view.group === "before";
+/** One ticked row: the ticker, plus the timeframe in the "All" list where a stock can be listed twice. */
+const pickKey = (row) => (row.tf_label ? `${row.ticker}|${row.tf_label}` : row.ticker);
 
 function setPicked(view, tickers) {
   picked.set(view.id, new Set(tickers));
@@ -680,10 +711,10 @@ function setPicked(view, tickers) {
 function pickColumn(view) {
   return {
     key: "_pick", label: "✓", type: "pick", title: "Tick stocks to export them to CSV",
-    isPicked: (row) => pickedIn(view).has(row.ticker),
+    isPicked: (row) => pickedIn(view).has(pickKey(row)),
     onToggle: (row, on) => {
       const next = new Set(pickedIn(view));
-      if (on) next.add(row.ticker); else next.delete(row.ticker);
+      if (on) next.add(pickKey(row)); else next.delete(pickKey(row));
       setPicked(view, next);
     },
   };
@@ -700,16 +731,16 @@ function exportFields(view) {
     { label: "Ticker", value: (row) => row.ticker },
     { label: "Name", value: (row) => row.name || "" },
     { label: "Cap", value: (row) => row.cap_category || "" },
-    { label: "Timeframe", value: () => (view.tf === "1d" ? "1D" : "2h") },
-    ...view.columns.filter((column) => column.type !== "ticker").map((column) => ({ label: column.label, value: plain(column) })),
+    { label: "Timeframe", value: (row) => row.tf_label || (view.tf === "1d" ? "1D" : "2h") },
+    ...view.columns.filter((column) => column.type !== "ticker" && column !== TF_COLUMN).map((column) => ({ label: column.label, value: plain(column) })),
   ];
 }
 
 function renderPickBar(view, visible) {
   dom.pickBar.hidden = !canPick(view);
   if (!canPick(view)) return;
-  const inList = new Set(visible.map((row) => row.ticker));
-  const chosen = visible.filter((row) => pickedIn(view).has(row.ticker));
+  const inList = new Set(visible.map(pickKey));
+  const chosen = visible.filter((row) => pickedIn(view).has(pickKey(row)));
   const exportRows = () => {
     const text = toCsv(chosen, exportFields(view));
     downloadCsv(`${exportDate()}.csv`, text);
@@ -718,7 +749,7 @@ function renderPickBar(view, visible) {
     el("button", { type: "button", text: `Select all (${visible.length})`, disabled: !visible.length,
       onclick: () => setPicked(view, [...pickedIn(view), ...inList]) }),
     el("button", { type: "button", text: "Clear", disabled: !chosen.length,
-      onclick: () => setPicked(view, [...pickedIn(view)].filter((ticker) => !inList.has(ticker))) }),
+      onclick: () => setPicked(view, [...pickedIn(view)].filter((key) => !inList.has(key))) }),
     el("button", { type: "button", class: "primary", text: `Export CSV (${chosen.length})`, disabled: !chosen.length,
       title: `Save the ticked stocks as ${exportDate()}.csv`, onclick: exportRows }),
     el("span", { class: "pick-count dim", text: chosen.length ? `${chosen.length} selected` : "Tick stocks to export them" }),
@@ -740,7 +771,7 @@ function renderList() {
   else if (needsKey.endsWith("swing_bars") && rows().length && !rows().some((row) => row[needsKey] > 0)) {
     hint += view.prefix === DAILY ? NO_DAILY_SWINGS : NO_SWINGS;
   }
-  if (view.tf === "2h" && state.scan) hint += sourceNote(rows());
+  if (view.tf && view.tf !== "1d" && state.scan) hint += sourceNote(rows());
   dom.listHint.textContent = hint;
   renderListTabs(view);
   renderZoneWinRate(view);

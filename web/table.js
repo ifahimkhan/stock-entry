@@ -40,6 +40,8 @@ function cell(column, row) {
     case "outcome": return el("td", { class: OUTCOME_CLASS[value] || "dim", text: OUTCOME_LABEL[value] || DASH });
     case "pattern": return el("td", { text: value || `${row[column.llKey || "before_entry_ll"] ?? "?"} LL (other)`, class: value ? "" : "dim" });
     case "bartime": return el("td", { text: formatBarTime(value), class: value ? "" : "dim" });
+    // a 2-hour bar time ("2026-11-16 09:15") or a daily date, in lists that mix both timeframes
+    case "swingtime": return el("td", { text: typeof value === "string" && value.length >= 16 ? formatBarTime(value) : formatDate(value), class: value ? "" : "dim" });
     case "angle": return el("td", { class: `num ${signClass(value)}`, text: formatAngle(value) });
     case "status": return el("td", {}, [statusBadge(row.status ?? row.entry_status, row.valid)]);
     case "valid": return el("td", { text: value === true ? "True" : value === false ? "False" : DASH, class: value === null ? "dim" : "" });

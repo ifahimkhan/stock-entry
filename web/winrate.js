@@ -14,6 +14,7 @@ const tradeColumns = (timeframe) => {
   return [
     { key: "ticker", label: "Stock", type: "ticker" },
     { key: "cap", label: "Cap", type: "text" },
+    ...(timeframe === "all" ? [{ key: "timeframe", label: "Timeframe", type: "text" }] : []),
     { key: "signal_at", label: "In list", type: time, title: "The bar the stock entered the Zone Entry list" },
     { key: "pattern", label: "Pattern", type: "text" },
     { key: "change_pct", label: "Change %", type: "pct", title: "HH close vs the last LH close" },
@@ -70,7 +71,7 @@ function headline(all, results) {
     + `${all.losses} losses, ${all.timeouts} timeouts, ${all.open} open · avg return ${formatPercent(all.avg_return)}`;
 }
 
-/** Fill `container` with the Large + Mid cap win rate of `timeframe` ("1d" / "2h").
+/** Fill `container` with the Large + Mid cap win rate of `timeframe` ("1d" / "2h", or "all" for both).
  *  `capOf(ticker)` gives "Large" / "Mid" / "Small" / ""; `onOpen(ticker)` opens a stock. */
 export function renderWinRate(container, results, timeframe, onOpen, capOf) {
   if (!results) {
@@ -78,7 +79,7 @@ export function renderWinRate(container, results, timeframe, onOpen, capOf) {
     return;
   }
   const trades = results.trades
-    .filter((trade) => trade.timeframe === timeframe)
+    .filter((trade) => timeframe === "all" || trade.timeframe === timeframe)
     .map((trade) => ({ ...trade, cap: capOf(trade.ticker) }))
     .filter((trade) => CAPS.includes(trade.cap));
   const summary = summaryRows(trades);
