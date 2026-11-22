@@ -34,6 +34,14 @@ export const TILE_INFO = {
       "CCI up-cross screen: CCI crossed above it today, by 4 points or more.",
       "Breakout screen: CCI is above it by 2 points or more."],
   },
+  "P/B ratio": {
+    title: "P/B ratio: the market price of a share against its book value",
+    lines: ["P/B = market price per share ÷ book value per share (BVPS).",
+      "Price: the latest close. Book value per share: from Yahoo Finance, the company's latest reported figure.",
+      "When Yahoo gives no book value: BVPS = (total assets − total liabilities) ÷ shares outstanding, from the balance sheet.",
+      "A negative P/B means the liabilities are larger than the assets (negative book value). It is not a cheap stock.",
+      "A dash means neither figure is available."],
+  },
   "ATR %": {
     title: "ATR %: the average daily range of the last 14 days, as a percent of the price",
     lines: ["It shows how much the stock usually moves in a day.",

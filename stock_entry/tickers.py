@@ -29,6 +29,7 @@ class Ticker:
     sector: str = ""
     market_cap_cr: float | None = None    # market cap in crore; optional column in tickers.csv
     debt_to_equity: float | None = None   # ratio, e.g. 0.25; optional column in tickers.csv
+    book_value: float | None = None       # book value per share in rupees; from Yahoo, for the P/B ratio
 
 
 def normalize_symbol(text: str, default_suffix: str = ".NS") -> str:

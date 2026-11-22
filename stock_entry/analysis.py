@@ -7,6 +7,7 @@ from typing import Any
 import pandas as pd
 
 from stock_entry.channel import parallel_channel
+from stock_entry.fundamentals import price_to_book
 from stock_entry.indicators import indicator_columns
 from stock_entry.intraday import analyze_swings
 from stock_entry.signals import add_entry_signals, clean_bars
@@ -59,9 +60,11 @@ def build_row(ticker: Ticker, analyzed: pd.DataFrame, swings: pd.DataFrame | Non
         swings, daily = None, None
     else:
         daily = daily_swings(analyzed) if daily is None else daily
+    latest = summarize_latest(ticker.symbol, analyzed, ticker.name, ticker.sector)
     return {
-        **summarize_latest(ticker.symbol, analyzed, ticker.name, ticker.sector),
+        **latest,
         **evaluate_screens(analyzed, ticker.market_cap_cr, ticker.debt_to_equity),
+        "book_value": ticker.book_value, "pb_ratio": price_to_book(latest["close"], ticker.book_value),
         **smc_summary(analyzed),
         "at_closing_high": high,
         **tight_fields(analyzed),

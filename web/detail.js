@@ -145,6 +145,10 @@ function indicators(summary) {
     ["Close > EMA 7", ...check(summary.ema7_pass, "Close is above EMA 7", "Close is under EMA 7")],
     ["3-rule candle", ...check(summary.candle_3rule, "Candle rules met", "Candle rules not met")],
     ["Above prev 5 closes", ...check(summary.close_breakout, "Close beat the last 5", "Close did not beat the last 5")],
+    ["P/B ratio", isNumber(summary.pb_ratio) ? summary.pb_ratio.toFixed(2) : DASH,
+      isNumber(summary.pb_ratio) ? `Price ${formatPrice(summary.close)} ÷ book value ${formatPrice(summary.book_value)} per share`
+        + (summary.pb_ratio < 0 ? " · negative: liabilities exceed assets" : "")
+        : "Book value per share not available", isNumber(summary.pb_ratio) && summary.pb_ratio < 0 ? "warn" : ""],
     ["Screens passed", summary.screens || "None", summary.top_pick ? "Top pick" : `${summary.screen_count || 0} of 2 (CCI up-cross, Breakout)`,
       summary.screens ? "pass" : "muted"],
   ];

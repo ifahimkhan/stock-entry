@@ -1,7 +1,13 @@
-"""Market cap (crore) and debt/equity (ratio) per stock, fetched from Yahoo Finance and cached on disk.
+"""Market cap (crore), debt/equity (ratio) and book value per share per stock, fetched from Yahoo Finance
+and cached on disk.
 
 Values already present in tickers.csv always win; Yahoo only fills the gaps. The cache is refreshed
 when an entry is older than `max_age_days`, because these numbers change slowly.
+
+Book value per share (for the P/B ratio) is never in the stock list, so every stock needs one Yahoo
+request for it each time its cache entry goes stale. When Yahoo gives no book value, it is worked out from
+the balance sheet: (total assets - total liabilities) / shares outstanding. It is negative when the
+liabilities exceed the assets, and so is the P/B ratio then.
 """
 from __future__ import annotations
 
@@ -30,10 +36,11 @@ OnProgress = Callable[[int, int], None]
 class Fundamentals:
     market_cap_cr: float | None = None
     debt_to_equity: float | None = None
+    book_value: float | None = None   # book value per share, rupees
 
     @property
     def is_empty(self) -> bool:
-        return self.market_cap_cr is None and self.debt_to_equity is None
+        return self.market_cap_cr is None and self.debt_to_equity is None and self.book_value is None
 
 
 FetchOne = Callable[[str], Fundamentals]
@@ -45,21 +52,92 @@ def _non_negative(value: Any) -> float | None:
     return float(value) if math.isfinite(value) and value >= 0 else None
 
 
-def from_yahoo_info(info: dict[str, Any]) -> Fundamentals:
-    """Convert Yahoo's raw fields (rupees, percent) to crore and a plain ratio."""
+def _positive(value: Any) -> float | None:
+    number = _non_negative(value)
+    return number if number else None
+
+
+def _number(value: Any) -> float | None:
+    """A finite number of either sign, else None."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value) if math.isfinite(value) else None
+
+
+def _book_value(value: Any) -> float | None:
+    """Book value per share, 2 decimals: negative when liabilities exceed assets, None when missing or zero."""
+    number = _number(value)
+    return round(number, 2) if number else None
+
+
+def book_value_per_share(total_assets: Any, total_liabilities: Any, shares: Any) -> float | None:
+    """BVPS = (total assets - total liabilities) / shares outstanding; None when a figure is missing."""
+    assets, liabilities, count = _number(total_assets), _number(total_liabilities), _positive(shares)
+    if assets is None or liabilities is None or count is None:
+        return None
+    return _book_value((assets - liabilities) / count)
+
+
+def price_to_book(price: Any, book_value: Any) -> float | None:
+    """P/B ratio = market price per share / book value per share (negative for a negative book value);
+    None when either is missing or zero."""
+    price, book_value = _positive(price), _book_value(book_value)
+    return None if price is None or book_value is None else round(price / book_value, 2)
+
+
+def from_yahoo_info(info: dict[str, Any], balance: dict[str, Any] | None = None) -> Fundamentals:
+    """Convert Yahoo's raw fields (rupees, percent) to crore, a plain ratio and book value per share.
+    `balance` (total_assets, total_liabilities, shares) is used when Yahoo's own book value is missing."""
     cap = _non_negative(info.get("marketCap"))
     debt = _non_negative(info.get("debtToEquity"))
+    book = _book_value(info.get("bookValue"))
+    if book is None and balance:
+        book = book_value_per_share(balance.get("total_assets"), balance.get("total_liabilities"),
+                                    balance.get("shares") or info.get("sharesOutstanding"))
     return Fundamentals(
         market_cap_cr=None if cap is None else round(cap / RUPEES_PER_CRORE),
         debt_to_equity=None if debt is None else round(debt / PERCENT, 4),
+        book_value=book,
     )
+
+
+# Balance sheet rows as Yahoo names them.
+ASSETS_ROW, LIABILITIES_ROW, SHARES_ROW = "Total Assets", "Total Liabilities Net Minority Interest", "Ordinary Shares Number"
+
+
+def latest_balance(sheet: Any) -> dict[str, Any] | None:
+    """Total assets, total liabilities and share count of the newest period of a Yahoo balance sheet
+    (rows = items, columns = period ends); None when the sheet is empty or has no assets / liabilities."""
+    if sheet is None or getattr(sheet, "empty", True):
+        return None
+    if ASSETS_ROW not in sheet.index or LIABILITIES_ROW not in sheet.index:
+        return None
+    newest = sheet[max(sheet.columns)]
+
+    def cell(row: str) -> float | None:
+        return _number(float(newest[row])) if row in newest.index else None
+
+    return {"total_assets": cell(ASSETS_ROW), "total_liabilities": cell(LIABILITIES_ROW), "shares": cell(SHARES_ROW)}
 
 
 def fetch_from_yahoo(symbol: str) -> Fundamentals:
     import yfinance as yf  # imported here so the rest of the app (and the tests) work offline
 
-    info = yf.Ticker(symbol).info
-    return from_yahoo_info(info if isinstance(info, dict) else {})
+    ticker = yf.Ticker(symbol)
+    info = ticker.info
+    info = info if isinstance(info, dict) else {}
+    if _book_value(info.get("bookValue")) is not None:
+        return from_yahoo_info(info)
+    # No book value from Yahoo: one more request, for the balance sheet (the annual one, else the quarterly).
+    balance = None
+    for read in (lambda: ticker.balance_sheet, lambda: ticker.quarterly_balance_sheet):
+        try:
+            balance = latest_balance(read())
+        except Exception as exc:  # a missing balance sheet only leaves the P/B ratio empty
+            logger.warning("No balance sheet for %s: %s", symbol, exc)
+        if balance:
+            break
+    return from_yahoo_info(info, balance)
 
 
 class FundamentalsService:
@@ -112,14 +190,19 @@ class FundamentalsService:
             ticker,
             market_cap_cr=ticker.market_cap_cr if ticker.market_cap_cr is not None else _non_negative(entry.get("market_cap_cr")),
             debt_to_equity=ticker.debt_to_equity if ticker.debt_to_equity is not None else _non_negative(entry.get("debt_to_equity")),
+            book_value=ticker.book_value if ticker.book_value is not None else _book_value(entry.get("book_value")),
         )
 
+    def _needs_fetch(self, ticker: Ticker, entry: Any) -> bool:
+        missing = ticker.market_cap_cr is None or ticker.debt_to_equity is None or ticker.book_value is None
+        # An entry saved before book value was stored has no "book_value" key: it is fetched once more.
+        return missing and not (self._is_fresh(entry) and "book_value" in entry)
+
     def enrich(self, tickers: list[Ticker], on_progress: OnProgress | None = None) -> list[Ticker]:
-        """Return tickers with market cap and debt/equity filled in, fetching what is missing or stale."""
+        """Return tickers with market cap, debt/equity and book value filled in, fetching what is missing or stale."""
         with self._lock:
             cache = self._load()
-        needed = [t.symbol for t in tickers
-                  if (t.market_cap_cr is None or t.debt_to_equity is None) and not self._is_fresh(cache.get(t.symbol))]
+        needed = [t.symbol for t in tickers if self._needs_fetch(t, cache.get(t.symbol))]
         done = len(tickers) - len(needed)
         if on_progress is not None:
             on_progress(done, len(tickers))
@@ -132,6 +215,7 @@ class FundamentalsService:
                     on_progress(done, len(tickers))
                 if not result.is_empty:  # failures are not cached, so they are retried next scan
                     fetched[symbol] = {"market_cap_cr": result.market_cap_cr, "debt_to_equity": result.debt_to_equity,
+                                       "book_value": result.book_value,
                                        "fetched_at": self._now().isoformat(timespec="seconds")}
         merged = {**cache, **fetched}
         if fetched:

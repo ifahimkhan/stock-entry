@@ -441,7 +441,11 @@ const ALL_VIEWS = [
     sort: { key: "ticker", dir: "asc" },
   },
 ];
-const VIEWS = ALL_VIEWS.filter((view) => !HIDDEN_VIEWS.has(view.id));
+// Every list ends with the P/B ratio, so each one can be sorted by it (header click, or the sort picker on phones).
+const PB = { key: "pb_ratio", label: "P/B", type: "num2",
+  title: "P/B ratio: latest close \u00f7 book value per share (Yahoo Finance). Negative = liabilities above assets. Click to sort; stocks without a book value go last" };
+const VIEWS = ALL_VIEWS.filter((view) => !HIDDEN_VIEWS.has(view.id))
+  .map((view) => ({ ...view, columns: [...view.columns, PB] }));
 
 const $ = (id) => document.getElementById(id);
 const dom = {

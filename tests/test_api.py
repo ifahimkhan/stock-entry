@@ -39,7 +39,7 @@ def settings(tmp_path: Path) -> Settings:
 
 
 def fake_fundamentals(symbol: str) -> Fundamentals:
-    known = {"ENTRY.NS": Fundamentals(150_000, 0.1), "WAIT.NS": Fundamentals(50_000, 0.25)}
+    known = {"ENTRY.NS": Fundamentals(150_000, 0.1, 50.0), "WAIT.NS": Fundamentals(50_000, 0.25)}
     return known.get(symbol, Fundamentals())
 
 
@@ -201,3 +201,11 @@ def test_hh_hl_endpoints_return_the_saved_analysis(client: FlaskClient, settings
     assert full["summary"] == [{"group": "Entry 1"}] and full["signals"][0]["stock"] == "A.NS"
     settings.hh_hl_path.write_text("[1, 2]", encoding="utf-8")
     assert client.get("/api/hh-hl-results").status_code == 500   # not the expected shape
+
+
+def test_stock_detail_carries_book_value_and_pb_ratio(client: FlaskClient) -> None:
+    summary = client.get("/api/stocks/ENTRY").get_json()["data"]["summary"]
+    assert summary["book_value"] == 50.0
+    assert summary["pb_ratio"] == round(summary["close"] / 50.0, 2)
+    waiting = client.get("/api/stocks/WAIT").get_json()["data"]["summary"]
+    assert waiting["book_value"] is None and waiting["pb_ratio"] is None
