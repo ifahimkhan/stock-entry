@@ -309,8 +309,11 @@ function picker(options, selectedLabel, groupLabel, onChange) {
 let currentTab = "overview";
 
 /** Tab bar + panels. `tabs`: [{id, label, body, onShow?}]; tabs without a body are left out. */
+// Detail tabs kept in the code but not shown (turn one back on by removing its id here).
+const HIDDEN_TABS = new Set(["sessions"]);
+
 function tabbed(tabs) {
-  const shown = tabs.filter((tab) => tab.body);
+  const shown = tabs.filter((tab) => tab.body && !HIDDEN_TABS.has(tab.id));
   const active = shown.some((tab) => tab.id === currentTab) ? currentTab : shown[0].id;
   const buttons = shown.map((tab) => el("button", {
     type: "button", role: "tab", id: `detail-tab-${tab.id}`, "aria-controls": `detail-panel-${tab.id}`,
