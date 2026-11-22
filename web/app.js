@@ -127,8 +127,9 @@ const TIMEFRAMES = [
     barsTitle: "Sessions since the record",
   },
 ];
-const DEFAULT_TIMEFRAME = "2h";
+const DEFAULT_TIMEFRAME = "2h";   // the timeframe whose view ids carry no suffix ("before", not "before1d")
 const ALL_TIMEFRAMES = "all";   // the "All" switch: the 2-hour and the daily list together, one row per stock and timeframe
+const START_TIMEFRAME = ALL_TIMEFRAMES;   // the switch position the page opens with
 const TIMEFRAME_OPTIONS = [{ id: ALL_TIMEFRAMES, label: "All" }, ...TIMEFRAMES];
 const TF_COLUMN = { key: "tf_label", label: "Timeframe", type: "text", title: "Bars the signal was found on: 2h or 1D" };
 
@@ -460,11 +461,13 @@ const dom = {
   tvSubmit: $("tv-submit"), tvSignout: $("tv-signout"), tvCheck: $("tv-check"),
 };
 
+// The page opens on the first list; a swing list opens on the start timeframe.
+const START_VIEW = VIEWS.find((view) => view.group === VIEWS[0].group && view.tf === START_TIMEFRAME) || VIEWS[0];
 let state = {
   scan: undefined,  // undefined until the first load answers; null when there is no scan yet
-  progress: { running: false }, tickers: [], viewId: VIEWS[0].id,
-  sort: VIEWS[0].sort, query: "", selected: null, capFilter: "all", patternFilter: "all", zoneTab: "stocks",
-  timeframe: DEFAULT_TIMEFRAME,
+  progress: { running: false }, tickers: [], viewId: START_VIEW.id,
+  sort: START_VIEW.sort, query: "", selected: null, capFilter: "all", patternFilter: "all", zoneTab: "stocks",
+  timeframe: START_TIMEFRAME,
 };
 let pollTimer = null;
 let detailCleanup = null;
