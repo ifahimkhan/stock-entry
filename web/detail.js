@@ -72,7 +72,7 @@ function withChannel(history, summary) {
 function legendItems(drawn, channel) {
   const item = (mark, text) => el("span", { class: "badge" }, [mark, el("span", { text })]);
   const price = drawn === "candles"
-    ? [item(el("span", { class: "candle up" }), "Up day (hollow)"), item(el("span", { class: "candle down" }), "Down day (filled)")]
+    ? [item(el("span", { class: "candle up" }), "Up day"), item(el("span", { class: "candle down" }), "Down day")]
     : [item(el("span", { class: "line" }), "Close")];
   return [
     ...price,

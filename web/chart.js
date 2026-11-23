@@ -98,7 +98,7 @@ function drawChannel(root, bars, scales) {
   line((bar) => (bar.channel_upper + bar.channel_lower) / 2, true);
 }
 
-/** One candle per day. Up days are hollow, down days are filled, so direction never relies on colour alone. */
+/** One candle per day, filled: green on an up day, red on a down day. */
 function drawCandles(root, bars, scales) {
   const bodyWidth = Math.max(CANDLE_MIN_WIDTH, Math.min(CANDLE_MAX_WIDTH, scales.slot * CANDLE_FILL_SHARE));
   bars.forEach((bar, index) => {
@@ -109,7 +109,7 @@ function drawCandles(root, bars, scales) {
     const height = Math.max(1, Math.abs(scales.y(bar.Open) - scales.y(bar.Close)));
     root.append(svg("line", { x1: x, x2: x, y1: scales.y(bar.High), y2: scales.y(bar.Low) }, `stroke: ${color}; stroke-width: 1`));
     root.append(svg("rect", { x: x - bodyWidth / 2, y: top, width: bodyWidth, height },
-      `fill: ${up ? "var(--surface)" : color}; stroke: ${color}; stroke-width: 1`));
+      `fill: ${color}; stroke: ${color}; stroke-width: 1`));
   });
 }
 
