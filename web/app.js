@@ -27,6 +27,10 @@ const CHANGE = { key: "pct_change", label: "Chg %", type: "pct" };
 const CCI = { key: "cci", label: "CCI", type: "num2" };
 const RSI = { key: "rsi", label: "RSI", type: "num2" };
 const CAP = { key: "cap_category", label: "Cap", type: "text" };
+// Every list has the P/B ratio, so each one can be sorted by it (header click, or the sort picker on phones):
+// at the end, unless the list places it itself.
+const PB = { key: "pb_ratio", label: "P/B", type: "num2",
+  title: "P/B ratio: latest close \u00f7 book value per share (Yahoo Finance). Negative = liabilities above assets. Click to sort; stocks without a book value go last" };
 const MARKET_CAP = { key: "market_cap_cr", label: "Mkt cap (Cr)", type: "crore" };
 const DEBT = { key: "debt_to_equity", label: "Debt/Eq", type: "num2" };
 const CAP_FILTERS = [
@@ -72,6 +76,7 @@ const CHANNEL_RULE = "Parallel channel on daily bars: two parallel lines through
 const CHANNEL_COLUMNS = [TICKER,
   { key: "channel_zone", label: "Where", title: "Near lower line: position 25% or less. Near upper line: 75% or more. Or the break of the channel" },
   { key: "channel_position_pct", label: "Position", type: "pctplain", title: "Latest close inside the channel: 0% = lower line, 100% = upper line" },
+  PB,
   { key: "channel_lower", label: "Lower line", type: "price", title: "Value of the lower line on the latest day" },
   { key: "channel_upper", label: "Upper line", type: "price", title: "Value of the upper line on the latest day" },
   CLOSE,
@@ -107,7 +112,7 @@ const entryColumns = (fall) => [TICKER,
   { key: "tight_entry_pct", label: "Breakout %", type: "pct", title: "Close of the breakout day against the base close of the range" },
   { key: "tight_entry_volume_x", label: "Volume ×", type: "num2", title: "Breakout day's volume as a multiple of the average volume of the days of the range" },
   { key: "tight_entry_range_days", label: "Range days", type: "int", title: "Length of the tight range before the breakout" },
-  ...(fall ? [{ key: "tight_entry_fall_pct", label: "Fall", type: "pct", title: "Base close of the range against the highest close of the 20 trading days before it" }] : []),
+  ...(fall ? [{ key: "tight_entry_fall_pct", label: "Fall", type: "pct", title: "Base close of the range against the highest close of the 20 trading days before it" }, PB] : []),
   { key: "tight_entry_base_close", label: "Base close", type: "price" },
   CLOSE, { key: "tight_entry_now_pct", label: "From base", type: "pct", title: "Latest close against the base close" }, CAP];
 const BEFORE_ENTRY_MAX_BARS = 12;  // TBC Zone Entry (2h): only HHs at most this many 2-hour bars old
@@ -168,11 +173,12 @@ const beforeEntryView = (tf) => {
       && withinBars(row[key("before_entry_bars")], maxBars),
     columns: [TICKER, { key: key("before_entry_at"), label: "Zone entry", type: tf.timeType },
       barsColumn(key("before_entry_bars"), tf),
-      { key: key("before_entry_pattern"), label: "Pattern", type: "pattern", llKey: key("before_entry_ll"), title: "Lower lows since the previous HH: 3LL-HH, 4LL-HH or other" },
-      { key: key("before_entry_close"), label: "HH close", type: "price" }, CLOSE,
       // Change % of the Zone entry HH on this timeframe's swings (HH close vs the close of the last LH before it)
       { key: key("before_entry_change_pct"), label: "Change %", type: "pct",
         title: `Change % of the Zone entry HH (${tf.short} swings): (HH close - last LH close) / last LH close` },
+      PB,
+      { key: key("before_entry_pattern"), label: "Pattern", type: "pattern", llKey: key("before_entry_ll"), title: "Lower lows since the previous HH: 3LL-HH, 4LL-HH or other" },
+      { key: key("before_entry_close"), label: "HH close", type: "price" }, CLOSE,
       ...angleColumns(tf)],
     sort: { key: key("before_entry_change_pct"), dir: "desc" },   // biggest HH-over-LH move first
   };
@@ -423,6 +429,7 @@ const ALL_VIEWS = [
       + WAIT_RULE,
     filter: (row) => row.tight_after_fall === true && waitMomentum(row),
     columns: [TICKER, { key: "tight_fall_pct", label: "Fall", type: "pct", title: "Base close of the range against the highest close of the 20 trading days before it" },
+      PB,
       { key: "tight_peak_date", label: "High on", type: "date", title: "Day of that highest close" },
       { key: "tight_peak_close", label: "High close", type: "price" },
       { key: "tight_base_date", label: "Range since", type: "date", title: "First day of the tight range: its close is the base" },
@@ -452,13 +459,13 @@ const ALL_VIEWS = [
     sort: { key: "ticker", dir: "asc" },
   },
 ];
-// Every list ends with the P/B ratio, so each one can be sorted by it (header click, or the sort picker on phones).
-const PB = { key: "pb_ratio", label: "P/B", type: "num2",
-  title: "P/B ratio: latest close \u00f7 book value per share (Yahoo Finance). Negative = liabilities above assets. Click to sort; stocks without a book value go last" };
 // List columns kept in the code but not shown (remove a type here to show them again): the LL\u2192LL and LL\u2192HL angles.
 const HIDDEN_COLUMN_TYPES = new Set(["angle"]);
 const VIEWS = ALL_VIEWS.filter((view) => !HIDDEN_VIEWS.has(view.id))
-  .map((view) => ({ ...view, columns: [...view.columns.filter((column) => !HIDDEN_COLUMN_TYPES.has(column.type)), PB] }));
+  .map((view) => {
+    const shown = view.columns.filter((column) => !HIDDEN_COLUMN_TYPES.has(column.type));
+    return { ...view, columns: shown.includes(PB) ? shown : [...shown, PB] };
+  });
 
 const $ = (id) => document.getElementById(id);
 const dom = {
