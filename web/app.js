@@ -81,9 +81,20 @@ const CHANNEL_COLUMNS = [TICKER,
   { key: "channel_days", label: "Days", type: "int", title: "Trading days from the first anchor to the latest day" },
   { key: "channel_break_date", label: "Break on", type: "date", title: "Day of the first close outside the lines" },
   RSI, CAP];
-const channelView = (kind, first) => ({
+const CHANNEL_TYPE = { key: "channel_type", label: "Type", type: "text", title: "Ascending, Descending or Horizontal" };
+// First tab of the section (the one its chip opens): every channel, whatever its direction.
+const CHANNEL_ALL = {
+  id: "channelall", label: "Parallel Channel (1D): All", mark: null, needsKey: "channel",
+  chip: "Parallel Channel (1D)", tabGroup: "channel", tabLabel: "All",
+  note: (row) => `${row.channel_type} channel since ${formatDate(row.channel_since)} \u00b7 ${row.channel_zone} \u00b7 ${formatPrice(row.channel_lower)} to ${formatPrice(row.channel_upper)}`,
+  hint: `${CHANNEL_RULE} All: ascending, descending and horizontal channels together (see the Type column).`,
+  filter: (row) => row.channel === true,
+  columns: [CHANNEL_COLUMNS[0], CHANNEL_TYPE, ...CHANNEL_COLUMNS.slice(1)],
+  sort: { key: "channel_position_pct", dir: "asc" },
+};
+const channelView = (kind) => ({
   id: `channel${kind.toLowerCase()}`, label: `Parallel Channel (1D): ${kind}`, mark: null, needsKey: "channel",
-  chip: "Parallel Channel (1D)", tabGroup: "channel", tabLabel: kind, ...(first ? {} : { tabOf: "channelascending" }),
+  chip: "Parallel Channel (1D)", tabGroup: "channel", tabLabel: kind, tabOf: CHANNEL_ALL.id,
   note: (row) => `${kind} channel since ${formatDate(row.channel_since)} · ${row.channel_zone} · ${formatPrice(row.channel_lower)} to ${formatPrice(row.channel_upper)}`,
   hint: `${CHANNEL_RULE} ${kind}: ${kind === "Horizontal" ? "the lines move less than 0.3% of the price per day" : `the lines ${kind === "Ascending" ? "rise" : "fall"} more than 0.3% of the price per day`}.`,
   filter: (row) => row.channel === true && row.channel_type === kind,
@@ -429,7 +440,7 @@ const ALL_VIEWS = [
     columns: entryColumns(true),
     sort: { key: "tight_entry_date", dir: "desc" },
   },
-  channelView("Ascending", true), channelView("Descending", false), channelView("Horizontal", false),
+  CHANNEL_ALL, channelView("Ascending"), channelView("Descending"), channelView("Horizontal"),
   {
     id: "all", label: "All stocks", mark: null,
     chip: "All",
