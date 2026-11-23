@@ -3,10 +3,11 @@
 import { el, formatDate, formatPercent, formatPrice, isNumber, signClass, statusKind } from "./format.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-const HEIGHT = 320;
+const HEIGHT = 320;   // default chart height; the full view passes its own
 const MARGIN = { top: 28, right: 18, bottom: 26, left: 58 };
 export const PLOT_MARGIN = MARGIN;   // where the plot sits inside the chart, for zoom and pan
-const Y_TICKS = 4;
+const Y_TICKS = 4;            // price lines of the default height; a taller chart (full view) gets more
+const Y_TICK_SPACING = 80;    // px of plot height per price line
 const X_TICKS = 5;
 const LABEL_HALF_WIDTH = 44;   // keeps the "Entry 1,234.50" label inside the plot
 const LABEL_CHAR_WIDTH = 6.4;  // approximate width of one 11px bold character
@@ -37,18 +38,18 @@ function niceTicks(min, max, count) {
 const hasCandle = (bar) => isNumber(bar.Open) && isNumber(bar.High) && isNumber(bar.Low);
 
 /** Scales for the plot. Candles get one equal slot per day; the line runs edge to edge. */
-function buildScales(bars, width, candles) {
+function buildScales(bars, width, candles, height = HEIGHT) {
   const low = Math.min(...bars.map((bar) => (candles ? bar.Low : bar.Close)));
   const high = Math.max(...bars.map((bar) => (candles ? bar.High : bar.Close)));
   const pad = (high - low) * (candles ? 0.12 : 0.08) || high * 0.02 || 1;
   const yMin = low - pad;
   const yMax = high + pad;
   const plotWidth = width - MARGIN.left - MARGIN.right;
-  const plotHeight = HEIGHT - MARGIN.top - MARGIN.bottom;
+  const plotHeight = height - MARGIN.top - MARGIN.bottom;
   const slot = plotWidth / bars.length;
   const lineX = (index) => (bars.length === 1 ? plotWidth / 2 : (index / (bars.length - 1)) * plotWidth);
   return {
-    yMin, yMax, plotWidth, plotHeight, slot,
+    yMin, yMax, plotWidth, plotHeight, slot, height,
     x: (index) => MARGIN.left + (candles ? (index + 0.5) * slot : lineX(index)),
     y: (value) => MARGIN.top + (1 - (value - yMin) / (yMax - yMin)) * plotHeight,
     indexAt: (pixelX) => {
@@ -60,14 +61,14 @@ function buildScales(bars, width, candles) {
 }
 
 function drawAxes(root, bars, scales, width) {
-  for (const tick of niceTicks(scales.yMin, scales.yMax, Y_TICKS)) {
+  for (const tick of niceTicks(scales.yMin, scales.yMax, Math.max(Y_TICKS, Math.round(scales.plotHeight / Y_TICK_SPACING)))) {
     const y = scales.y(tick);
     root.append(svg("line", { x1: MARGIN.left, x2: width - MARGIN.right, y1: y, y2: y }, "stroke: var(--grid); stroke-width: 1"));
     const label = svg("text", { x: MARGIN.left - 8, y: y + 4, "text-anchor": "end" });
     label.textContent = formatPrice(tick).replace(/\.00$/, "");
     root.append(label);
   }
-  const baseline = HEIGHT - MARGIN.bottom;
+  const baseline = scales.height - MARGIN.bottom;
   root.append(svg("line", { x1: MARGIN.left, x2: width - MARGIN.right, y1: baseline, y2: baseline }, "stroke: var(--axis); stroke-width: 1"));
   const count = Math.min(X_TICKS, bars.length);
   for (let i = 0; i < count; i += 1) {
@@ -171,10 +172,10 @@ function tooltipContent(bar, candles) {
 }
 
 function addHover(container, root, bars, scales, width, candles) {
-  const crosshair = svg("line", { y1: MARGIN.top, y2: HEIGHT - MARGIN.bottom, visibility: "hidden" }, "stroke: var(--axis); stroke-width: 1");
+  const crosshair = svg("line", { y1: MARGIN.top, y2: scales.height - MARGIN.bottom, visibility: "hidden" }, "stroke: var(--axis); stroke-width: 1");
   const focus = svg("circle", { r: 5, visibility: "hidden" }, "fill: none; stroke: var(--ink); stroke-width: 1.5");
   const tooltip = el("div", { class: "tooltip", hidden: true });
-  const hitArea = svg("rect", { x: MARGIN.left, y: 0, width: scales.plotWidth, height: HEIGHT }, "fill: transparent");
+  const hitArea = svg("rect", { x: MARGIN.left, y: 0, width: scales.plotWidth, height: scales.height }, "fill: transparent");
   root.append(crosshair, focus, hitArea);
   container.append(tooltip);
 
@@ -211,9 +212,10 @@ function addHover(container, root, bars, scales, width, candles) {
  * @param {Array<{Date: string, Open: number|null, High: number|null, Low: number|null, Close: number,
  *                pct_change: number|null, valid: boolean|null, entry_status: string}>} history
  * @param {"candles"|"line"} mode  candles fall back to the line when open/high/low are missing
+ * @param {number} [height]  chart height in px (default 320); the full view passes the room it has
  * @returns {"candles"|"line"|null} the mode actually drawn, or null when there are too few bars
  */
-export function renderChart(container, history, mode = "candles") {
+export function renderChart(container, history, mode = "candles", height = HEIGHT) {
   const bars = history.filter((bar) => isNumber(bar.Close));
   container.replaceChildren();
   if (bars.length < 2) {
@@ -222,10 +224,10 @@ export function renderChart(container, history, mode = "candles") {
   }
   const candles = mode === "candles" && bars.every(hasCandle);
   const width = Math.max(320, Math.round(container.clientWidth));
-  const scales = buildScales(bars, width, candles);
+  const scales = buildScales(bars, width, candles, height);
   const kind = candles ? "Daily candlestick chart" : "Closing price";
   const root = svg("svg", {
-    viewBox: `0 0 ${width} ${HEIGHT}`, height: HEIGHT, role: "img",
+    viewBox: `0 0 ${width} ${height}`, height, role: "img",
     "aria-label": `${kind} from ${formatDate(bars[0].Date, true)} to ${formatDate(bars[bars.length - 1].Date, true)} with breakout, wait and entry marks. The same data is in the table below.`,
   });
   drawAxes(root, bars, scales, width);

@@ -12,6 +12,8 @@ const RANGES = [{ label: "1M", bars: 22 }, { label: "3M", bars: 66 }, { label: "
 const DEFAULT_RANGE = "3M";
 const MODES = [{ label: "Candles", mode: "candles" }, { label: "Line", mode: "line" }];
 const DEFAULT_MODE = "candles";
+const FULL_VIEW_MIN_HEIGHT = 320;   // px: the chart is never shorter than outside the full view
+const FULL_VIEW_SPARE = 62;         // px kept for the card padding and the zoom hint under the chart
 const HISTORY_COLUMNS = [
   { key: "Date", label: "Date", type: "date" },
   { key: "Open", label: "Open", type: "price" },
@@ -391,12 +393,17 @@ export function renderDetail(panel, detail) {
   let chartMode = DEFAULT_MODE;
   let zoom = null;   // null: the whole period; else { count, offset } (see chartzoom.js)
   const zoomInfo = el("span", { class: "zoom-info dim" });
+  // Full view: the chart with its controls over the whole screen (see toggleFullView below).
+  let fullView = false;
+  const controls = el("div", { class: "chart-controls" });
+  const chartView = el("div", { class: "chart-view" });
+  const fullHeight = () => Math.max(FULL_VIEW_MIN_HEIGHT, chartView.clientHeight - controls.offsetHeight - FULL_VIEW_SPARE);
   const periodBars = () => (visibleBars ? history.slice(-visibleBars) : history);
   const drawChart = () => {
     if (!chart.clientWidth) return;   // chart tab hidden: drawn when it is shown
     const period = periodBars();
     const shown = sliceWindow(period, zoom);
-    const drawn = renderChart(chart, shown, chartMode);
+    const drawn = renderChart(chart, shown, chartMode, fullView ? fullHeight() : undefined);
     legend.replaceChildren(...legendItems(drawn, summary.channel === true ? `${summary.channel_type} channel` : null));  // matches what was drawn, e.g. line when OHLC is missing
     const zoomed = fitWindow(zoom, period.length).count < period.length;
     zoomInfo.textContent = zoomed
@@ -417,6 +424,59 @@ export function renderDetail(panel, detail) {
     el("button", { type: "button", text: "+", title: "Zoom in", "aria-label": "Zoom in", onclick: () => zoomBy(ZOOM_STEP) }),
     el("button", { type: "button", text: "Reset", title: "Show the whole period", onclick: () => setZoom(null) }),
   ]);
+  // The chart view is moved to <body> while it is full: the detail pane is a transformed sheet on phones,
+  // and a fixed element inside it would only cover the sheet. The browser's own full screen is asked for
+  // on top of that; where it is refused (iPhone, some embedded pages) the view still fills the window.
+  const fullButton = el("button", { type: "button", class: "full-view-button" });
+  const placeholder = document.createComment("chart view");
+  const nativeFull = () => document.fullscreenElement || document.webkitFullscreenElement;
+  const showFullState = () => {
+    fullButton.textContent = fullView ? "Exit full view" : "Full view";
+    fullButton.title = fullView ? "Back to the stock page (Esc)" : "Open the chart on the full screen";
+    fullButton.setAttribute("aria-pressed", String(fullView));
+  };
+  const setFullView = (on) => {
+    if (on === fullView) return;
+    fullView = on;
+    if (on) {
+      chartView.replaceWith(placeholder);
+      document.body.append(chartView);
+    } else {
+      placeholder.replaceWith(chartView);
+    }
+    chartView.classList.toggle("full", on);
+    document.body.classList.toggle("chart-full-open", on);
+    showFullState();
+    drawChart();
+  };
+  const toggleFullView = () => {
+    const on = !fullView;
+    setFullView(on);
+    const root = document.documentElement;
+    const request = root.requestFullscreen || root.webkitRequestFullscreen;
+    const leave = document.exitFullscreen || document.webkitExitFullscreen;
+    try {
+      const done = on ? (request && !nativeFull() ? request.call(root) : null) : (leave && nativeFull() ? leave.call(document) : null);
+      if (done && done.catch) done.catch(() => {});   // refused: the view already fills the window
+    } catch {
+      // older browsers throw instead of rejecting; same fallback
+    }
+  };
+  const onFullscreenChange = () => {
+    if (!nativeFull() && fullView) setFullView(false);   // left with Esc or the browser's own button
+    else drawChart();                                    // the screen size changed
+  };
+  const onKey = (event) => {
+    if (event.key === "Escape" && fullView && !nativeFull()) setFullView(false);
+  };
+  const onResize = () => { if (fullView) drawChart(); };
+  fullButton.addEventListener("click", toggleFullView);
+  document.addEventListener("fullscreenchange", onFullscreenChange);
+  document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+  document.addEventListener("keydown", onKey);
+  window.addEventListener("resize", onResize);
+  showFullState();
+  zoomButtons.append(fullButton);
 
   const tabs = tabbed([
     { id: "overview", label: "Overview", body: el("div", {}, [
@@ -424,8 +484,8 @@ export function renderDetail(panel, detail) {
         factLines(summary).map((text, i) => el("p", {}, [el("span", { text }), i === 0 ? infoButton(CYCLE_INFO) : null]))),
       indicators(summary),
     ]) },
-    { id: "chart", label: "Chart", onShow: () => drawChart(), body: el("div", {}, [
-      el("div", { class: "chart-controls" }, [legend, el("div", { class: "pickers" }, [
+    { id: "chart", label: "Chart", onShow: () => drawChart(), body: (() => {
+      controls.append(legend, el("div", { class: "pickers" }, [
         picker(MODES, DEFAULT_MODE === "candles" ? "Candles" : "Line", "Chart type", (option) => {
           chartMode = option.mode;
           drawChart();
@@ -435,9 +495,10 @@ export function renderDetail(panel, detail) {
           setZoom(null);   // a new period starts unzoomed
         }),
         zoomButtons,
-      ])]),
-      el("div", { class: "chart-card" }, [chart, zoomInfo]),
-    ]) },
+      ]));
+      chartView.append(controls, el("div", { class: "chart-card" }, [chart, zoomInfo]));
+      return el("div", {}, [chartView]);
+    })() },
     { id: "swings2h", label: "Swings 2h",
       body: swingSection(summary, detail[SWING_FRAMES.twoHour.swingsKey], SWING_FRAMES.twoHour, detail[SWING_FRAMES.twoHour.barsKey]) },
     { id: "swings1d", label: "Swings 1D", body: swingSection(summary, detail[SWING_FRAMES.daily.swingsKey], SWING_FRAMES.daily, detail[SWING_FRAMES.daily.barsKey]) },
@@ -476,5 +537,13 @@ export function renderDetail(panel, detail) {
   return () => {
     observer.disconnect();
     stopZoom();
+    // leave the full view with the stock: the chart must not stay over the page
+    if (fullView && nativeFull()) (document.exitFullscreen || document.webkitExitFullscreen)?.call(document)?.catch?.(() => {});
+    chartView.remove();
+    document.body.classList.remove("chart-full-open");
+    document.removeEventListener("fullscreenchange", onFullscreenChange);
+    document.removeEventListener("webkitfullscreenchange", onFullscreenChange);
+    document.removeEventListener("keydown", onKey);
+    window.removeEventListener("resize", onResize);
   };
 }

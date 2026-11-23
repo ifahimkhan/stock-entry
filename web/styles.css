@@ -308,6 +308,15 @@ body.sheet-open .detail { transform: none; visibility: visible; }
 .legend .line { width: 16px; height: 2px; background: var(--series); display: inline-block; }
 .legend .line.channel { background: var(--channel, #7c5cff); }
 .chart-card { padding: 8px 4px 4px; border-radius: 12px; background: var(--page); border: 1px solid var(--border); }
+/* Full view: the chart and its controls over the whole screen (the view is moved to <body> while it is open). */
+.chart-view.full {
+  position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; overflow: auto;
+  padding: 8px max(12px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  background: var(--page);
+}
+.chart-view.full .chart-controls { margin-top: 4px; }
+.chart-view.full .chart-card { flex: 1; min-height: 0; }
+html:has(> body.chart-full-open), body.chart-full-open { overflow: hidden; }   /* no page scrollbar beside the chart */
 .chart { position: relative; touch-action: pan-y; cursor: grab; user-select: none; }
 .chart.dragging { cursor: grabbing; }
 .ranges.zoom button { min-width: 30px; font-size: 13px; }
