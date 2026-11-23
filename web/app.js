@@ -444,8 +444,10 @@ const ALL_VIEWS = [
 // Every list ends with the P/B ratio, so each one can be sorted by it (header click, or the sort picker on phones).
 const PB = { key: "pb_ratio", label: "P/B", type: "num2",
   title: "P/B ratio: latest close \u00f7 book value per share (Yahoo Finance). Negative = liabilities above assets. Click to sort; stocks without a book value go last" };
+// List columns kept in the code but not shown (remove a type here to show them again): the LL\u2192LL and LL\u2192HL angles.
+const HIDDEN_COLUMN_TYPES = new Set(["angle"]);
 const VIEWS = ALL_VIEWS.filter((view) => !HIDDEN_VIEWS.has(view.id))
-  .map((view) => ({ ...view, columns: [...view.columns, PB] }));
+  .map((view) => ({ ...view, columns: [...view.columns.filter((column) => !HIDDEN_COLUMN_TYPES.has(column.type)), PB] }));
 
 const $ = (id) => document.getElementById(id);
 const dom = {
