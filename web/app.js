@@ -72,9 +72,17 @@ const ENTRY_RULE = `Entry: the close broke more than ${TIGHT_PCT}% above the bas
 const CHANNEL_RULE = "Parallel channel on daily bars: two parallel lines through swing points (pivots with 5 bars on each side). "
   + "The base line joins the last two swing lows (rising or flat) or swing highs (falling or flat); the parallel line passes through the farthest swing point on the other side, "
   + "and a second swing point must touch it. Channel: 30 or more trading days long, 3% to 20% wide, no bar outside the lines while it formed. "
-  + "Position: 0% = on the lower line, 100% = on the upper line. Breakout up / Breakdown = the first close outside the lines, listed for 5 trading days.";
+  + "Position: 0% = on the lower line, 100% = on the upper line. Breakout up / Breakdown = the first close outside the lines, listed for 5 trading days. "
+  + "Descending channels have their own Breakout up (see the Descending tab).";
+// Breakout of a falling channel: same number as LL_HIGH_BARS in stock_entry/channel.py
+const DESCENDING_BREAKOUT = "Breakout up in a Descending channel: the latest daily close is above the highest High of the 4 candles just before the latest LL "
+  + "(the Clean swing label of the Swings 1D table). It shows while the close stays above that level; Break on = the first day of that run. "
+  + "A close above the upper line alone is not a breakout here (Where = Above upper line). "
+  + "Breakdown is still the first close below the lower line.";
+const CHANNEL_BREAKOUT_LEVEL = { key: "channel_breakout_level", label: "Breakout above", type: "price",
+  title: "Highest High of the 4 candles just before the latest LL: a close above it is the Breakout up of a Descending channel" };
 const CHANNEL_COLUMNS = [TICKER,
-  { key: "channel_zone", label: "Where", title: "Near lower line: position 25% or less. Near upper line: 75% or more. Or the break of the channel" },
+  { key: "channel_zone", label: "Where", title: "Near lower line: position 25% or less. Near upper line: 75% or more. Above upper line: a falling channel closed over its upper line. Or the break of the channel" },
   { key: "channel_position_pct", label: "Position", type: "pctplain", title: "Latest close inside the channel: 0% = lower line, 100% = upper line" },
   PB,
   { key: "channel_lower", label: "Lower line", type: "price", title: "Value of the lower line on the latest day" },
@@ -101,9 +109,11 @@ const channelView = (kind) => ({
   id: `channel${kind.toLowerCase()}`, label: `Parallel Channel (1D): ${kind}`, mark: null, needsKey: "channel",
   chip: "Parallel Channel (1D)", tabGroup: "channel", tabLabel: kind, tabOf: CHANNEL_ALL.id,
   note: (row) => `${kind} channel since ${formatDate(row.channel_since)} · ${row.channel_zone} · ${formatPrice(row.channel_lower)} to ${formatPrice(row.channel_upper)}`,
-  hint: `${CHANNEL_RULE} ${kind}: ${kind === "Horizontal" ? "the lines move less than 0.3% of the price per day" : `the lines ${kind === "Ascending" ? "rise" : "fall"} more than 0.3% of the price per day`}.`,
+  hint: `${CHANNEL_RULE} ${kind}: ${kind === "Horizontal" ? "the lines move less than 0.3% of the price per day" : `the lines ${kind === "Ascending" ? "rise" : "fall"} more than 0.3% of the price per day`}.`
+    + (kind === "Descending" ? ` ${DESCENDING_BREAKOUT}` : ""),
   filter: (row) => row.channel === true && row.channel_type === kind,
-  columns: CHANNEL_COLUMNS,
+  // Descending: the breakout level sits right after Where
+  columns: kind === "Descending" ? [...CHANNEL_COLUMNS.slice(0, 2), CHANNEL_BREAKOUT_LEVEL, ...CHANNEL_COLUMNS.slice(2)] : CHANNEL_COLUMNS,
   sort: { key: "channel_position_pct", dir: "asc" },
 });
 const entryColumns = (fall) => [TICKER,
