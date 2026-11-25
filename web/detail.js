@@ -45,7 +45,17 @@ function withChannel(history, summary) {
   });
 }
 
-function legendItems(drawn, channel) {
+/** History whose days carry the cleaned daily swing label (HH / HL / LH / LL) of the Swings 1D tab, for the chart. */
+function withSwingLabels(history, dailyBars) {
+  const labels = new Map((dailyBars || []).filter((bar) => bar.label).map((bar) => [String(bar.time).slice(0, 10), bar.label]));
+  if (!labels.size) return history;
+  return history.map((bar) => {
+    const label = labels.get(String(bar.Date).slice(0, 10));
+    return label ? { ...bar, swing_label: label } : bar;
+  });
+}
+
+function legendItems(drawn, channel, swings) {
   const item = (mark, text) => el("span", { class: "badge" }, [mark, el("span", { text })]);
   const price = drawn === "candles"
     ? [item(el("span", { class: "candle up" }), "Up day"), item(el("span", { class: "candle down" }), "Down day")]
@@ -55,6 +65,7 @@ function legendItems(drawn, channel) {
     ...(SHOW_CYCLE_MARKS ? [item(el("span", { class: "mark breakout" }), "Breakout (valid)"),
       item(el("span", { class: "mark wait" }), "Wait"), item(el("span", { class: "mark entry" }), "Entry")] : []),
     ...(drawn === "candles" ? [item(el("span", { class: "tag", text: "SPV" }), "MRI SPV / PV candle")] : []),
+    ...(swings ? [item(el("span", { class: "tag", text: "HH" }), "HH / HL / LH / LL swing label (1D, Clean)")] : []),
     ...(channel ? [item(el("span", { class: "line channel" }), channel)] : []),
   ];
 }
@@ -389,7 +400,8 @@ export function renderDetailMessage(panel, text) {
  */
 export function renderDetail(panel, detail) {
   const { summary } = detail;
-  const history = withChannel(detail.history, summary);
+  const history = withSwingLabels(withChannel(detail.history, summary), detail[SWING_FRAMES.daily.barsKey]);
+  const hasSwingLabels = history.some((bar) => bar.swing_label);
   const subtitle = [summary.name, summary.sector].filter(Boolean).join(" · ");
   const final = dailyFinal(detail[SWING_FRAMES.daily.barsKey]);   // replaces the breakout / wait / entry chip
   const chart = el("div", { class: "chart" });
@@ -411,7 +423,7 @@ export function renderDetail(panel, detail) {
     const period = periodBars();
     const shown = sliceWindow(period, zoom);
     const drawn = renderChart(chart, shown, chartMode, fullView ? fullHeight() : undefined);
-    legend.replaceChildren(...legendItems(drawn, summary.channel === true ? `${summary.channel_type} channel` : null));  // matches what was drawn, e.g. line when OHLC is missing
+    legend.replaceChildren(...legendItems(drawn, summary.channel === true ? `${summary.channel_type} channel` : null, hasSwingLabels));  // matches what was drawn, e.g. line when OHLC is missing
     const zoomed = fitWindow(zoom, period.length).count < period.length;
     zoomInfo.textContent = zoomed
       ? `${shown.length} of ${period.length} days · drag to move, wheel to zoom`

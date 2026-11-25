@@ -16,6 +16,10 @@ const CANDLE_MIN_WIDTH = 2;
 const CANDLE_FILL_SHARE = 0.62;  // share of each day's slot taken by the candle body
 const MARK_GAP = 11;             // px between a candle's high and its status mark
 const MRI_GAP = 14;              // px between a candle and its SPV / PV text
+const SWING_GAP_ABOVE = 5;       // px between a candle's high and its HH / LH text
+const SWING_GAP_BELOW = 13;      // px between a candle's low and its HL / LL text (text sits on its baseline)
+const SWING_ABOVE = new Set(["HH", "LH"]);   // swing highs are written above the candle, swing lows below
+const SWING_UP = new Set(["HH", "HL"]);      // higher high / higher low: the up colour
 const STATUS_TEXT ={ entry: "Entry", wait: "Wait", breakout: "Breakout (valid)" };
 // The breakout / wait / entry marks of the daily cycle: kept in the code, not drawn (as the hidden
 // Entry today / Waiting lists). Set to true to draw them and their legend again.
@@ -157,6 +161,22 @@ function drawMriMarks(root, bars, scales) {
   });
 }
 
+/** HH / HL / LH / LL of the daily swings (bar.swing_label) as plain text at the candle: highs above, lows below. */
+function drawSwingLabels(root, bars, scales, candles) {
+  bars.forEach((bar, index) => {
+    if (!bar.swing_label) return;
+    const above = SWING_ABOVE.has(bar.swing_label);
+    const bullishMri = Boolean(bar.mri_mark) && bar.mri_mark.endsWith("bull");   // SPV / PV text under the candle
+    const y = above
+      ? scales.y(candles ? bar.High : bar.Close) - SWING_GAP_ABOVE
+      : scales.y(candles ? bar.Low : bar.Close) + SWING_GAP_BELOW + (candles && bullishMri ? MRI_GAP : 0);
+    const label = svg("text", { x: scales.x(index), y, "text-anchor": "middle", class: "label swing" },
+      `fill: var(${SWING_UP.has(bar.swing_label) ? "--good" : "--critical"})`);
+    label.textContent = bar.swing_label;
+    root.append(label);
+  });
+}
+
 function tooltipContent(bar, candles) {
   const kind = SHOW_CYCLE_MARKS ? statusKind(bar.entry_status, bar.valid) : "";
   const ohlc = candles && el("div", { class: "tip-ohlc" }, [
@@ -169,6 +189,7 @@ function tooltipContent(bar, candles) {
     ohlc,
     el("div", { class: signClass(bar.pct_change), text: `${formatPercent(bar.pct_change)} vs previous close` }),
     kind && el("div", { class: "badge" }, [el("span", { class: `mark ${kind}` }), el("span", { text: STATUS_TEXT[kind] })]),
+    bar.swing_label && el("div", { class: "tip-date", text: `Swing ${bar.swing_label}` }),
     [bar.mri_mark && `MRI ${bar.mri_mark}`, bar.smc_event, bar.ma_signal && `EMA ${bar.ma_signal}`].some(Boolean)
       && el("div", { class: "tip-date", text: [bar.mri_mark && `MRI ${bar.mri_mark}`, bar.smc_event, bar.ma_signal && `EMA ${bar.ma_signal}`].filter(Boolean).join(" · ") }),
   ];
@@ -240,6 +261,7 @@ export function renderChart(container, history, mode = "candles", height = HEIGH
   // On candles the marks sit above the day's high so they never cover the candle.
   if (SHOW_CYCLE_MARKS) drawMarks(root, bars, scales, width, (bar) => (candles ? scales.y(bar.High) - MARK_GAP : scales.y(bar.Close)));
   if (candles) drawMriMarks(root, bars, scales);
+  drawSwingLabels(root, bars, scales, candles);
   container.append(root);
   addHover(container, root, bars, scales, width, candles);
   return candles ? "candles" : "line";
