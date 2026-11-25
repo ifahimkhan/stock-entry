@@ -81,6 +81,31 @@ const DESCENDING_BREAKOUT = "Breakout up in a Descending channel: the latest dai
   + "Breakdown is still the first close below the lower line.";
 const CHANNEL_BREAKOUT_LEVEL = { key: "channel_breakout_level", label: "Breakout above", type: "price",
   title: "Highest High of the 4 candles just before the latest LL: a close above it is the Breakout up of a Descending channel" };
+// The "i" button of the Where column: every value it can show. Same numbers as NEAR_LINE_PCT, BREAK_MAX_AGE
+// and LL_HIGH_BARS in stock_entry/channel.py.
+const WHERE_POSITION = "Position = where the latest close sits between the two lines: 0% on the lower line, 100% on the upper line.";
+const WHERE_INSIDE_ROWS = [
+  ["Near lower line", "The close is inside the channel, in its lowest quarter (position 25% or less)."],
+  ["Middle", "The close is inside the channel, between 25% and 75%."],
+  ["Near upper line", "The close is inside the channel, in its top quarter (position 75% to 100%)."],
+];
+const WHERE_LINE_BREAKOUT = ["Breakout up", "The first daily close above the upper line. Listed for 5 trading days, then the channel is dropped."];
+const WHERE_LL_BREAKOUT = ["Breakout up", "The latest daily close is above the Breakout above price: the highest High of the 4 candles just before the latest LL. "
+  + "Shows for as long as the close stays above it; Break on is the first day of that run."];
+const WHERE_ABOVE_UPPER = ["Above upper line", "The close is over the upper line (position above 100%) but not above the Breakout above price, so it is not a breakout yet. "
+  + "The channel is dropped 5 trading days after that close."];
+const WHERE_BREAKDOWN = ["Breakdown", "The first daily close below the lower line. Listed for 5 trading days, then the channel is dropped."];
+const whereInfo = (title, rows, lines = []) => ({ label: "What the values of the Where column mean", title, lines: [WHERE_POSITION, ...lines], columns: ["Where", "Meaning"], rows });
+const WHERE_INFO = {
+  Descending: whereInfo("Where: Descending channel", [...WHERE_INSIDE_ROWS, WHERE_ABOVE_UPPER, WHERE_LL_BREAKOUT, WHERE_BREAKDOWN]),
+  other: whereInfo("Where: Ascending / Horizontal channel", [...WHERE_INSIDE_ROWS, WHERE_LINE_BREAKOUT, WHERE_BREAKDOWN]),
+  all: whereInfo("Where: all channels", [...WHERE_INSIDE_ROWS,
+    ["Breakout up", "Ascending / Horizontal: the first daily close above the upper line, listed for 5 trading days. "
+      + "Descending: the latest daily close is above the highest High of the 4 candles just before the latest LL."],
+    ["Above upper line", "Descending only: the close is over the upper line but not above that High, so it is not a breakout yet."],
+    WHERE_BREAKDOWN]),
+};
+const whereColumn = (kind) => ({ ...CHANNEL_COLUMNS[1], title: null, info: WHERE_INFO[kind] || WHERE_INFO.other });
 const CHANNEL_COLUMNS = [TICKER,
   { key: "channel_zone", label: "Where", title: "Near lower line: position 25% or less. Near upper line: 75% or more. Above upper line: a falling channel closed over its upper line. Or the break of the channel" },
   { key: "channel_position_pct", label: "Position", type: "pctplain", title: "Latest close inside the channel: 0% = lower line, 100% = upper line" },
@@ -102,7 +127,7 @@ const CHANNEL_ALL = {
   note: (row) => `${row.channel_type} channel since ${formatDate(row.channel_since)} \u00b7 ${row.channel_zone} \u00b7 ${formatPrice(row.channel_lower)} to ${formatPrice(row.channel_upper)}`,
   hint: `${CHANNEL_RULE} All: ascending, descending and horizontal channels together (see the Type column).`,
   filter: (row) => row.channel === true,
-  columns: [CHANNEL_COLUMNS[0], CHANNEL_TYPE, ...CHANNEL_COLUMNS.slice(1)],
+  columns: [CHANNEL_COLUMNS[0], CHANNEL_TYPE, whereColumn("all"), ...CHANNEL_COLUMNS.slice(2)],
   sort: { key: "channel_position_pct", dir: "asc" },
 };
 const channelView = (kind) => ({
@@ -113,7 +138,7 @@ const channelView = (kind) => ({
     + (kind === "Descending" ? ` ${DESCENDING_BREAKOUT}` : ""),
   filter: (row) => row.channel === true && row.channel_type === kind,
   // Descending: the breakout level sits right after Where
-  columns: kind === "Descending" ? [...CHANNEL_COLUMNS.slice(0, 2), CHANNEL_BREAKOUT_LEVEL, ...CHANNEL_COLUMNS.slice(2)] : CHANNEL_COLUMNS,
+  columns: [CHANNEL_COLUMNS[0], whereColumn(kind), ...(kind === "Descending" ? [CHANNEL_BREAKOUT_LEVEL] : []), ...CHANNEL_COLUMNS.slice(2)],
   sort: { key: "channel_position_pct", dir: "asc" },
 });
 const entryColumns = (fall) => [TICKER,
