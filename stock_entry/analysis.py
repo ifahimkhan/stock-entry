@@ -7,6 +7,7 @@ from typing import Any
 import pandas as pd
 
 from stock_entry.channel import parallel_channel
+from stock_entry.channel_2h import channel_fields as two_hour_channel
 from stock_entry.fundamentals import price_to_book
 from stock_entry.indicators import indicator_columns
 from stock_entry.intraday import analyze_swings
@@ -56,6 +57,7 @@ def build_row(ticker: Ticker, analyzed: pd.DataFrame, swings: pd.DataFrame | Non
     (`daily`, computed from `analyzed` when not given; fields prefixed d1_).
     At a new closing high (see at_closing_high) both swing parts are skipped and left empty."""
     high = at_closing_high(analyzed)
+    two_hour_bars = swings   # the rising 2-hour channel is looked for at a closing high too
     if high:
         swings, daily = None, None
     else:
@@ -69,6 +71,7 @@ def build_row(ticker: Ticker, analyzed: pd.DataFrame, swings: pd.DataFrame | Non
         "at_closing_high": high,
         **tight_fields(analyzed),
         **parallel_channel(analyzed),
+        **two_hour_channel(two_hour_bars),
         **_swing_fields(ticker.symbol, swings),
         **daily_summary(_swing_fields(ticker.symbol, daily)),
     }

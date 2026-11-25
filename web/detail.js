@@ -10,6 +10,10 @@ import { renderTable } from "./table.js";
 const HISTORY_ROWS = 40;
 const RANGES = [{ label: "1M", bars: 22 }, { label: "3M", bars: 66 }, { label: "6M", bars: null }];
 const DEFAULT_RANGE = "3M";
+// Chart of the 2-hour bars (a stock opened from the Ascending list): 4 bars a session
+const TWO_HOUR_RANGES = [{ label: "1W", bars: 20 }, { label: "2W", bars: 40 }, { label: "All", bars: null }];
+const TWO_HOUR_DEFAULT_RANGE = "All";
+const ENTRY_SHORT = { "Entry 1": "E1", "Entry 2": "E2" };   // P-Final of a bar, as written on the chart
 const MODES = [{ label: "Candles", mode: "candles" }, { label: "Line", mode: "line" }];
 const DEFAULT_MODE = "candles";
 const FULL_VIEW_MIN_HEIGHT = 320;   // px: the chart is never shorter than outside the full view
@@ -33,7 +37,8 @@ const plural = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
 /** History whose bars from the channel's first anchor on carry the two line values (straight lines per bar). */
 function withChannel(history, summary) {
   if (summary.channel !== true || !isNumber(summary.channel_start_lower) || !isNumber(summary.channel_lower)) return history;
-  const first = history.findIndex((bar) => bar.Date >= summary.channel_since);
+  const since = String(summary.channel_since).slice(0, 10);   // a 2-hour channel starts on a bar: its day
+  const first = history.findIndex((bar) => String(bar.Date).slice(0, 10) >= since);
   const last = history.length - 1;
   if (first < 0 || first >= last) return history;
   const width = summary.channel_upper - summary.channel_lower;
@@ -55,17 +60,53 @@ function withSwingLabels(history, dailyBars) {
   });
 }
 
-function legendItems(drawn, channel, swings) {
+/** The 2-hour bars of the Swings 2h table as chart bars, with the rising 2-hour channel's lines on the bars
+ *  it covers (exact per bar: the lower line rises evenly from its first anchor to the latest bar). */
+function twoHourHistory(bars, summary) {
+  const last = bars.length - 1;
+  const span = summary.ch2_bars - 1;                      // bars from the first anchor to the latest bar
+  const step = span > 0 ? (summary.ch2_lower - summary.ch2_start_lower) / span : 0;
+  const width = summary.ch2_upper - summary.ch2_lower;
+  return bars.map((bar, index) => {
+    const lower = summary.ch2_lower - step * (last - index);
+    const previous = index > 0 ? bars[index - 1].close : null;
+    return {
+      Date: bar.time, Open: bar.open, High: bar.high, Low: bar.low, Close: bar.close, Volume: bar.volume,
+      pct_change: isNumber(previous) && previous !== 0 ? ((bar.close - previous) / previous) * 100 : null,
+      swing_label: bar.label || null, entry_mark: ENTRY_SHORT[bar.p_final] || null, entry_text: bar.p_final || null,
+      ...(last - index <= span ? { channel_lower: lower, channel_upper: lower + width } : {}),
+    };
+  });
+}
+
+const hasDailyChannel = (summary) => summary.channel === true && isNumber(summary.channel_start_lower);
+const hasTwoHourChannel = (summary) => summary.ch2_channel === true && isNumber(summary.ch2_start_lower);
+/** The channel the chart draws, as the fields of a daily channel plus its legend text, or null.
+ *  `preferTwoHour` (the stock was opened from the Ascending list): the rising 2-hour channel comes first;
+ *  it is also drawn when the stock has no daily channel. On the daily chart its lines run from the day of
+ *  its first anchor to the latest day. */
+function chartChannel(summary, preferTwoHour) {
+  const twoHour = hasTwoHourChannel(summary) && (preferTwoHour || !hasDailyChannel(summary));
+  if (twoHour) {
+    return { channel: true, channel_since: summary.ch2_since, channel_start_lower: summary.ch2_start_lower,
+      channel_lower: summary.ch2_lower, channel_upper: summary.ch2_upper, legend: "Ascending channel (2h): lower, middle, upper line" };
+  }
+  return hasDailyChannel(summary) ? { ...summary, legend: `${summary.channel_type} channel: lower, middle, upper line` } : null;
+}
+
+function legendItems(drawn, channel, swings, twoHour = false) {
   const item = (mark, text) => el("span", { class: "badge" }, [mark, el("span", { text })]);
+  const unit = twoHour ? "2h bar" : "day";
   const price = drawn === "candles"
-    ? [item(el("span", { class: "candle up" }), "Up day"), item(el("span", { class: "candle down" }), "Down day")]
+    ? [item(el("span", { class: "candle up" }), `Up ${unit}`), item(el("span", { class: "candle down" }), `Down ${unit}`)]
     : [item(el("span", { class: "line" }), "Close")];
   return [
     ...price,
     ...(SHOW_CYCLE_MARKS ? [item(el("span", { class: "mark breakout" }), "Breakout (valid)"),
       item(el("span", { class: "mark wait" }), "Wait"), item(el("span", { class: "mark entry" }), "Entry")] : []),
-    ...(drawn === "candles" ? [item(el("span", { class: "tag", text: "SPV" }), "MRI SPV / PV candle")] : []),
-    ...(swings ? [item(el("span", { class: "tag", text: "HH" }), "HH / HL / LH / LL swing label (1D, Clean)")] : []),
+    ...(drawn === "candles" && !twoHour ? [item(el("span", { class: "tag", text: "SPV" }), "MRI SPV / PV candle")] : []),
+    ...(swings ? [item(el("span", { class: "tag", text: "HH" }), `HH / HL / LH / LL swing label (${twoHour ? "2h" : "1D"}, Clean)`)] : []),
+    ...(twoHour ? [item(el("span", { class: "tag", text: "E1" }), "E1 / E2: Entry 1 / Entry 2 at the lower line (P-Final)")] : []),
     ...(channel ? [item(el("span", { class: "line channel" }), channel)] : []),
   ];
 }
@@ -182,7 +223,9 @@ const FINAL_TITLE = "Final: Before Entry on an HH that comes right after an LH b
   + "Entry1 on the first 3-rule candle once that HH is confirmed (5 bars after it); "
   + "Entry2 on the first 3-rule candle after the Clean labels LH, HH, HL, HH in a row, once the last HH is confirmed, closing below that HH's close; "
   + "LH breakout > level when the close breaks the last LH (comma separated when a bar has more than one)";
-const barColumns = (frame) => [
+const P_FINAL_COLUMN = { key: "p_final", label: "P-Final", type: "text",
+  title: "Rising 2-hour parallel channel: Entry 1 = touch 2 of its lower line, Entry 2 = touch 3 (a bar's High must reach the middle line between two touches)" };
+const barColumns = (frame, pFinal = false) => [
   { key: "time", label: frame.prefix ? "Day" : "2h bar", type: frame.timeType },
   { key: "open", label: "Open", type: "price" },
   { key: "high", label: "High", type: "price" },
@@ -193,6 +236,7 @@ const barColumns = (frame) => [
   { key: "raw_label", label: "Status", type: "text", title: "status: the raw HH / HL / LH / LL label" },
   { key: "label", label: "Clean", type: "text", title: "status_clean: the label after the clean-up" },
   { key: "final", label: "Final", type: "text", title: FINAL_TITLE },
+  ...(pFinal ? [P_FINAL_COLUMN] : []),
   { key: "ang_ll_ll", label: "LL→LL", type: "angle", title: "ang_LL_LL" },
   { key: "ang_ll_hl", label: "LL→HL", type: "angle", title: "ang_LL_HL" },
   { key: "ll3_hh", label: "3LL_HH", type: "flag" },
@@ -294,6 +338,15 @@ function changeFact(frame, everyBar) {
 
 const CLOSING_HIGH_NOTE = "it closed at a new high, and the scan does no swing analysis for a stock at a new closing high";
 
+/** The rising 2-hour channel and its entries in a sentence (above the Swings 2h table). */
+function channelFact(summary) {
+  if (summary.ch2_channel !== true) return "P-Final: Entry 1 / Entry 2 at the lower line of the rising 2-hour channel.";
+  const entries = [summary.ch2_entry1_at && `Entry 1 on ${formatBarTime(summary.ch2_entry1_at)}`,
+    summary.ch2_entry2_at && `Entry 2 on ${formatBarTime(summary.ch2_entry2_at)}`].filter(Boolean);
+  return `Rising 2-hour channel since ${formatBarTime(summary.ch2_since)} (${plural(summary.ch2_bars, "bar")}, ${formatPrice(summary.ch2_lower)} to ${formatPrice(summary.ch2_upper)}, ${summary.ch2_zone}): `
+    + `${entries.length ? entries.join(", ") : "one touch of the lower line so far, no entry yet"}. See the P-Final column.`;
+}
+
 function swingSection(summary, swings, frame, everyBar = null) {
   const bars = summary[`${frame.prefix}swing_bars`];
   if (bars === undefined) return null;
@@ -309,12 +362,14 @@ function swingSection(summary, swings, frame, everyBar = null) {
   const rows = allBars
     ? [...everyBar].reverse().map(barRow)   // newest first, every bar as in the CSV
     : [...(swings || [])].reverse().map((point) => ({ ...point, signal: swingSignal(point) }));
-  renderTable(table, { rows, columns: shownColumns(allBars ? barColumns(frame) : swingColumns(frame)) });
+  // P-Final: 2-hour table only, for a stock in a rising 2-hour channel
+  const pFinal = !frame.prefix && allBars && (summary.ch2_channel === true || everyBar.some((bar) => bar.p_final));
+  renderTable(table, { rows, columns: shownColumns(allBars ? barColumns(frame, pFinal) : swingColumns(frame)) });
   return el("div", {}, [
     title,
     el("div", { class: "facts facts-none" },
       [...(bars ? swingFacts(summary, frame) : [`No swing summary for this stock today (${skipped ? CLOSING_HIGH_NOTE : "it was not part of the last scan"}). The bars and their labels are shown below.`]),
-        changeFact(frame, everyBar)].filter(Boolean).map((text) => el("p", { text }))),
+        changeFact(frame, everyBar), pFinal ? channelFact(summary) : null].filter(Boolean).map((text) => el("p", { text }))),
     rows.length ? el("div", { class: "table-wrap" }, [table]) : null,
   ]);
 }
@@ -339,8 +394,8 @@ let currentTab = "overview";
 // Detail tabs kept in the code but not shown (turn one back on by removing its id here).
 const HIDDEN_TABS = new Set(["sessions"]);
 
-function tabbed(tabs) {
-  const shown = tabs.filter((tab) => tab.body && !HIDDEN_TABS.has(tab.id));
+function tabbed(tabs, hidden = []) {
+  const shown = tabs.filter((tab) => tab.body && !HIDDEN_TABS.has(tab.id) && !hidden.includes(tab.id));
   const active = shown.some((tab) => tab.id === currentTab) ? currentTab : shown[0].id;
   const buttons = shown.map((tab) => el("button", {
     type: "button", role: "tab", id: `detail-tab-${tab.id}`, "aria-controls": `detail-panel-${tab.id}`,
@@ -398,17 +453,25 @@ export function renderDetailMessage(panel, text) {
  * @param {{summary: object, history: object[], swings?: object[], swings_1d?: object[]}} detail
  * @returns {() => void} cleanup that stops the chart's resize tracking
  */
-export function renderDetail(panel, detail) {
+export function renderDetail(panel, detail, { hiddenTabs = [], twoHourChannel = false } = {}) {
   const { summary } = detail;
-  const history = withSwingLabels(withChannel(detail.history, summary), detail[SWING_FRAMES.daily.barsKey]);
+  // Opened from the Ascending list with a rising 2-hour channel: the chart shows the 2-hour bars, not the days.
+  const twoHourBars = detail[SWING_FRAMES.twoHour.barsKey] || [];
+  const twoHourChart = twoHourChannel && hasTwoHourChannel(summary) && twoHourBars.length > 1;
+  const drawnChannel = chartChannel(summary, twoHourChannel);
+  const dailyHistory = twoHourChart ? detail.history
+    : withSwingLabels(drawnChannel ? withChannel(detail.history, drawnChannel) : detail.history, detail[SWING_FRAMES.daily.barsKey]);
+  const history = twoHourChart ? twoHourHistory(twoHourBars, summary) : dailyHistory;
+  const ranges = twoHourChart ? TWO_HOUR_RANGES : RANGES;
+  const defaultRange = twoHourChart ? TWO_HOUR_DEFAULT_RANGE : DEFAULT_RANGE;
   const hasSwingLabels = history.some((bar) => bar.swing_label);
   const subtitle = [summary.name, summary.sector].filter(Boolean).join(" · ");
   const final = dailyFinal(detail[SWING_FRAMES.daily.barsKey]);   // replaces the breakout / wait / entry chip
   const chart = el("div", { class: "chart" });
   const table = el("table", { class: "compact" }, [el("thead"), el("tbody")]);
-  const recent = history.slice(-HISTORY_ROWS).reverse().map((bar) => ({ ...bar, status: bar.entry_status }));
+  const recent = dailyHistory.slice(-HISTORY_ROWS).reverse().map((bar) => ({ ...bar, status: bar.entry_status }));
   const legend = el("div", { class: "legend" });
-  let visibleBars = RANGES.find((range) => range.label === DEFAULT_RANGE).bars;
+  let visibleBars = ranges.find((range) => range.label === defaultRange).bars;
   let chartMode = DEFAULT_MODE;
   let zoom = null;   // null: the whole period; else { count, offset } (see chartzoom.js)
   const zoomInfo = el("span", { class: "zoom-info dim" });
@@ -423,11 +486,11 @@ export function renderDetail(panel, detail) {
     const period = periodBars();
     const shown = sliceWindow(period, zoom);
     const drawn = renderChart(chart, shown, chartMode, fullView ? fullHeight() : undefined);
-    legend.replaceChildren(...legendItems(drawn, summary.channel === true ? `${summary.channel_type} channel` : null, hasSwingLabels));  // matches what was drawn, e.g. line when OHLC is missing
+    legend.replaceChildren(...legendItems(drawn, drawnChannel ? drawnChannel.legend : null, hasSwingLabels, twoHourChart));  // matches what was drawn, e.g. line when OHLC is missing
     const zoomed = fitWindow(zoom, period.length).count < period.length;
     zoomInfo.textContent = zoomed
-      ? `${shown.length} of ${period.length} days · drag to move, wheel to zoom`
-      : "Wheel or + to zoom in";
+      ? `${shown.length} of ${period.length} ${twoHourChart ? "2-hour bars" : "days"} · drag to move, wheel to zoom`
+      : `${twoHourChart ? "2-hour bars · " : ""}Wheel or + to zoom in`;
   };
   const setZoom = (view) => {
     zoom = view;
@@ -509,7 +572,7 @@ export function renderDetail(panel, detail) {
           chartMode = option.mode;
           drawChart();
         }),
-        picker(RANGES, DEFAULT_RANGE, "Chart period", (option) => {
+        picker(ranges, defaultRange, "Chart period", (option) => {
           visibleBars = option.bars;
           setZoom(null);   // a new period starts unzoomed
         }),
@@ -522,7 +585,7 @@ export function renderDetail(panel, detail) {
       body: swingSection(summary, detail[SWING_FRAMES.twoHour.swingsKey], SWING_FRAMES.twoHour, detail[SWING_FRAMES.twoHour.barsKey]) },
     { id: "swings1d", label: "Swings 1D", body: swingSection(summary, detail[SWING_FRAMES.daily.swingsKey], SWING_FRAMES.daily, detail[SWING_FRAMES.daily.barsKey]) },
     { id: "sessions", label: `Last ${recent.length} sessions`, body: el("div", { class: "table-wrap" }, [table]) },
-  ]);
+  ], hiddenTabs);
 
   panel.replaceChildren(
     el("div", { class: "detail-head" }, [

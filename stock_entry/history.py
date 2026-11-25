@@ -9,6 +9,7 @@ from typing import Any, Callable
 import pandas as pd
 
 from stock_entry.analysis import analyze, build_row, daily_swings
+from stock_entry.channel_2h import entry_marks
 from stock_entry.intraday import analyze_swings
 from stock_entry.market_data import MarketDataError
 from stock_entry.summary import history_records
@@ -16,6 +17,12 @@ from stock_entry.swings import daily_points, swing_points
 from stock_entry.tickers import Ticker
 
 Fetch = Callable[[list[str]], dict[str, pd.DataFrame]]
+
+
+
+def _with_p_final(points: list[dict[str, Any]], marks: dict[str, str]) -> list[dict[str, Any]]:
+    """The 2-hour bars with `p_final`: "Entry 1" / "Entry 2" of the rising 2-hour channel (see channel_2h)."""
+    return [{**point, "p_final": marks.get(point["time"])} for point in points]
 
 
 class StockNotFoundError(LookupError):
@@ -73,7 +80,8 @@ class HistoryService:
             "summary": build_row(ticker, analyzed, swings, daily),
             "history": history_records(analyzed, self._detail_rows),
             "swings": [] if swings is None else swing_points(swings, self._swing_points),
-            "bars_2h": [] if swings is None else swing_points(swings, self._two_hour_rows, every_bar=True),
+            "bars_2h": [] if swings is None else _with_p_final(
+                swing_points(swings, self._two_hour_rows, every_bar=True), entry_marks(swings)),
             "swings_1d": [] if daily is None else daily_points(swing_points(daily, self._swing_points)),
             "bars_1d": [] if daily is None else daily_points(swing_points(daily, self._daily_rows, every_bar=True)),
         }

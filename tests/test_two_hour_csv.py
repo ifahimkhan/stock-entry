@@ -97,7 +97,9 @@ def test_apply_bars_updates_listed_stocks_only_and_keeps_the_input(tmp_path: Pat
     krn, bank = updated["rows"]
     assert krn["swing_source"] == CSV_SOURCE and krn["swing_bars"] == 120 and krn["close"] == 1.0
     assert krn["swing_last_bar"] == swing_fields(frames["KRN.NS"])["swing_last_bar"]
-    assert bank == scan["rows"][1]
+    # not in the CSV: its own fields are kept; it only gains the (empty) fields of the rising 2-hour channel
+    assert {key: value for key, value in bank.items() if not key.startswith("ch2_")} == scan["rows"][1]
+    assert bank["ch2_channel"] is False and "ch2_channel" in krn
     assert scan["rows"][0]["swing_source"] == "tradingview"   # the input scan is not changed
 
 

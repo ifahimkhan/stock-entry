@@ -119,15 +119,77 @@ const CHANNEL_COLUMNS = [TICKER,
   { key: "channel_days", label: "Days", type: "int", title: "Trading days from the first anchor to the latest day" },
   { key: "channel_break_date", label: "Break on", type: "date", title: "Day of the first close outside the lines" },
   RSI, CAP];
+// ---- Ascending: built on 2-hour bars, with the entries at the lower line (stock_entry/channel_2h.py; fields ch2_*)
+const ASCENDING = "Ascending";
+const ASCENDING_VIEW_ID = "channelascending";
+const TWO_HOUR_BARS_PER_DAY = 4;
+const isTwoHourAscending = (row) => row.ch2_channel === true;
+/** Daily channels of the section: the daily Ascending ones are replaced by the 2-hour ones. */
+const isDailyChannel = (row) => row.channel === true && row.channel_type !== ASCENDING;
+/** A scan row as its 2-hour rising channel, under the field names of the daily channel columns. */
+const asTwoHourChannel = (row) => ({
+  ...row, channel: true, channel_type: ASCENDING, channel_zone: row.ch2_zone, channel_position_pct: row.ch2_position_pct,
+  channel_lower: row.ch2_lower, channel_upper: row.ch2_upper, channel_width_pct: row.ch2_width_pct, channel_slope_pct: row.ch2_slope_pct,
+  channel_since: row.ch2_since, channel_days: Math.ceil(row.ch2_bars / TWO_HOUR_BARS_PER_DAY), channel_break_date: row.ch2_break_at,
+  channel_breakout_level: null, source_row: row,
+});
+/** Since / Break on of a list that holds 2-hour channels: a 2-hour bar or a day, whichever the value is. */
+const barTimes = (column) => (column.type === "date" && column.key.startsWith("channel_") ? { ...column, type: "swingtime" } : column);
+const ASCENDING_RULE = "Rising parallel channel on 2-hour bars: the lower line joins the last two swing lows (pivots with 5 bars on each side), "
+  + "the upper line is parallel through the farthest swing high and a second swing high must touch it. "
+  + "Channel: 40 or more 2-hour bars long, 3% to 20% wide, rising more than 0.3% of the price per day, no bar outside the lines while it formed. "
+  + "P-Final: touch 2 of the lower line is Entry 1, touch 3 is Entry 2. A touch = a bar whose Low is in the lowest quarter of the channel; "
+  + "between two touches a bar's High must reach the middle line. "
+  + "Breakout up / Breakdown = the first close outside the lines, listed for 20 bars (5 sessions).";
+const P_FINAL_INFO = {
+  label: "What P-Final means", title: "P-Final: entries at the lower line of the rising 2-hour channel",
+  lines: ["Touches of the lower line are counted from the channel's first anchor.",
+    "A touch: a 2-hour bar whose Low is in the lowest quarter of the channel (within 25% of its width of the lower line).",
+    "After a touch the price must cross the middle: a later bar's High at or above the middle line. Only then the next touch counts."],
+  columns: ["P-Final", "Meaning"],
+  rows: [["Entry 1", "Touch 2 of the lower line."], ["Entry 2", "Touch 3 of the lower line."],
+    ["\u2014", "Only one touch so far."]],
+};
+const ASCENDING_WHERE_INFO = whereInfo("Where: Ascending channel (2-hour bars)", [...WHERE_INSIDE_ROWS,
+  ["Breakout up", "The first 2-hour close above the upper line. Listed for 20 bars (5 sessions), then the channel is dropped."],
+  ["Breakdown", "The first 2-hour close below the lower line. Listed for 20 bars (5 sessions), then the channel is dropped."]]);
+const ASCENDING_COLUMNS = [TICKER,
+  { key: "ch2_zone", label: "Where", info: ASCENDING_WHERE_INFO },
+  { key: "ch2_final", label: "P-Final", type: "text", info: P_FINAL_INFO },
+  { key: "ch2_final_at", label: "Entry bar", type: "bartime", title: "2-hour bar of the entry shown in P-Final" },
+  { key: "ch2_final_bars", label: "Bars ago", type: "int", title: "2-hour bars since that entry (0 = the latest bar)" },
+  { key: "ch2_touches", label: "Touches", type: "int", title: "Touches of the lower line so far (a cross of the middle between two of them)" },
+  { key: "ch2_position_pct", label: "Position", type: "pctplain", title: "Latest close inside the channel: 0% = lower line, 100% = upper line" },
+  PB,
+  { key: "ch2_lower", label: "Lower line", type: "price", title: "Value of the lower line on the latest 2-hour bar" },
+  { key: "ch2_upper", label: "Upper line", type: "price", title: "Value of the upper line on the latest 2-hour bar" },
+  CLOSE,
+  { key: "ch2_width_pct", label: "Width", type: "pctplain", title: "Distance between the lines, in percent of the middle line" },
+  { key: "ch2_slope_pct", label: "Slope / day", type: "pct", title: "Rise of the lines per trading day (4 two-hour bars), in percent of the price" },
+  { key: "ch2_since", label: "Since", type: "bartime", title: "First anchor of the channel" },
+  { key: "ch2_bars", label: "Bars", type: "int", title: "2-hour bars from the first anchor to the latest bar" },
+  { key: "ch2_break_at", label: "Break on", type: "bartime", title: "Bar of the first close outside the lines" },
+  RSI, CAP];
+const ASCENDING_VIEW = {
+  id: ASCENDING_VIEW_ID, label: "Parallel Channel (2h): Ascending", mark: null, needsKey: "ch2_channel",
+  chip: "Parallel Channel (1D)", tabGroup: "channel", tabLabel: ASCENDING, tabOf: "channelall",
+  note: (row) => `Rising 2h channel since ${formatBarTime(row.ch2_since)} \u00b7 ${row.ch2_zone}${row.ch2_final ? ` \u00b7 ${row.ch2_final} ${formatBarTime(row.ch2_final_at)}` : ""}`,
+  hint: ASCENDING_RULE,
+  filter: isTwoHourAscending,
+  columns: ASCENDING_COLUMNS,
+  sort: { key: "ch2_final_bars", dir: "asc" },
+};
 const CHANNEL_TYPE = { key: "channel_type", label: "Type", type: "text", title: "Ascending, Descending or Horizontal" };
 // First tab of the section (the one its chip opens): every channel, whatever its direction.
 const CHANNEL_ALL = {
   id: "channelall", label: "Parallel Channel (1D): All", mark: null, needsKey: "channel",
   chip: "Parallel Channel (1D)", tabGroup: "channel", tabLabel: "All",
   note: (row) => `${row.channel_type} channel since ${formatDate(row.channel_since)} \u00b7 ${row.channel_zone} \u00b7 ${formatPrice(row.channel_lower)} to ${formatPrice(row.channel_upper)}`,
-  hint: `${CHANNEL_RULE} All: ascending, descending and horizontal channels together (see the Type column).`,
-  filter: (row) => row.channel === true,
-  columns: [CHANNEL_COLUMNS[0], CHANNEL_TYPE, whereColumn("all"), ...CHANNEL_COLUMNS.slice(2)],
+  hint: `${CHANNEL_RULE} All: ascending, descending and horizontal channels together (see the Type column). `
+    + "Ascending channels are built on 2-hour bars (see the Ascending tab); for them Days counts sessions and Since / Break on show the bar.",
+  rowsOf: (scanRows) => [...scanRows.filter(isDailyChannel), ...scanRows.filter(isTwoHourAscending).map(asTwoHourChannel)],
+  filter: (row) => isDailyChannel(row) || isTwoHourAscending(row),
+  columns: [CHANNEL_COLUMNS[0], CHANNEL_TYPE, whereColumn("all"), ...CHANNEL_COLUMNS.slice(2).map(barTimes)],
   sort: { key: "channel_position_pct", dir: "asc" },
 };
 const channelView = (kind) => ({
@@ -482,7 +544,7 @@ const ALL_VIEWS = [
     columns: entryColumns(true),
     sort: { key: "tight_entry_date", dir: "desc" },
   },
-  CHANNEL_ALL, channelView("Ascending"), channelView("Descending"), channelView("Horizontal"),
+  CHANNEL_ALL, ASCENDING_VIEW, channelView("Descending"), channelView("Horizontal"),
   {
     id: "all", label: "All stocks", mark: null,
     chip: "All",
@@ -931,7 +993,8 @@ async function openStock(symbol) {
   try {
     const detail = await getStock(symbol);
     if (request !== detailRequest) return;  // a newer click won
-    detailCleanup = renderDetail(dom.detail, detail);
+    // opened from the 2-hour Ascending list: the daily swings are left out
+    detailCleanup = renderDetail(dom.detail, detail, { hiddenTabs: state.viewId === ASCENDING_VIEW_ID ? ["swings1d"] : [], twoHourChannel: state.viewId === ASCENDING_VIEW_ID });
     setState({ selected: detail.summary.ticker });
     history.replaceState(null, "", `#${encodeURIComponent(detail.summary.ticker)}`);  // bookmarkable
   } catch (error) {

@@ -18,6 +18,7 @@ import pandas as pd
 from stock_entry.config import Settings
 from stock_entry.intraday import analyze_swings
 from stock_entry.store import ScanStore
+from stock_entry.channel_2h import channel_fields, empty_channel
 from stock_entry.swings import empty_swing_summary, swing_summary
 from stock_entry.two_hour_csv import read_bars
 
@@ -35,6 +36,10 @@ def apply_bars(scan: dict[str, Any], frames: dict[str, pd.DataFrame]) -> tuple[d
     rows = []
     for row in scan["rows"]:
         frame = frames.get(row["ticker"])
+        if frame is not None:   # the rising 2-hour channel: for every stock of the CSV, at a closing high too
+            row = {**row, **channel_fields(frame.sort_values("Date"))}
+        else:                   # not in the CSV: keep the fields of the scan, empty ones when it has none
+            row = {**empty_channel(), **row}
         if row.get("at_closing_high"):   # new closing high: no swing analysis (see analysis.at_closing_high)
             counts["closing high, skipped"] += 1
             rows.append({**row, **empty_swing_summary()})

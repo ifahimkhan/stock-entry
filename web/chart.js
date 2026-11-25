@@ -1,6 +1,6 @@
 // Daily price chart (candlesticks or close line) with breakout / wait / entry marks, crosshair and tooltip.
 
-import { el, formatDate, formatPercent, formatPrice, isNumber, signClass, statusKind } from "./format.js";
+import { el, formatBarTime, formatDate, formatPercent, formatPrice, isNumber, signClass, statusKind } from "./format.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const HEIGHT = 320;   // default chart height; the full view passes its own
@@ -18,6 +18,8 @@ const MARK_GAP = 11;             // px between a candle's high and its status ma
 const MRI_GAP = 14;              // px between a candle and its SPV / PV text
 const SWING_GAP_ABOVE = 5;       // px between a candle's high and its HH / LH text
 const SWING_GAP_BELOW = 13;      // px between a candle's low and its HL / LL text (text sits on its baseline)
+const ENTRY_GAP = 12;             // px an E1 / E2 text sits under the HL / LL text of the same candle
+const TIME_LENGTH = 16;           // "2026-11-25 13:15": a bar with a time of day (2-hour bars)
 const SWING_ABOVE = new Set(["HH", "LH"]);   // swing highs are written above the candle, swing lows below
 const SWING_UP = new Set(["HH", "HL"]);      // higher high / higher low: the up colour
 const STATUS_TEXT ={ entry: "Entry", wait: "Wait", breakout: "Breakout (valid)" };
@@ -177,6 +179,21 @@ function drawSwingLabels(root, bars, scales, candles) {
   });
 }
 
+/** E1 / E2 (bar.entry_mark: an entry at the lower line of the 2-hour channel) as text under the candle. */
+function drawEntryMarks(root, bars, scales, candles) {
+  bars.forEach((bar, index) => {
+    if (!bar.entry_mark) return;
+    const lowLabel = Boolean(bar.swing_label) && !SWING_ABOVE.has(bar.swing_label);   // HL / LL text under the same candle
+    const y = scales.y(candles ? bar.Low : bar.Close) + SWING_GAP_BELOW + (lowLabel ? ENTRY_GAP : 0);
+    const label = svg("text", { x: scales.x(index), y, "text-anchor": "middle", class: "label entry-mark" }, "fill: var(--channel, #7c5cff)");
+    label.textContent = bar.entry_mark;
+    root.append(label);
+  });
+}
+
+/** Day of a daily bar, day and time of a 2-hour bar. */
+const barWhen = (bar) => (typeof bar.Date === "string" && bar.Date.length >= TIME_LENGTH ? `${formatDate(bar.Date, true)}, ${formatBarTime(bar.Date).split(", ")[1]}` : formatDate(bar.Date, true));
+
 function tooltipContent(bar, candles) {
   const kind = SHOW_CYCLE_MARKS ? statusKind(bar.entry_status, bar.valid) : "";
   const ohlc = candles && el("div", { class: "tip-ohlc" }, [
@@ -184,12 +201,13 @@ function tooltipContent(bar, candles) {
     el("span", { text: `L ${formatPrice(bar.Low)}` }), el("span", { text: `C ${formatPrice(bar.Close)}` }),
   ]);
   return [
-    el("div", { class: "tip-date", text: formatDate(bar.Date, true) }),
+    el("div", { class: "tip-date", text: barWhen(bar) }),
     el("div", { class: "tip-value", text: formatPrice(bar.Close) }),
     ohlc,
     el("div", { class: signClass(bar.pct_change), text: `${formatPercent(bar.pct_change)} vs previous close` }),
     kind && el("div", { class: "badge" }, [el("span", { class: `mark ${kind}` }), el("span", { text: STATUS_TEXT[kind] })]),
     bar.swing_label && el("div", { class: "tip-date", text: `Swing ${bar.swing_label}` }),
+    bar.entry_text && el("div", { class: "tip-date", text: `P-Final ${bar.entry_text}` }),
     [bar.mri_mark && `MRI ${bar.mri_mark}`, bar.smc_event, bar.ma_signal && `EMA ${bar.ma_signal}`].some(Boolean)
       && el("div", { class: "tip-date", text: [bar.mri_mark && `MRI ${bar.mri_mark}`, bar.smc_event, bar.ma_signal && `EMA ${bar.ma_signal}`].filter(Boolean).join(" · ") }),
   ];
@@ -262,6 +280,7 @@ export function renderChart(container, history, mode = "candles", height = HEIGH
   if (SHOW_CYCLE_MARKS) drawMarks(root, bars, scales, width, (bar) => (candles ? scales.y(bar.High) - MARK_GAP : scales.y(bar.Close)));
   if (candles) drawMriMarks(root, bars, scales);
   drawSwingLabels(root, bars, scales, candles);
+  drawEntryMarks(root, bars, scales, candles);
   container.append(root);
   addHover(container, root, bars, scales, width, candles);
   return candles ? "candles" : "line";
