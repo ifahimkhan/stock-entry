@@ -1,6 +1,6 @@
 // The stock list as tappable cards: the phone layout of the list (the table is shown on wide screens).
 
-import { el, formatPercent, formatPrice, signClass, statusBadge, statusKind } from "./format.js";
+import { el, formatPercent, formatPrice, signClass } from "./format.js";
 
 /**
  * @param {HTMLElement} list  the <ul> to fill
@@ -13,10 +13,7 @@ export function renderCards(list, { rows, selected, note, onSelect, pick = null 
       onclick: () => onSelect(row),
     }, [
       el("span", { class: "card-top" }, [
-        el("span", { class: "card-id" }, [
-          el("span", { class: "ticker", text: row.ticker }),
-          statusKind(row.status, row.valid) ? statusBadge(row.status, row.valid) : null,
-        ]),
+        el("span", { class: "card-id" }, [el("span", { class: "ticker", text: row.ticker })]),
         el("span", { class: "card-price", text: formatPrice(row.close) }),
       ]),
       el("span", { class: "card-mid" }, [

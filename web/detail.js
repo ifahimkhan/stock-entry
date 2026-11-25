@@ -1,10 +1,10 @@
 // Single-stock panel: headline, plain-language status, chart, and the bars as a table.
 
 import { infoButton } from "./infotip.js";
-import { CYCLE_INFO, TILE_INFO } from "./overviewinfo.js";
-import { PLOT_MARGIN, renderChart } from "./chart.js";
+import { TILE_INFO } from "./overviewinfo.js";
+import { PLOT_MARGIN, renderChart, SHOW_CYCLE_MARKS } from "./chart.js";
 import { attachZoom, fitWindow, sliceWindow, zoomWindow, ZOOM_STEP } from "./chartzoom.js";
-import { DASH, el, formatAngle, formatBarTime, formatDate, formatPercent, formatPrice, isNumber, signClass, statusBadge, statusKind } from "./format.js";
+import { DASH, el, formatAngle, formatBarTime, formatDate, formatPercent, formatPrice, isNumber, signClass } from "./format.js";
 import { renderTable } from "./table.js";
 
 const HISTORY_ROWS = 40;
@@ -29,30 +29,6 @@ const HISTORY_COLUMNS = [
 
 const plural = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
-/** Plain sentences describing where the stock is in the breakout -> wait -> entry cycle. */
-function factLines(summary) {
-  const lines = [];
-  if (summary.status === "entry") {
-    lines.push(`Entry signal on ${formatDate(summary.date, true)} at ${formatPrice(summary.close)}: first up day after the pullback.`);
-  } else if (summary.status === "wait") {
-    lines.push(`Waiting ${plural(summary.wait_days, "day")} for a reversal. Entry is the first up day.`);
-  } else if (summary.valid === true) {
-    lines.push(`Breakout on ${formatDate(summary.date, true)}: closed above the previous 4-day high of ${formatPrice(summary.prev4_max_close)}.`);
-    lines.push("Next: a down day starts the wait, then the first up day is the entry.");
-  } else {
-    lines.push("No signal on the latest bar.");
-  }
-  if (summary.status === "wait" && summary.breakout_date) {
-    lines.push(`Breakout on ${formatDate(summary.breakout_date)} closed at ${formatPrice(summary.breakout_close)}; price is ${formatPercent(summary.pullback_pct)} from it.`);
-  }
-  if (summary.last_entry_date && summary.status !== "entry") {
-    lines.push(`Last entry ${formatDate(summary.last_entry_date)} at ${formatPrice(summary.last_entry_price)}, ${formatPercent(summary.since_entry_pct)} since (${plural(summary.sessions_since_entry, "session")} ago).`);
-  } else if (!summary.last_entry_date) {
-    lines.push("No entry signal in the loaded history.");
-  }
-  return lines;
-}
-
 /** Legend items for the chart type actually drawn ("candles" or "line"). */
 /** History whose bars from the channel's first anchor on carry the two line values (straight lines per bar). */
 function withChannel(history, summary) {
@@ -76,9 +52,8 @@ function legendItems(drawn, channel) {
     : [item(el("span", { class: "line" }), "Close")];
   return [
     ...price,
-    item(el("span", { class: "mark breakout" }), "Breakout (valid)"),
-    item(el("span", { class: "mark wait" }), "Wait"),
-    item(el("span", { class: "mark entry" }), "Entry"),
+    ...(SHOW_CYCLE_MARKS ? [item(el("span", { class: "mark breakout" }), "Breakout (valid)"),
+      item(el("span", { class: "mark wait" }), "Wait"), item(el("span", { class: "mark entry" }), "Entry")] : []),
     ...(drawn === "candles" ? [item(el("span", { class: "tag", text: "SPV" }), "MRI SPV / PV candle")] : []),
     ...(channel ? [item(el("span", { class: "line channel" }), channel)] : []),
   ];
@@ -226,6 +201,37 @@ const barRow = (bar) => {
   ].filter(Boolean);
   return { ...bar, final: merged.length ? merged.join(", ") : null };
 };
+
+/** The stock's Final status of the daily bars: the latest day whose Final cell (Swings 1D) is filled.
+ *  @returns {{text: string, kind: string, date: string, sessions: number} | null} */
+function dailyFinal(bars) {
+  const rows = (bars || []).map(barRow);
+  const at = rows.findLastIndex((row) => row.final);
+  if (at < 0) return null;
+  const row = rows[at];
+  // chip colour: an entry is green, the Before Entry HH amber, an LH breakout alone blue
+  const kind = row.entry || row.entry_2 ? "entry" : row.before_entry_1 ? "wait" : "breakout";
+  return { text: row.final, kind, date: row.time, sessions: rows.length - 1 - at };
+}
+
+function finalBadge(final) {
+  return el("span", { class: `badge badge-${final.kind}`, title: `Final status of the daily bars (Swings 1D), on ${formatDate(final.date, true)}` }, [
+    el("span", { class: `mark ${final.kind}`, "aria-hidden": "true" }),
+    el("span", { text: `${final.text} · ${formatDate(final.date)}` }),   // with its day: the status can be old
+  ]);
+}
+
+/** The box at the top of the Overview: the Final status of the daily bars in a sentence. */
+function finalFacts(final, summary) {
+  if (!final) {
+    return [summary.at_closing_high === true
+      ? "No Final status: the stock is at a new closing high, so its daily swings are not analysed."
+      : "No Final status in the loaded daily bars."];
+  }
+  const ago = final.sessions === 0 ? "the latest day" : `${plural(final.sessions, "session")} ago`;
+  return [`Final status (1D): ${final.text} on ${formatDate(final.date, true)} (${ago}).`,
+    "From the Final column of the Swings 1D tab: the latest day with a Before Entry, Entry1, Entry2 or LH breakout."];
+}
 
 function swingSignal(point) {
   const before = point.before_entry && `TBC Zone Entry (${point.pattern || `${point.ll_count} LL, other`})`;
@@ -385,6 +391,7 @@ export function renderDetail(panel, detail) {
   const { summary } = detail;
   const history = withChannel(detail.history, summary);
   const subtitle = [summary.name, summary.sector].filter(Boolean).join(" · ");
+  const final = dailyFinal(detail[SWING_FRAMES.daily.barsKey]);   // replaces the breakout / wait / entry chip
   const chart = el("div", { class: "chart" });
   const table = el("table", { class: "compact" }, [el("thead"), el("tbody")]);
   const recent = history.slice(-HISTORY_ROWS).reverse().map((bar) => ({ ...bar, status: bar.entry_status }));
@@ -480,8 +487,8 @@ export function renderDetail(panel, detail) {
 
   const tabs = tabbed([
     { id: "overview", label: "Overview", body: el("div", {}, [
-      el("div", { class: `facts facts-${statusKind(summary.status, summary.valid) || "none"}` },
-        factLines(summary).map((text, i) => el("p", {}, [el("span", { text }), i === 0 ? infoButton(CYCLE_INFO) : null]))),
+      el("div", { class: `facts facts-${final ? final.kind : "none"}` },
+        finalFacts(final, summary).map((text) => el("p", { text, title: FINAL_TITLE }))),
       indicators(summary),
     ]) },
     { id: "chart", label: "Chart", onShow: () => drawChart(), body: (() => {
@@ -510,7 +517,7 @@ export function renderDetail(panel, detail) {
       el("div", {}, [
         el("div", { class: "detail-title" }, [
           el("h2", { text: summary.ticker }),
-          statusKind(summary.status, summary.valid) ? statusBadge(summary.status, summary.valid) : null,
+          final ? finalBadge(final) : null,
           tradingViewButton(summary.ticker),
         ]),
         subtitle ? el("p", { class: "detail-name", text: subtitle }) : null,

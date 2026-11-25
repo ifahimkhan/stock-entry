@@ -17,6 +17,9 @@ const CANDLE_FILL_SHARE = 0.62;  // share of each day's slot taken by the candle
 const MARK_GAP = 11;             // px between a candle's high and its status mark
 const MRI_GAP = 14;              // px between a candle and its SPV / PV text
 const STATUS_TEXT ={ entry: "Entry", wait: "Wait", breakout: "Breakout (valid)" };
+// The breakout / wait / entry marks of the daily cycle: kept in the code, not drawn (as the hidden
+// Entry today / Waiting lists). Set to true to draw them and their legend again.
+export const SHOW_CYCLE_MARKS = false;
 
 function svg(tag, attrs = {}, style = "") {
   const node = document.createElementNS(SVG_NS, tag);
@@ -155,7 +158,7 @@ function drawMriMarks(root, bars, scales) {
 }
 
 function tooltipContent(bar, candles) {
-  const kind = statusKind(bar.entry_status, bar.valid);
+  const kind = SHOW_CYCLE_MARKS ? statusKind(bar.entry_status, bar.valid) : "";
   const ohlc = candles && el("div", { class: "tip-ohlc" }, [
     el("span", { text: `O ${formatPrice(bar.Open)}` }), el("span", { text: `H ${formatPrice(bar.High)}` }),
     el("span", { text: `L ${formatPrice(bar.Low)}` }), el("span", { text: `C ${formatPrice(bar.Close)}` }),
@@ -228,14 +231,14 @@ export function renderChart(container, history, mode = "candles", height = HEIGH
   const kind = candles ? "Daily candlestick chart" : "Closing price";
   const root = svg("svg", {
     viewBox: `0 0 ${width} ${height}`, height, role: "img",
-    "aria-label": `${kind} from ${formatDate(bars[0].Date, true)} to ${formatDate(bars[bars.length - 1].Date, true)} with breakout, wait and entry marks. The same data is in the table below.`,
+    "aria-label": `${kind} from ${formatDate(bars[0].Date, true)} to ${formatDate(bars[bars.length - 1].Date, true)} ${SHOW_CYCLE_MARKS ? " with breakout, wait and entry marks" : ""}. The same data is in the table below.`,
   });
   drawAxes(root, bars, scales, width);
   if (candles) drawCandles(root, bars, scales);
   else drawLine(root, bars, scales);
   drawChannel(root, bars, scales);
   // On candles the marks sit above the day's high so they never cover the candle.
-  drawMarks(root, bars, scales, width, (bar) => (candles ? scales.y(bar.High) - MARK_GAP : scales.y(bar.Close)));
+  if (SHOW_CYCLE_MARKS) drawMarks(root, bars, scales, width, (bar) => (candles ? scales.y(bar.High) - MARK_GAP : scales.y(bar.Close)));
   if (candles) drawMriMarks(root, bars, scales);
   container.append(root);
   addHover(container, root, bars, scales, width, candles);
